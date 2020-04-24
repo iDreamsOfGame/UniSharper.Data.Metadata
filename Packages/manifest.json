@@ -30,26 +30,6 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.github.cosmos53076.exceldatareader": "1.0.0",
-    "com.github.cosmos53076.unisharper.core": "1.1.1",
-    "com.github.cosmos53076.resharp.patterns": "1.0.2",
-    "com.github.cosmos53076.resharp.data.iboxdb": "1.0.2"
-  },
-  "scopedRegistries": [
-    {
-      "name": "package.openupm.com",
-      "url": "https://package.openupm.com",
-      "scopes": [
-        "com.github.cosmos53076.exceldatareader",
-        "com.github.cosmos53076.newtonsoft.json",
-        "com.github.cosmos53076.resharp.core",
-        "com.github.cosmos53076.resharp.data.iboxdb",
-        "com.github.cosmos53076.resharp.patterns",
-        "com.github.cosmos53076.sharpziplib",
-        "com.github.cosmos53076.unisharper.core",
-        "com.openupm"
-      ]
-    }
-  ]
+    "com.unity.modules.xr": "1.0.0"
+  }
 }
