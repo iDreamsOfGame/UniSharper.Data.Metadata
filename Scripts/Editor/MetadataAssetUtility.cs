@@ -1,5 +1,5 @@
-﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License. See LICENSE in the
-// project root for license information.
+﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
+// See LICENSE in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,8 @@ namespace UniSharperEditor.Data.Metadata
     internal static class MetadataAssetUtility
     {
         #region Fields
+
+        private const string UnityPackageName = "io.github.idreamsofgame.unisharper.data.metadata";
 
         private static string tempFolderPath;
 
@@ -99,8 +101,8 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static bool GenerateMetadataEntityScripts()
         {
-            bool result = false;
-            MetadataAssetSettings settings = MetadataAssetSettings.Load();
+            var result = false;
+            var settings = MetadataAssetSettings.Load();
             MetadataAssetSettings.CreateEntityScriptsStoreFolder(settings);
 
             if (string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath))
@@ -114,10 +116,10 @@ namespace UniSharperEditor.Data.Metadata
                     result = (table != null);
                     if (result)
                     {
-                        string info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
-                        float progress = (float)(index + 1) / length;
+                        var info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
+                        var progress = (float)(index + 1) / length;
                         UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        List<MetadataEntityRawInfo> rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
+                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
                         result = GenerateMetadataEntityScript(settings, fileName, rawInfoList);
                     }
                 });
@@ -129,11 +131,11 @@ namespace UniSharperEditor.Data.Metadata
 
         private static void CopyDatabaseFile(string dbFolderPath, long dbLocalAddress, string entityName = null)
         {
-            string sourceFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(TempFolderPath, $"db{dbLocalAddress}.box"));
-            string newFileName = dbLocalAddress > 1 ? $"{entityName}.db.bytes" : "MetadataEntityDBConfig.db.bytes";
-            string destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
+            var sourceFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(TempFolderPath, $"db{dbLocalAddress}.box"));
+            var newFileName = dbLocalAddress > 1 ? $"{entityName}.db.bytes" : "MetadataEntityDBConfig.db.bytes";
+            var destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
             FileUtil.ReplaceFile(sourceFilePath, destFilePath);
-            string assetFilePath = EditorPath.ConvertToAssetPath(destFilePath);
+            var assetFilePath = EditorPath.ConvertToAssetPath(destFilePath);
             AssetDatabase.ImportAsset(assetFilePath);
         }
 
@@ -366,11 +368,12 @@ namespace UniSharperEditor.Data.Metadata
             try
             {
                 entityScriptName = entityScriptName.ToTitleCase();
-                var scriptTextContent = AssetDatabaseUtility.LoadEditorResources<TextAsset>("NewMetadataEntityScriptTemplate")[0].text;
+                var scriptTextContent = ScriptTemplate.LoadScriptTemplateFile("NewMetadataEntityScriptTemplate.txt", UnityPackageName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Namespace, settings.EntityScriptNamespace);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.ScriptName, entityScriptName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, GenerateEntityScriptEnumString(rawInfoList));
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
+                scriptTextContent = scriptTextContent.Replace(Environment.NewLine, PlayerEnvironment.WindowsNewLine);
 
                 var scriptStorePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
                 var assetPath = EditorPath.ConvertToAssetPath(scriptStorePath);

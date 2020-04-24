@@ -1,0 +1,16 @@
+{
+    "name": "UniSharper.Data.Metadata.Examples",
+    "references": [
+        "UniSharper.Data.Metadata"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
