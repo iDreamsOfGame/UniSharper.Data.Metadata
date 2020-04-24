@@ -16,6 +16,6 @@ MonoBehaviour:
   entityPropertyCommentRowIndex: 0
   entityPropertyNameRowIndex: 2
   entityPropertyTypeRowIndex: 1
-  entityScriptNamespace: UniSharper.Data.Metadata.Example.Entities
-  entityScriptsStorePath: Assets/Examples/Entities
+  entityScriptNamespace: UniSharper.Data.Metadata.Examples
+  entityScriptsStorePath: Assets/UniSharper.Data.Metadata/Examples
   metadataPersistentStorePath: Assets/Metadata/Data

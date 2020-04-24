@@ -30,6 +30,23 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
-  }
+    "com.unity.modules.xr": "1.0.0",
+    "io.github.idreamsofgame.unisharper.core": "1.1.2",
+    "io.github.idreamsofgame.resharp.data.iboxdb": "1.0.0",
+    "com.github.exceldatareader.exceldatareader": "3.6.0"
+  },
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.github.exceldatareader.exceldatareader",
+        "com.github.jillejr.newtonsoft.json.unity",
+        "com.openupm",
+        "io.github.idreamsofgame.resharp.core",
+        "io.github.idreamsofgame.resharp.data.iboxdb",
+        "io.github.idreamsofgame.unisharper.core"
+      ]
+    }
+  ]
 }
