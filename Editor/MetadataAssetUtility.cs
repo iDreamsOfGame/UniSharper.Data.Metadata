@@ -373,7 +373,6 @@ namespace UniSharperEditor.Data.Metadata
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.ScriptName, entityScriptName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, GenerateEntityScriptEnumString(rawInfoList));
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
-                scriptTextContent = scriptTextContent.Replace(Environment.NewLine, PlayerEnvironment.WindowsNewLine);
 
                 var scriptStorePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
                 var assetPath = EditorPath.ConvertToAssetPath(scriptStorePath);
