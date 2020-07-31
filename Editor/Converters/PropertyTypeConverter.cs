@@ -33,8 +33,13 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         public virtual object Parse(string value, params object[] parameters)
         {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+            
             value = value.Trim();
-            return string.IsNullOrEmpty(value) ? null : value;
+            return value;
         }
 
         protected bool ParseBoolean(string value)

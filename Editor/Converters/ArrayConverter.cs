@@ -9,7 +9,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
     {
         #region Fields
 
-        private const string ArrayElementSeparator = "|";
+        private static readonly char[] ArrayElementSeparator = new char[] { '|' };
 
         #endregion Fields
 
@@ -24,7 +24,14 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         #region Methods
 
-        public override object Parse(string value, params object[] parameters) => value.Split(ArrayElementSeparator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+        public override object Parse(string value, params object[] parameters)
+        {
+            if (string.IsNullOrEmpty(value))
+                return new string[0] { };
+            
+            var result = value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
+            return result;
+        }
 
         #endregion Methods
     }

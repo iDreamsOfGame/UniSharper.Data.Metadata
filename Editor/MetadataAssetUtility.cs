@@ -67,7 +67,8 @@ namespace UniSharperEditor.Data.Metadata
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
             {
                 result = (table != null);
-                if (!result) return;
+                if (!result) 
+                    return;
                 var entityClassName = fileName.ToTitleCase();
                 var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
                 var progress = (float)(index + 1) / length;
@@ -152,21 +153,17 @@ namespace UniSharperEditor.Data.Metadata
                 for (int j = 0, propertiesCount = rawInfoList.Count; j < propertiesCount; ++j)
                 {
                     string cellValue = table.Rows[i][j].ToString().Trim();
+                    MetadataEntityRawInfo rowInfo = rawInfoList[j];
+                    IPropertyTypeConverter typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
 
-                    if (!string.IsNullOrEmpty(cellValue))
+                    if (typeParser != null)
                     {
-                        MetadataEntityRawInfo rowInfo = rawInfoList[j];
-                        IPropertyTypeConverter typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
-
-                        if (typeParser != null)
-                        {
-                            object value = typeParser.Parse(cellValue, rowInfo.Parameters);
-                            entityData.SetObjectPropertyValue(rowInfo.PropertyName, value);
-                        }
-                        else
-                        {
-                            UnityDebug.LogWarningFormat("Type '{0}' is not supported!", rowInfo.PropertyType);
-                        }
+                        object value = typeParser.Parse(cellValue, rowInfo.Parameters);
+                        entityData.SetObjectPropertyValue(rowInfo.PropertyName, value);
+                    }
+                    else
+                    {
+                        UnityDebug.LogWarningFormat("Type '{0}' is not supported!", rowInfo.PropertyType);
                     }
                 }
 
@@ -417,14 +414,20 @@ namespace UniSharperEditor.Data.Metadata
                 {
                     dbContext.EnsureTable<T>(typeof(T).Name, tablePrimaryKey);
                     dbContext.Open();
-                    result = dbContext.Insert(tableName, dataList);
+
+                    foreach (var data in dataList)
+                    {
+                        result = dbContext.Insert(tableName, data);
+                        
+                        if (!result)
+                        {
+                            Debug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
+                        }
+                    }
                 }
 
                 // Copy metadata entity database file.
-                if (result)
-                {
-                    CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
-                }
+                CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
             }
         }
 
