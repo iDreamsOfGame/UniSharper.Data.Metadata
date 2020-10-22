@@ -42,6 +42,8 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             GUILayout.BeginVertical();
+            
+            // Import Settings
             GUILayout.Label("Import Settings", EditorStyles.boldLabel);
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
@@ -52,10 +54,12 @@ namespace UniSharperEditor.Data.Metadata
             {
                 settings.ExcelWorkbookFilesFolderPath = string.Empty;
             }
-            settings.ExcelWorkbookFilesFolderPath = EditorGUILayoutUtility.FolderField(new GUIContent("Excel Workbook Files Folder Path", "The folder path where to locate excel workbook files."), settings.ExcelWorkbookFilesFolderPath, "Excel Workbook Files Folder Path", string.Empty, string.Empty, LabelWidth);
+            settings.ExcelWorkbookFilesFolderPath = EditorGUILayoutUtility.FolderField(new GUIContent("Excel Workbook Files Folder Path", 
+                "The folder path where to locate excel workbook files."), settings.ExcelWorkbookFilesFolderPath, "Excel Workbook Files Folder Path", string.Empty, string.Empty, LabelWidth);
 
             // Metadata Persistent Store Path
-            string metadataPersistentStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Metadata Persistent Store Path", "The folder path where to store metadata."), settings.MetadataPersistentStorePath, "Metadata Persistent Store Path", settings.MetadataPersistentStorePath, string.Empty, LabelWidth);
+            string metadataPersistentStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Metadata Persistent Store Path", 
+                "The folder path where to store metadata."), settings.MetadataPersistentStorePath, "Metadata Persistent Store Path", settings.MetadataPersistentStorePath, string.Empty, LabelWidth);
 
             if (EditorPath.IsAssetPath(metadataPersistentStoreAbsolutePath))
             {
@@ -63,11 +67,13 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                UnityEditorUtility.DisplayDialog("Invalid Path", "The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!", "OK");
+                UnityEditorUtility.DisplayDialog("Invalid Path", 
+                    "The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!", "OK");
             }
 
             // Metadata Entity Scripts Store Path
-            string entityScriptsStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Entity Scripts Store Path", "The folder path where to store metadata entity scripts."), settings.EntityScriptsStorePath, "Entity Scripts Store Path", settings.EntityScriptsStorePath, string.Empty, LabelWidth);
+            string entityScriptsStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Entity Scripts Store Path", 
+                "The folder path where to store metadata entity scripts."), settings.EntityScriptsStorePath, "Entity Scripts Store Path", settings.EntityScriptsStorePath, string.Empty, LabelWidth);
 
             if (EditorPath.IsAssetPath(entityScriptsStoreAbsolutePath))
             {
@@ -75,38 +81,69 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                UnityEditorUtility.DisplayDialog("Invalid Path", "The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!", "OK");
+                UnityEditorUtility.DisplayDialog("Invalid Path", 
+                    "The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!", "OK");
             }
 
             // Metadata Entity Namespace
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityScriptNamespace = EditorGUILayout.TextField(new GUIContent("Entity Script Namespace", "The namespace of entity script."), settings.EntityScriptNamespace);
+                settings.EntityScriptNamespace = EditorGUILayout.TextField(new GUIContent("Entity Script Namespace", 
+                    "The namespace of entity script."), settings.EntityScriptNamespace);
             }
 
             // Metadata Entity Property Comment Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyCommentRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Comment Definition Row Index", "The row index of entity property comment definition."), settings.EntityPropertyCommentRowIndex, 0, MaxIntValue);
+                settings.EntityPropertyCommentRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Comment Definition Row Index", 
+                    "The row index of entity property comment definition."), settings.EntityPropertyCommentRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Type Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyTypeRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Type Definition Row Index", "The row index of entity property type definition."), settings.EntityPropertyTypeRowIndex, 0, MaxIntValue);
+                settings.EntityPropertyTypeRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Type Definition Row Index", 
+                    "The row index of entity property type definition."), settings.EntityPropertyTypeRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Name Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyNameRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Name Definition Row Index", "The row index of entity property name definition."), settings.EntityPropertyNameRowIndex, 0, MaxIntValue);
+                settings.EntityPropertyNameRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Name Definition Row Index", 
+                    "The row index of entity property name definition."), settings.EntityPropertyNameRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Value Starting Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityDataStartingRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Data Starting Row Index", "The row index and after will be entity data definitions."), settings.EntityDataStartingRowIndex, 0, MaxIntValue);
+                settings.EntityDataStartingRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Data Starting Row Index", 
+                    "The row index and after will be entity data definitions."), settings.EntityDataStartingRowIndex, 0, MaxIntValue);
             }
+            
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(20);
+            
+            // Other Settings
+            GUILayout.Label("Other Settings", EditorStyles.boldLabel);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUILayout.BeginVertical();
+            
+            // Data encryption/decryption
+            using (new EditorGUIFieldScope(LabelWidth))
+            {
+                settings.DataEncryptionAndDecryption = EditorGUILayout.Toggle(new GUIContent("Data Encryption/Decryption", 
+                    "Generate database file with encryption, and load metadata with decryption."), settings.DataEncryptionAndDecryption);
+            }
+            
+            GUILayout.EndVertical();
+            GUILayout.Space(10);
+            GUILayout.EndHorizontal();
+            
 
             GUILayout.Space(20);
 
@@ -122,10 +159,7 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             GUILayout.Space(20);
-
-            GUILayout.EndVertical();
-            GUILayout.Space(10);
-            GUILayout.EndHorizontal();
+            
             GUILayout.EndVertical();
         }
 

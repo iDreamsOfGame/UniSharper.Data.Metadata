@@ -5,6 +5,8 @@ using ReSharp.Data.iBoxDB;
 using ReSharp.Patterns;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using ReSharp.Security.Cryptography;
 using UnityEngine.Scripting;
 
 namespace UniSharper.Data.Metadata
@@ -17,6 +19,11 @@ namespace UniSharper.Data.Metadata
     public sealed class MetadataManager : Singleton<MetadataManager>
     {
         #region Fields
+
+        /// <summary>
+        /// Key length of encryption.
+        /// </summary>
+        public const int EncryptionKeyLength = 16;
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
         
@@ -44,25 +51,25 @@ namespace UniSharper.Data.Metadata
         public T[] GetAllEntities<T>() where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            var dbContext = CreateDBContextForEntity<T>(entityType);
-            var list = dbContext.SelectAll<T>(entityType.Name);
-            return list?.ToArray();
+            List<T> results = null;
+            CreateDBContextForEntity<T>(entityType, context => results = context.SelectAll<T>(entityType.Name));
+            return results?.ToArray();
         }
 
         public T[] GetEntities<T>(string key, object value) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            var dbContext = CreateDBContextForEntity<T>(entityType);
-            var list = dbContext.Select<T>(entityType.Name, key, value);
-            return list?.ToArray();
+            List<T> results = null;
+            CreateDBContextForEntity<T>(entityType, context => results = context.Select<T>(entityType.Name, key, value));
+            return results?.ToArray();
         }
 
         public T[] GetEntities<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            var dbContext = CreateDBContextForEntity<T>(entityType);
-            var list = dbContext.Select<T>(entityType.Name, arguments, logicalOperator);
-            return list?.ToArray();
+            List<T> results = null;
+            CreateDBContextForEntity<T>(entityType, context => results = context.Select<T>(entityType.Name, arguments, logicalOperator));
+            return results?.ToArray();
         }
 
         /// <summary>
@@ -74,8 +81,9 @@ namespace UniSharper.Data.Metadata
         public T GetEntity<T>(object key) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            var dbContext = CreateDBContextForEntity<T>(entityType);
-            return dbContext.SelectKey<T>(entityType.Name, key);
+            T result = default;
+            CreateDBContextForEntity<T>(entityType, context => result = context.SelectKey<T>(entityType.Name, key));
+            return result;
         }
 
         /// <summary>
@@ -85,7 +93,8 @@ namespace UniSharper.Data.Metadata
         public void Initialize(byte[] configDBData)
         {
             if (configDBContext != null) return;
-            configDBContext = new iBoxDBContext(configDBData);
+            var rawData = DecryptDatabaseFile(configDBData);
+            configDBContext = new iBoxDBContext(rawData);
             configDBContext.EnsureTable<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, MetadataEntityDBConfig.TablePrimaryKey);
             configDBContext.Open();
         }
@@ -95,28 +104,21 @@ namespace UniSharper.Data.Metadata
         /// </summary>
         /// <typeparam name="T">The type of entity.</typeparam>
         /// <param name="rawData">The raw data of entity database.</param>
-        public void LoadEntityDatabase<T>(byte[] rawData) where T : MetadataEntity
-        {
-            var entityType = typeof(T);
-            LoadEntityDatabase(entityType, rawData);
-        }
+        public void LoadEntityDatabase<T>(byte[] rawData) where T : MetadataEntity => LoadEntityDatabase(typeof(T), rawData);
 
         /// <summary>
         /// Cache the raw data of entity database.
         /// </summary>
         /// <param name="entityType">The type of entity.</param>
         /// <param name="rawData">The raw data of entity database.</param>
-        public void LoadEntityDatabase(Type entityType, byte[] rawData)
-        {
-            entityDBRawDataMap.AddUnique(entityType, rawData);
-        }
+        public void LoadEntityDatabase(Type entityType, byte[] rawData) => entityDBRawDataMap.AddUnique(entityType, DecryptDatabaseFile(rawData));
 
         public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            var dbContext = CreateDBContextForEntity<T>(entityType);
-            var list = dbContext.Select<T>(entityType.Name, query, arguments);
-            return list?.ToArray();
+            List<T> results = null;
+            CreateDBContextForEntity<T>(entityType, context => results = context.Select<T>(entityType.Name, query, arguments));
+            return results?.ToArray();
         }
 
         /// <summary>
@@ -140,7 +142,7 @@ namespace UniSharper.Data.Metadata
             base.Dispose(disposing);
         }
 
-        private iBoxDBContext CreateDBContextForEntity<T>(Type entityType) where T : MetadataEntity, new()
+        private void CreateDBContextForEntity<T>(Type entityType, Action<iBoxDBContext> handler) where T : MetadataEntity, new()
         {
             if (entityType == null)
             {
@@ -149,7 +151,8 @@ namespace UniSharper.Data.Metadata
 
             if (!GetDBRawDataForEntity(entityType, out var dbRawData))
             {
-                return null;
+                handler?.Invoke(null);
+                return;
             }
 
             using (var dbContext = new iBoxDBContext(dbRawData))
@@ -158,7 +161,7 @@ namespace UniSharper.Data.Metadata
                 var primaryKeyName = GetMetadataEntityDBPrimaryKey<T>();
                 dbContext.EnsureTable<T>(tableName, primaryKeyName);
                 dbContext.Open();
-                return dbContext;
+                handler?.Invoke(dbContext);
             }
         }
 
@@ -189,8 +192,27 @@ namespace UniSharper.Data.Metadata
         private string GetMetadataEntityDBPrimaryKey<T>() where T : MetadataEntity
         {
             var config = GetMetadataEntityDBConfig<T>();
-            var key = config?.PrimaryKey;
-            return key;
+            return config?.PrimaryKey;
+        }
+
+        private byte[] DecryptDatabaseFile(byte[] fileData)
+        {
+            using (var reader = new BinaryReader(new MemoryStream(fileData)))
+            {
+                var dataEncryptionFlagRawData = reader.ReadBytes(1);
+                var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
+
+                if (dataEncryptionFlag)
+                {
+                    var key = reader.ReadBytes(EncryptionKeyLength);
+                    var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
+                    return CryptoUtility.AesDecrypt(cipherData, key);
+                }
+                else
+                {
+                    return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
+                }
+            }
         }
 
         #endregion Methods

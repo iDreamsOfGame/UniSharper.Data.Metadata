@@ -26,7 +26,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
 
-        private static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{typeof(MetadataAssetSettings).Name}.asset";
+        private static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
         [ReadOnlyField]
         [SerializeField]
@@ -56,6 +56,10 @@ namespace UniSharperEditor.Data.Metadata
         [SerializeField]
         private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
 
+        [ReadOnlyField]
+        [SerializeField]
+        private bool dataEncryptionAndDecryption = false;
+        
         #endregion Fields
 
         #region Properties
@@ -160,6 +164,16 @@ namespace UniSharperEditor.Data.Metadata
                     return;
 
                 metadataPersistentStorePath = value;
+                Save();
+            }
+        }
+
+        internal bool DataEncryptionAndDecryption
+        {
+            get => dataEncryptionAndDecryption;
+            set
+            {
+                dataEncryptionAndDecryption = value;
                 Save();
             }
         }

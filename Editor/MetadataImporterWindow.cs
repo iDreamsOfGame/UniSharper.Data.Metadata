@@ -2,6 +2,7 @@
 // See LICENSE in the project root for license information.
 
 using UnityEditor;
+using UnityEngine;
 
 namespace UniSharperEditor.Data.Metadata
 {
@@ -18,7 +19,7 @@ namespace UniSharperEditor.Data.Metadata
         [MenuItem("UniSharper/Metadata Management/Metadata Importer", false, 1)]
         internal static void ShowWindow()
         {
-            GetWindow<MetadataImporterWindow>("Metadata Importer", true).Show();
+            GetWindowWithRect<MetadataImporterWindow>(new Rect(0, 0, 850, 300), true, "Metadata Importer").Show();
         }
 
         protected override void DrawGUIWithSettings()

@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using ExcelDataReader;
 using JetBrains.Annotations;
 using ReSharp.Data.iBoxDB;
+using ReSharp.Security.Cryptography;
 using UniSharper;
 using UniSharper.Data.Metadata;
 using UniSharperEditor.Data.Metadata.Converters;
@@ -136,8 +137,38 @@ namespace UniSharperEditor.Data.Metadata
             var newFileName = dbLocalAddress > 1 ? $"{entityName}.db.bytes" : "MetadataEntityDBConfig.db.bytes";
             var destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
             FileUtil.ReplaceFile(sourceFilePath, destFilePath);
+            EncryptFileRawData(destFilePath);
             var assetFilePath = EditorPath.ConvertToAssetPath(destFilePath);
             AssetDatabase.ImportAsset(assetFilePath);
+        }
+
+        private static void EncryptFileRawData(string filePath)
+        {
+            var settings = MetadataAssetSettings.Load();
+            var rawData = File.ReadAllBytes(filePath);
+            var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
+            using (var writer = new BinaryWriter(new MemoryStream()))
+            {
+                // Write flag to judge if data need to decryption
+                writer.Write(dataEncryptionFlag);
+                
+                if (settings.DataEncryptionAndDecryption)
+                {
+                    // Write key and cipher data
+                    var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
+                    var cipherData = CryptoUtility.AesEncrypt(rawData, key);
+                    writer.Write(key);
+                    writer.Write(cipherData);
+                }
+                else
+                {
+                    // Write raw data
+                    writer.Write(rawData);
+                }
+
+                var bufferData = ((MemoryStream) writer.BaseStream).GetBuffer();
+                File.WriteAllBytes(filePath, bufferData);
+            }
         }
 
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings, DataTable table, Type entityClassType, List<MetadataEntityRawInfo> rawInfoList)
