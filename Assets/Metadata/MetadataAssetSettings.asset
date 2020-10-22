@@ -19,3 +19,4 @@ MonoBehaviour:
   entityScriptNamespace: UniSharper.Data.Metadata.Examples
   entityScriptsStorePath: Assets/UniSharper.Data.Metadata/Examples
   metadataPersistentStorePath: Assets/Metadata/Data
+  dataEncryptionAndDecryption: 1
