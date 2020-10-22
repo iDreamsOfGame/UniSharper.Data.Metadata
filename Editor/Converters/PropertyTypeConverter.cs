@@ -21,11 +21,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         #region Properties
 
-        protected string PropertyName
-        {
-            get;
-            private set;
-        }
+        protected string PropertyName { get; }
 
         #endregion Properties
 
@@ -42,7 +38,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
             return value;
         }
 
-        protected bool ParseBoolean(string value)
+        protected static bool ParseBoolean(string value)
         {
             if (string.IsNullOrEmpty(value))
                 return false;
@@ -53,12 +49,12 @@ namespace UniSharperEditor.Data.Metadata.Converters
             return result;
         }
 
-        protected T ParseNumber<T>(string value)
+        protected static T ParseNumber<T>(string value)
         {
             var result = default(T);
             var targetType = typeof(T);
             value = value.Trim();
-            var args = new object[4] { value, NumberStyles.Any, CultureInfo.InvariantCulture, result };
+            var args = new object[] { value, NumberStyles.Any, CultureInfo.InvariantCulture, result };
 
             if (!string.IsNullOrEmpty(value))
             {

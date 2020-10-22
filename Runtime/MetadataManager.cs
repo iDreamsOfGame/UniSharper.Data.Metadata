@@ -19,6 +19,7 @@ namespace UniSharper.Data.Metadata
         #region Fields
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
+        
         private iBoxDBContext configDBContext;
 
         #endregion Fields
@@ -42,40 +43,25 @@ namespace UniSharper.Data.Metadata
         /// <returns>The list entities found in database.</returns>
         public T[] GetAllEntities<T>() where T : MetadataEntity, new()
         {
-            Type entityType = typeof(T);
-            List<T> list = null;
-
-            CreateDBContextForEntity<T>(entityType, (dbContext) =>
-            {
-                list = dbContext.SelectAll<T>(entityType.Name);
-            });
-
+            var entityType = typeof(T);
+            var dbContext = CreateDBContextForEntity<T>(entityType);
+            var list = dbContext.SelectAll<T>(entityType.Name);
             return list?.ToArray();
         }
 
         public T[] GetEntities<T>(string key, object value) where T : MetadataEntity, new()
         {
-            Type entityType = typeof(T);
-            List<T> list = null;
-
-            CreateDBContextForEntity<T>(entityType, (dbContext) =>
-            {
-                list = dbContext.Select<T>(entityType.Name, key, value);
-            });
-
+            var entityType = typeof(T);
+            var dbContext = CreateDBContextForEntity<T>(entityType);
+            var list = dbContext.Select<T>(entityType.Name, key, value);
             return list?.ToArray();
         }
 
         public T[] GetEntities<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None) where T : MetadataEntity, new()
         {
-            Type entityType = typeof(T);
-            List<T> list = null;
-
-            CreateDBContextForEntity<T>(entityType, (dbContext) =>
-            {
-                list = dbContext.Select<T>(entityType.Name, arguments, logicalOperator);
-            });
-
+            var entityType = typeof(T);
+            var dbContext = CreateDBContextForEntity<T>(entityType);
+            var list = dbContext.Select<T>(entityType.Name, arguments, logicalOperator);
             return list?.ToArray();
         }
 
@@ -88,14 +74,8 @@ namespace UniSharper.Data.Metadata
         public T GetEntity<T>(object key) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            T result = default;
-
-            CreateDBContextForEntity<T>(entityType, (dbContext) =>
-            {
-                result = dbContext.SelectKey<T>(entityType.Name, key);
-            });
-
-            return result;
+            var dbContext = CreateDBContextForEntity<T>(entityType);
+            return dbContext.SelectKey<T>(entityType.Name, key);
         }
 
         /// <summary>
@@ -125,7 +105,7 @@ namespace UniSharper.Data.Metadata
         /// Cache the raw data of entity database.
         /// </summary>
         /// <param name="entityType">The type of entity.</param>
-        /// <param name="rawData">The raw data of entity databse.</param>
+        /// <param name="rawData">The raw data of entity database.</param>
         public void LoadEntityDatabase(Type entityType, byte[] rawData)
         {
             entityDBRawDataMap.AddUnique(entityType, rawData);
@@ -134,13 +114,8 @@ namespace UniSharper.Data.Metadata
         public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            List<T> list = null;
-
-            CreateDBContextForEntity<T>(entityType, (dbContext) =>
-            {
-                list = dbContext.Select<T>(entityType.Name, query, arguments);
-            });
-
+            var dbContext = CreateDBContextForEntity<T>(entityType);
+            var list = dbContext.Select<T>(entityType.Name, query, arguments);
             return list?.ToArray();
         }
 
@@ -165,29 +140,25 @@ namespace UniSharper.Data.Metadata
             base.Dispose(disposing);
         }
 
-        private void CreateDBContextForEntity<T>(Type entityType, Action<iBoxDBContext> handler) where T : MetadataEntity, new()
+        private iBoxDBContext CreateDBContextForEntity<T>(Type entityType) where T : MetadataEntity, new()
         {
             if (entityType == null)
             {
                 throw new ArgumentNullException(nameof(entityType));
             }
 
-            if (handler == null)
+            if (!GetDBRawDataForEntity(entityType, out var dbRawData))
             {
-                throw new ArgumentNullException(nameof(handler));
+                return null;
             }
 
-            if (GetDBRawDataForEntity(entityType, out byte[] dbRawData))
+            using (var dbContext = new iBoxDBContext(dbRawData))
             {
-                using (iBoxDBContext dbContext = new iBoxDBContext(dbRawData))
-                {
-                    string tableName = entityType.Name;
-                    string primaryKeyName = GetMetadataEntityDBPrimaryKey<T>();
-                    dbContext.EnsureTable<T>(tableName, primaryKeyName);
-                    dbContext.Open();
-
-                    handler.Invoke(dbContext);
-                }
+                var tableName = entityType.Name;
+                var primaryKeyName = GetMetadataEntityDBPrimaryKey<T>();
+                dbContext.EnsureTable<T>(tableName, primaryKeyName);
+                dbContext.Open();
+                return dbContext;
             }
         }
 

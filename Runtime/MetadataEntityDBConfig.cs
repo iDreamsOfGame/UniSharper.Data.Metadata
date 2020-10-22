@@ -25,7 +25,7 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// The table name.
         /// </summary>
-        public static readonly string TableName = typeof(MetadataEntityDBConfig).Name;
+        public const string TableName = nameof(MetadataEntityDBConfig);
 
         #endregion Fields
 

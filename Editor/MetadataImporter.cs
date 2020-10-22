@@ -133,20 +133,53 @@ namespace UniSharperEditor.Data.Metadata
         {
             EditorUtility.ClearConsole();
 
+            if (UnityEditorUtility.scriptCompilationFailed) 
+                return;
+            
+            try
+            {
+                var result = MetadataAssetUtility.GenerateMetadataEntityScripts();
+                EditorPrefs.SetBool(ScriptsGeneratedPrefKey, result);
+
+                if (result)
+                {
+                    UnityEditorUtility.DisplayProgressBar("Hold on...", "Compiling metadata entity scripts...", 0f);
+                }
+                else
+                {
+                    UnityEditorUtility.DisplayDialog("Error", "Failed to generate metadata entity scripts!", "OK");
+                }
+            }
+            catch (System.Exception)
+            {
+                UnityEditorUtility.ClearProgressBar();
+                throw;
+            }
+        }
+
+        [DidReloadScripts]
+        private static void OnScriptsReloaded()
+        {
+            var scriptsGenerated = EditorPrefs.GetBool(ScriptsGeneratedPrefKey);
+            if (!scriptsGenerated)
+                return;
+            
+            UnityEditorUtility.ClearProgressBar();
+            EditorPrefs.SetBool(ScriptsGeneratedPrefKey, false);
+
             if (!UnityEditorUtility.scriptCompilationFailed)
             {
                 try
                 {
-                    bool result = MetadataAssetUtility.GenerateMetadataEntityScripts();
-                    EditorPrefs.SetBool(ScriptsGeneratedPrefKey, result);
+                    var result = MetadataAssetUtility.CreateMetadataDatabaseFiles();
 
                     if (result)
                     {
-                        UnityEditorUtility.DisplayProgressBar("Hold on...", "Compiling metadata entity scripts...", 0f);
+                        UnityEditorUtility.DisplayDialog("Success", "Build success!", "OK");
                     }
                     else
                     {
-                        UnityEditorUtility.DisplayDialog("Error", "Failed to generate metadata entity scripts!", "OK");
+                        UnityEditorUtility.DisplayDialog("Error", "Failed to create metadata database files!", "OK");
                     }
                 }
                 catch (System.Exception)
@@ -155,43 +188,9 @@ namespace UniSharperEditor.Data.Metadata
                     throw;
                 }
             }
-        }
-
-        [DidReloadScripts]
-        private static void OnScriptsReloaded()
-        {
-            bool scriptsGenerated = EditorPrefs.GetBool(ScriptsGeneratedPrefKey);
-
-            if (scriptsGenerated)
+            else
             {
-                UnityEditorUtility.ClearProgressBar();
-                EditorPrefs.SetBool(ScriptsGeneratedPrefKey, false);
-
-                if (!UnityEditorUtility.scriptCompilationFailed)
-                {
-                    try
-                    {
-                        bool result = MetadataAssetUtility.CreateMetadataDatabaseFiles();
-
-                        if (result)
-                        {
-                            UnityEditorUtility.DisplayDialog("Success", "Build success!", "OK");
-                        }
-                        else
-                        {
-                            UnityEditorUtility.DisplayDialog("Error", "Failed to create metadata database files!", "OK");
-                        }
-                    }
-                    catch (System.Exception)
-                    {
-                        UnityEditorUtility.ClearProgressBar();
-                        throw;
-                    }
-                }
-                else
-                {
-                    UnityEditorUtility.DisplayDialog("Error", "Failed to compile metadata entity scripts!", "OK");
-                }
+                UnityEditorUtility.DisplayDialog("Error", "Failed to compile metadata entity scripts!", "OK");
             }
         }
 

@@ -9,10 +9,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using ExcelDataReader;
+using JetBrains.Annotations;
 using ReSharp.Data.iBoxDB;
 using UniSharper;
 using UniSharper.Data.Metadata;
-using UniSharper.Data.Metadata.Parsers;
 using UniSharperEditor.Data.Metadata.Converters;
 using UnityEditor;
 using UnityEngine;
@@ -62,7 +62,7 @@ namespace UniSharperEditor.Data.Metadata
             MetadataAssetSettings.CreateMetadataPersistentStoreFolder(settings);
             DeleteTempDbFiles();
 
-            string dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
+            var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
 
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
             {
@@ -74,7 +74,7 @@ namespace UniSharperEditor.Data.Metadata
                 var progress = (float)(index + 1) / length;
                 UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
 
-                var rawInfoList = CreateMetadataEntityRawInfoList(settings, entityClassName, table);
+                var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
                 var entityClassType = GetEntityClassType(settings, entityClassName);
 
                 if (entityClassType != null)
@@ -120,7 +120,7 @@ namespace UniSharperEditor.Data.Metadata
                         var info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
                         var progress = (float)(index + 1) / length;
                         UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
+                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
                         result = GenerateMetadataEntityScript(settings, fileName, rawInfoList);
                     }
                 });
@@ -142,23 +142,23 @@ namespace UniSharperEditor.Data.Metadata
 
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings, DataTable table, Type entityClassType, List<MetadataEntityRawInfo> rawInfoList)
         {
-            List<MetadataEntity> list = new List<MetadataEntity>();
+            var list = new List<MetadataEntity>();
 
-            int rowCount = table.Rows.Count;
+            var rowCount = table.Rows.Count;
 
-            for (int i = settings.EntityDataStartingRowIndex; i < rowCount; ++i)
+            for (var i = settings.EntityDataStartingRowIndex; i < rowCount; ++i)
             {
-                MetadataEntity entityData = (MetadataEntity)entityClassType.InvokeConstructor();
+                var entityData = (MetadataEntity)entityClassType.InvokeConstructor();
 
                 for (int j = 0, propertiesCount = rawInfoList.Count; j < propertiesCount; ++j)
                 {
-                    string cellValue = table.Rows[i][j].ToString().Trim();
-                    MetadataEntityRawInfo rowInfo = rawInfoList[j];
-                    IPropertyTypeConverter typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
+                    var cellValue = table.Rows[i][j].ToString().Trim();
+                    var rowInfo = rawInfoList[j];
+                    var typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
 
                     if (typeParser != null)
                     {
-                        object value = typeParser.Parse(cellValue, rowInfo.Parameters);
+                        var value = typeParser.Parse(cellValue, rowInfo.Parameters);
                         entityData.SetObjectPropertyValue(rowInfo.PropertyName, value);
                     }
                     else
@@ -173,50 +173,50 @@ namespace UniSharperEditor.Data.Metadata
             return list;
         }
 
-        private static List<MetadataEntityRawInfo> CreateMetadataEntityRawInfoList(MetadataAssetSettings settings, string entityName, DataTable table)
+        private static List<MetadataEntityRawInfo> CreateMetadataEntityRawInfoList(MetadataAssetSettings settings, DataTable table)
         {
-            DataColumnCollection columns = table.Columns;
-            DataRowCollection rows = table.Rows;
-            int columnCount = columns.Count;
-            List<MetadataEntityRawInfo> list = new List<MetadataEntityRawInfo>();
+            var columns = table.Columns;
+            var rows = table.Rows;
+            var columnCount = columns.Count;
+            var list = new List<MetadataEntityRawInfo>();
 
-            for (int i = 0; i < columnCount; i++)
+            for (var i = 0; i < columnCount; i++)
             {
-                string propertyName = rows[settings.EntityPropertyNameRowIndex][i].ToString().Trim().ToTitleCase();
-                string propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString().Trim().ToLower();
-                string comment = FormatCommentString(rows[settings.EntityPropertyCommentRowIndex][i].ToString().Trim());
+                var propertyName = rows[settings.EntityPropertyNameRowIndex][i].ToString().Trim().ToTitleCase();
+                var propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString().Trim().ToLower();
+                var comment = FormatCommentString(rows[settings.EntityPropertyCommentRowIndex][i].ToString().Trim());
 
-                if (!string.IsNullOrEmpty(propertyName) && !string.IsNullOrEmpty(propertyType))
+                if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType)) 
+                    continue;
+                
+                object[] arguments = null;
+
+                if (propertyType.Equals("enum"))
                 {
-                    object[] arguments = null;
+                    arguments = new object[3];
+                    arguments[0] = propertyName;
+                    arguments[1] = $"{propertyName}Enum";
 
-                    if (propertyType.Equals("enum"))
+                    var enumValues = new List<string>
                     {
-                        arguments = new object[3];
-                        arguments[0] = propertyName;
-                        arguments[1] = $"{propertyName}Enum";
+                        "None"
+                    };
 
-                        List<string> enumValues = new List<string>
+                    for (var j = settings.EntityDataStartingRowIndex; j < rows.Count; j++)
+                    {
+                        var enumValue = rows[j][i].ToString().Trim();
+
+                        if (!string.IsNullOrEmpty(enumValue))
                         {
-                            "None"
-                        };
-
-                        for (int j = settings.EntityDataStartingRowIndex; j < rows.Count; j++)
-                        {
-                            string enumValue = rows[j][i].ToString().Trim();
-
-                            if (!string.IsNullOrEmpty(enumValue))
-                            {
-                                enumValues.AddUnique(enumValue);
-                            }
+                            enumValues.AddUnique(enumValue);
                         }
-
-                        arguments[2] = enumValues.ToArray();
-                        propertyName = $"{propertyName}IntValue";
                     }
 
-                    list.Add(new MetadataEntityRawInfo(comment, propertyType, propertyName, arguments));
+                    arguments[2] = enumValues.ToArray();
+                    propertyName = $"{propertyName}IntValue";
                 }
+
+                list.Add(new MetadataEntityRawInfo(comment, propertyType, propertyName, arguments));
             }
 
             return list;
@@ -235,12 +235,12 @@ namespace UniSharperEditor.Data.Metadata
                 return;
             }
 
-            string[] paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
+            var paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
 
             // Mac OS can not find *.xlsx files by above filter.
             if (!PlayerEnvironment.IsWindowsEditorPlatform)
             {
-                string[] xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
+                var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
                 paths = paths.Concat(xlsxFilePaths).ToArray();
             }
 
@@ -252,28 +252,26 @@ namespace UniSharperEditor.Data.Metadata
                 return;
             }
 
-            for (int i = 0; i < paths.Length; i++)
+            for (var i = 0; i < paths.Length; i++)
             {
-                string path = paths[i];
-                string fileName = Path.GetFileNameWithoutExtension(path);
-                string fileExtension = Path.GetExtension(path);
+                var path = paths[i];
+                var fileName = Path.GetFileNameWithoutExtension(path);
+                var fileExtension = Path.GetExtension(path);
 
-                using (FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(path, FileMode.Open, FileAccess.Read))
                 {
-                    using (IExcelDataReader reader = fileExtension != null && fileExtension.Equals(".xlsx") ? ExcelReaderFactory.CreateOpenXmlReader(stream) : ExcelReaderFactory.CreateBinaryReader(stream))
+                    using (var reader = fileExtension != null && fileExtension.Equals(".xlsx") ? ExcelReaderFactory.CreateOpenXmlReader(stream) : ExcelReaderFactory.CreateBinaryReader(stream))
                     {
-                        DataSet result = reader.AsDataSet();
+                        var result = reader.AsDataSet();
 
                         if (result.Tables.Count > 0)
                         {
-                            DataTable table = result.Tables[0];
-
+                            var table = result.Tables[0];
                             action?.Invoke(table, fileName, i, paths.Length);
                         }
                         else
                         {
                             UnityDebug.LogError("Excel file should have a table at least!");
-                            continue;
                         }
                     }
                 }
@@ -282,44 +280,44 @@ namespace UniSharperEditor.Data.Metadata
 
         private static string FormatCommentString(string comment)
         {
-            if (!string.IsNullOrEmpty(comment))
-            {
-                const string pattern = @"\r*\n";
-                Regex rgx = new Regex(pattern);
-                return rgx.Replace(comment, PlayerEnvironment.WindowsNewLine + "\t\t/// ");
-            }
-
-            return comment;
+            if (string.IsNullOrEmpty(comment)) 
+                return comment;
+            
+            const string pattern = @"\r*\n";
+            var regex = new Regex(pattern);
+            return regex.Replace(comment, PlayerEnvironment.WindowsNewLine + "\t\t/// ");
         }
 
         private static string GenerateEntityScriptEnumString(List<MetadataEntityRawInfo> rawInfoList)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             for (int i = 0, length = rawInfoList.Count; i < length; ++i)
             {
-                MetadataEntityRawInfo rowInfo = rawInfoList[i];
+                var rowInfo = rawInfoList[i];
 
-                if (rowInfo.PropertyType.Equals("enum"))
+                if (!rowInfo.PropertyType.Equals("enum")) 
+                    continue;
+                
+                var enumValuesString = new StringBuilder();
+                var enumValueList = rowInfo.Parameters[2] as string[];
+                if (enumValueList == null)
+                    continue;
+
+                for (var j = 0; j < enumValueList.Length; j++)
                 {
-                    StringBuilder enumValuesString = new StringBuilder();
-                    string[] enumValueList = rowInfo.Parameters[2] as string[];
+                    var enumValue = enumValueList[j];
+                    enumValuesString.Append($"\t\t\t{enumValue}");
 
-                    for (int j = 0; j < enumValueList.Length; j++)
-                    {
-                        var enumValue = enumValueList[j];
-                        enumValuesString.Append($"\t\t\t{enumValue}");
+                    if (j >= enumValueList.Length - 1)
+                        continue;
 
-                        if (j >= enumValueList.Length - 1)
-                            continue;
-
-                        enumValuesString.Append(",")
-                            .AppendWindowsNewLine();
-                    }
-
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
-                        .AppendWindowsNewLine().AppendWindowsNewLine();
+                    enumValuesString.Append(",")
+                        .AppendWindowsNewLine();
                 }
+
+                stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
+                    .AppendWindowsNewLine().AppendWindowsNewLine();
             }
 
             return stringBuilder.ToString();
@@ -327,12 +325,12 @@ namespace UniSharperEditor.Data.Metadata
 
         private static string GenerateEntityScriptPropertiesString(List<MetadataEntityRawInfo> rawInfoList)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             for (int i = 0, length = rawInfoList.Count; i < length; ++i)
             {
-                MetadataEntityRawInfo rowInfo = rawInfoList[i];
-                string propertyType = rowInfo.PropertyType;
+                var rowInfo = rawInfoList[i];
+                var propertyType = rowInfo.PropertyType;
 
                 if (propertyType.Equals("enum"))
                 {
@@ -391,14 +389,16 @@ namespace UniSharperEditor.Data.Metadata
             return scriptObject ? scriptObject.GetClass() : null;
         }
 
+        [UsedImplicitly]
         private static void InsertEntityData<T>(string dbFolderPath, string tableName, IList<MetadataEntityRawInfo> rowInfos, IList<MetadataEntity> entityDataList, int index) where T : MetadataEntity
         {
+            long dbLocalAddress = index + 2;
+            
             using (var configDbContext = new iBoxDBContext(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress))
             {
-                configDbContext.EnsureTable<MetadataEntityDBConfig>(typeof(MetadataEntityDBConfig).Name, MetadataEntityDBConfig.TablePrimaryKey);
+                configDbContext.EnsureTable<MetadataEntityDBConfig>(nameof(MetadataEntityDBConfig), MetadataEntityDBConfig.TablePrimaryKey);
                 configDbContext.Open();
                 var tablePrimaryKey = rowInfos[0].PropertyName;
-                long dbLocalAddress = index + 2;
                 var success = configDbContext.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
 
                 if (!success) return;
@@ -409,7 +409,6 @@ namespace UniSharperEditor.Data.Metadata
                     dataList[i] = (T)entityDataList[i];
                 }
 
-                bool result;
                 using (var dbContext = new iBoxDBContext(TempFolderPath, dbLocalAddress))
                 {
                     dbContext.EnsureTable<T>(typeof(T).Name, tablePrimaryKey);
@@ -417,25 +416,25 @@ namespace UniSharperEditor.Data.Metadata
 
                     foreach (var data in dataList)
                     {
-                        result = dbContext.Insert(tableName, data);
-                        
+                        var result = dbContext.Insert(tableName, data);
+
                         if (!result)
                         {
                             Debug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
                         }
                     }
                 }
-
-                // Copy metadata entity database file.
-                CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
             }
+            
+            // Copy metadata entity database file.
+            CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
         }
 
         #endregion Methods
 
         #region Structs
 
-        private struct MetadataEntityRawInfo
+        private readonly struct MetadataEntityRawInfo
         {
             #region Constructors
 

@@ -27,7 +27,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
         public override object Parse(string value, params object[] parameters)
         {
             if (string.IsNullOrEmpty(value))
-                return new string[0] { };
+                return new string[] { };
             
             var result = value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
             return result;

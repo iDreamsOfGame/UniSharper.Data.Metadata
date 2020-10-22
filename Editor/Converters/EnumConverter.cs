@@ -25,8 +25,8 @@ namespace UniSharperEditor.Data.Metadata.Converters
                 return 0;
             }
 
-            string[] enumValues = parameters[2] as string[];
-            return Array.FindIndex(enumValues, enumValue => enumValue.Equals(value));
+            var enumValues = parameters[2] as string[];
+            return Array.FindIndex(enumValues ?? Array.Empty<string>(), enumValue => enumValue.Equals(value));
         }
 
         #endregion Methods

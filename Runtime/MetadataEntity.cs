@@ -2,7 +2,7 @@
 // See LICENSE in the project root for license information.
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace UniSharper.Data.Metadata
@@ -20,13 +20,12 @@ namespace UniSharper.Data.Metadata
         /// <returns>A <see cref="System.String"/> that represents this instance.</returns>
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            StringBuilder propsSb = new StringBuilder();
-            Dictionary<string, object> map = this.GetPropertyValuePairs();
+            var sb = new StringBuilder();
+            var propsSb = new StringBuilder();
+            var map = this.GetPropertyValuePairs();
 
-            foreach (KeyValuePair<string, object> kvp in map)
+            foreach (var output in map.Select(kvp => $"{kvp.Key} = {kvp.Value}, "))
             {
-                string output = string.Format("{0} = {1}, ", kvp.Key, kvp.Value);
                 propsSb.Append(output);
             }
 

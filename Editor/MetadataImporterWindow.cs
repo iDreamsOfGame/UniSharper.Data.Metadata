@@ -5,7 +5,6 @@ using UnityEditor;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    [InitializeOnLoad]
     internal class MetadataImporterWindow : MetadataEditorWindow
     {
         #region Fields
