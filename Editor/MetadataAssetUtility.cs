@@ -68,7 +68,7 @@ namespace UniSharperEditor.Data.Metadata
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
             {
                 result = (table != null);
-                if (!result) 
+                if (!result)
                     return;
                 var entityClassName = fileName.ToTitleCase();
                 var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
@@ -142,35 +142,6 @@ namespace UniSharperEditor.Data.Metadata
             AssetDatabase.ImportAsset(assetFilePath);
         }
 
-        private static void EncryptFileRawData(string filePath)
-        {
-            var settings = MetadataAssetSettings.Load();
-            var rawData = File.ReadAllBytes(filePath);
-            var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
-            using (var writer = new BinaryWriter(new MemoryStream()))
-            {
-                // Write flag to judge if data need to decryption
-                writer.Write(dataEncryptionFlag);
-                
-                if (settings.DataEncryptionAndDecryption)
-                {
-                    // Write key and cipher data
-                    var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
-                    var cipherData = CryptoUtility.AesEncrypt(rawData, key);
-                    writer.Write(key);
-                    writer.Write(cipherData);
-                }
-                else
-                {
-                    // Write raw data
-                    writer.Write(rawData);
-                }
-
-                var bufferData = ((MemoryStream) writer.BaseStream).GetBuffer();
-                File.WriteAllBytes(filePath, bufferData);
-            }
-        }
-
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings, DataTable table, Type entityClassType, List<MetadataEntityRawInfo> rawInfoList)
         {
             var list = new List<MetadataEntity>();
@@ -217,9 +188,9 @@ namespace UniSharperEditor.Data.Metadata
                 var propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString().Trim().ToLower();
                 var comment = FormatCommentString(rows[settings.EntityPropertyCommentRowIndex][i].ToString().Trim());
 
-                if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType)) 
+                if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
                     continue;
-                
+
                 object[] arguments = null;
 
                 if (propertyType.Equals("enum"))
@@ -258,6 +229,35 @@ namespace UniSharperEditor.Data.Metadata
             FileUtil.DeleteFileOrDirectory(TempFolderPath);
         }
 
+        private static void EncryptFileRawData(string filePath)
+        {
+            var settings = MetadataAssetSettings.Load();
+            var rawData = File.ReadAllBytes(filePath);
+            var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
+            using (var writer = new BinaryWriter(new MemoryStream()))
+            {
+                // Write flag to judge if data need to decryption
+                writer.Write(dataEncryptionFlag);
+
+                if (settings.DataEncryptionAndDecryption)
+                {
+                    // Write key and cipher data
+                    var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
+                    var cipherData = CryptoUtility.AesEncrypt(rawData, key);
+                    writer.Write(key);
+                    writer.Write(cipherData);
+                }
+                else
+                {
+                    // Write raw data
+                    writer.Write(rawData);
+                }
+
+                var bufferData = ((MemoryStream)writer.BaseStream).GetBuffer();
+                File.WriteAllBytes(filePath, bufferData);
+            }
+        }
+
         private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, int, int> action)
         {
             if (string.IsNullOrEmpty(excelFilesFolderPath))
@@ -266,14 +266,10 @@ namespace UniSharperEditor.Data.Metadata
                 return;
             }
 
+            // Find *.xls and *.xlsx
             var paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
-
-            // Mac OS can not find *.xlsx files by above filter.
-            if (!PlayerEnvironment.IsWindowsEditorPlatform)
-            {
-                var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
-                paths = paths.Concat(xlsxFilePaths).ToArray();
-            }
+            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
+            paths = paths.Union(xlsxFilePaths).ToArray();
 
             if (paths.Length == 0)
             {
@@ -311,9 +307,9 @@ namespace UniSharperEditor.Data.Metadata
 
         private static string FormatCommentString(string comment)
         {
-            if (string.IsNullOrEmpty(comment)) 
+            if (string.IsNullOrEmpty(comment))
                 return comment;
-            
+
             const string pattern = @"\r*\n";
             var regex = new Regex(pattern);
             return regex.Replace(comment, PlayerEnvironment.WindowsNewLine + "\t\t/// ");
@@ -327,9 +323,9 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var rowInfo = rawInfoList[i];
 
-                if (!rowInfo.PropertyType.Equals("enum")) 
+                if (!rowInfo.PropertyType.Equals("enum"))
                     continue;
-                
+
                 var enumValuesString = new StringBuilder();
                 var enumValueList = rowInfo.Parameters[2] as string[];
                 if (enumValueList == null)
@@ -370,7 +366,7 @@ namespace UniSharperEditor.Data.Metadata
 
                     stringBuilder.AppendWindowsNewLine()
                         .AppendWindowsNewLine();
-                    
+
                     // Add enum property
                     stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumProperty, rowInfo.Comment, rowInfo.Parameters[1], rowInfo.Parameters[0], rowInfo.PropertyName);
                 }
@@ -423,8 +419,8 @@ namespace UniSharperEditor.Data.Metadata
         [UsedImplicitly]
         private static void InsertEntityData<T>(string dbFolderPath, string tableName, IList<MetadataEntityRawInfo> rowInfos, IList<MetadataEntity> entityDataList, int index) where T : MetadataEntity
         {
-            long dbLocalAddress = index + 2;
-            
+            var dbLocalAddress = index + 2L;
+
             using (var configDbContext = new iBoxDBContext(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress))
             {
                 configDbContext.EnsureTable<MetadataEntityDBConfig>(nameof(MetadataEntityDBConfig), MetadataEntityDBConfig.TablePrimaryKey);
@@ -456,7 +452,7 @@ namespace UniSharperEditor.Data.Metadata
                     }
                 }
             }
-            
+
             // Copy metadata entity database file.
             CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
         }
@@ -481,25 +477,13 @@ namespace UniSharperEditor.Data.Metadata
 
             #region Properties
 
-            public string Comment
-            {
-                get;
-            }
+            public string Comment { get; }
 
-            public object[] Parameters
-            {
-                get;
-            }
+            public object[] Parameters { get; }
 
-            public string PropertyName
-            {
-                get;
-            }
+            public string PropertyName { get; }
 
-            public string PropertyType
-            {
-                get;
-            }
+            public string PropertyType { get; }
 
             #endregion Properties
         }

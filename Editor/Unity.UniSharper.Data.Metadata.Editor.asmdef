@@ -1,0 +1,19 @@
+{
+    "name": "Unity.UniSharper.Data.Metadata.Editor",
+    "references": [
+        "Unity.UniSharper",
+        "Unity.UniSharper.Editor",
+        "Unity.UniSharper.Data.Metadata"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

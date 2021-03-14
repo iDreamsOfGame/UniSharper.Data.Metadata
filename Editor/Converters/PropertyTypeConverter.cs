@@ -3,7 +3,6 @@
 
 using System;
 using System.Globalization;
-using System.Threading;
 using UniSharper.Data.Metadata.Parsers;
 
 namespace UniSharperEditor.Data.Metadata.Converters
@@ -33,7 +32,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
             {
                 return value;
             }
-            
+
             value = value.Trim();
             return value;
         }
@@ -43,7 +42,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
             if (string.IsNullOrEmpty(value))
                 return false;
 
-            var textInfo = Thread.CurrentThread.CurrentCulture.TextInfo;
+            var textInfo = CultureInfo.InvariantCulture.TextInfo;
             value = textInfo.ToTitleCase(value.Trim());
             bool.TryParse(value, out var result);
             return result;

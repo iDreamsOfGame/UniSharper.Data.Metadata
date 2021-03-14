@@ -20,17 +20,17 @@ namespace UniSharper.Data.Metadata
         /// <returns>A <see cref="System.String"/> that represents this instance.</returns>
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            var propsSb = new StringBuilder();
+            var outputBuilder = new StringBuilder();
+            var propertiesBuilder = new StringBuilder();
             var map = this.GetPropertyValuePairs();
 
             foreach (var output in map.Select(kvp => $"{kvp.Key} = {kvp.Value}, "))
             {
-                propsSb.Append(output);
+                propertiesBuilder.Append(output);
             }
 
-            sb.AppendFormat("{0}({1})", base.ToString(), propsSb.ToString(0, propsSb.Length - 2));
-            return sb.ToString();
+            outputBuilder.AppendFormat("{0}({1})", base.ToString(), propertiesBuilder.ToString(0, propertiesBuilder.Length - 2));
+            return outputBuilder.ToString();
         }
 
         #endregion Methods

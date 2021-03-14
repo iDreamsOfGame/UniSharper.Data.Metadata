@@ -28,9 +28,8 @@ namespace UniSharperEditor.Data.Metadata.Converters
         {
             if (string.IsNullOrEmpty(value))
                 return new string[] { };
-            
-            var result = value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
-            return result;
+
+            return value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries); ;
         }
 
         #endregion Methods

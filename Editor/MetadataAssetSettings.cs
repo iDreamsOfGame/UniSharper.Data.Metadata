@@ -19,6 +19,7 @@ namespace UniSharperEditor.Data.Metadata
         #region Fields
 
         private const string MetadataFolderName = "Metadata";
+
         private const string MetadataPersistentStoresFolderName = "Data";
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
@@ -27,6 +28,10 @@ namespace UniSharperEditor.Data.Metadata
         private static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
 
         private static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
+
+        [ReadOnlyField]
+        [SerializeField]
+        private bool dataEncryptionAndDecryption;
 
         [ReadOnlyField]
         [SerializeField]
@@ -56,13 +61,22 @@ namespace UniSharperEditor.Data.Metadata
         [SerializeField]
         private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
 
-        [ReadOnlyField]
-        [SerializeField]
-        private bool dataEncryptionAndDecryption = false;
-        
         #endregion Fields
 
         #region Properties
+
+        internal bool DataEncryptionAndDecryption
+        {
+            get => dataEncryptionAndDecryption;
+            set
+            {
+                if (dataEncryptionAndDecryption.Equals(value))
+                    return;
+
+                dataEncryptionAndDecryption = value;
+                Save();
+            }
+        }
 
         internal int EntityDataStartingRowIndex
         {
@@ -117,7 +131,7 @@ namespace UniSharperEditor.Data.Metadata
             get => entityScriptNamespace;
             set
             {
-                if (string.IsNullOrEmpty(value) || entityScriptNamespace.Equals(value))
+                if (entityScriptNamespace.Equals(value))
                     return;
 
                 entityScriptNamespace = value;
@@ -130,7 +144,7 @@ namespace UniSharperEditor.Data.Metadata
             get => entityScriptsStorePath;
             set
             {
-                if (string.IsNullOrEmpty(value) || entityScriptsStorePath.Equals(value))
+                if (entityScriptsStorePath.Equals(value))
                     return;
 
                 entityScriptsStorePath = value;
@@ -147,7 +161,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             set
             {
-                if (string.IsNullOrEmpty(value) || ExcelWorkbookFilesFolderPath.Equals(value))
+                if (ExcelWorkbookFilesFolderPath.Equals(value))
                     return;
 
                 var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
@@ -160,20 +174,10 @@ namespace UniSharperEditor.Data.Metadata
             get => metadataPersistentStorePath;
             set
             {
-                if (string.IsNullOrEmpty(value) || metadataPersistentStorePath.Equals(value))
+                if (metadataPersistentStorePath.Equals(value))
                     return;
 
                 metadataPersistentStorePath = value;
-                Save();
-            }
-        }
-
-        internal bool DataEncryptionAndDecryption
-        {
-            get => dataEncryptionAndDecryption;
-            set
-            {
-                dataEncryptionAndDecryption = value;
                 Save();
             }
         }
@@ -226,10 +230,7 @@ namespace UniSharperEditor.Data.Metadata
             AssetDatabase.ImportAsset(settings.MetadataPersistentStorePath);
         }
 
-        internal static MetadataAssetSettings Load()
-        {
-            return File.Exists(SettingsAssetPath) ? AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(SettingsAssetPath) : null;
-        }
+        internal static MetadataAssetSettings Load() => File.Exists(SettingsAssetPath) ? AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(SettingsAssetPath) : null;
 
         [UsedImplicitly]
         private void OnEnable()

@@ -17,7 +17,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private const int MaxIntValue = 5;
 
-        private const string ScriptsGeneratedPrefKey = "UniSharperEditor.Data.Metadata.MetadataImporterscriptsGenerated";
+        private static readonly string ScriptsGeneratedPrefKey = $"{typeof(MetadataImporter).FullName}.MetadataImporterscriptsGenerated";
 
         private readonly MetadataAssetSettings settings;
 
@@ -34,15 +34,13 @@ namespace UniSharperEditor.Data.Metadata
 
         #region Methods
 
-        internal void DrawEditorGui()
+        internal void DrawEditorGUI()
         {
             if (settings == null)
-            {
                 return;
-            }
 
             GUILayout.BeginVertical();
-            
+
             // Import Settings
             GUILayout.Label("Import Settings", EditorStyles.boldLabel);
             GUILayout.BeginHorizontal();
@@ -51,14 +49,13 @@ namespace UniSharperEditor.Data.Metadata
 
             // Excel Sheets Folder Path
             if (!string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath) && !Directory.Exists(settings.ExcelWorkbookFilesFolderPath))
-            {
                 settings.ExcelWorkbookFilesFolderPath = string.Empty;
-            }
-            settings.ExcelWorkbookFilesFolderPath = EditorGUILayoutUtility.FolderField(new GUIContent("Excel Workbook Files Folder Path", 
+
+            settings.ExcelWorkbookFilesFolderPath = EditorGUILayoutUtility.FolderField(new GUIContent("Excel Workbook Files Folder Path",
                 "The folder path where to locate excel workbook files."), settings.ExcelWorkbookFilesFolderPath, "Excel Workbook Files Folder Path", string.Empty, string.Empty, LabelWidth);
 
             // Metadata Persistent Store Path
-            string metadataPersistentStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Metadata Persistent Store Path", 
+            var metadataPersistentStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Metadata Persistent Store Path",
                 "The folder path where to store metadata."), settings.MetadataPersistentStorePath, "Metadata Persistent Store Path", settings.MetadataPersistentStorePath, string.Empty, LabelWidth);
 
             if (EditorPath.IsAssetPath(metadataPersistentStoreAbsolutePath))
@@ -67,12 +64,11 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                UnityEditorUtility.DisplayDialog("Invalid Path", 
-                    "The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!", "OK");
+                Debug.LogError("The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!");
             }
 
             // Metadata Entity Scripts Store Path
-            string entityScriptsStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Entity Scripts Store Path", 
+            var entityScriptsStoreAbsolutePath = EditorGUILayoutUtility.FolderField(new GUIContent("Entity Scripts Store Path",
                 "The folder path where to store metadata entity scripts."), settings.EntityScriptsStorePath, "Entity Scripts Store Path", settings.EntityScriptsStorePath, string.Empty, LabelWidth);
 
             if (EditorPath.IsAssetPath(entityScriptsStoreAbsolutePath))
@@ -81,69 +77,67 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                UnityEditorUtility.DisplayDialog("Invalid Path", 
-                    "The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!", "OK");
+                Debug.LogError("The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!");
             }
 
             // Metadata Entity Namespace
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityScriptNamespace = EditorGUILayout.TextField(new GUIContent("Entity Script Namespace", 
+                settings.EntityScriptNamespace = EditorGUILayout.TextField(new GUIContent("Entity Script Namespace",
                     "The namespace of entity script."), settings.EntityScriptNamespace);
             }
 
             // Metadata Entity Property Comment Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyCommentRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Comment Definition Row Index", 
+                settings.EntityPropertyCommentRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Comment Definition Row Index",
                     "The row index of entity property comment definition."), settings.EntityPropertyCommentRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Type Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyTypeRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Type Definition Row Index", 
+                settings.EntityPropertyTypeRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Type Definition Row Index",
                     "The row index of entity property type definition."), settings.EntityPropertyTypeRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Name Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityPropertyNameRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Name Definition Row Index", 
+                settings.EntityPropertyNameRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Property Name Definition Row Index",
                     "The row index of entity property name definition."), settings.EntityPropertyNameRowIndex, 0, MaxIntValue);
             }
 
             // Metadata Entity Property Value Starting Row Index
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.EntityDataStartingRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Data Starting Row Index", 
+                settings.EntityDataStartingRowIndex = EditorGUILayout.IntSlider(new GUIContent("Entity Data Starting Row Index",
                     "The row index and after will be entity data definitions."), settings.EntityDataStartingRowIndex, 0, MaxIntValue);
             }
-            
+
             GUILayout.EndVertical();
             GUILayout.Space(10);
             GUILayout.EndHorizontal();
 
             GUILayout.Space(20);
-            
+
             // Other Settings
             GUILayout.Label("Other Settings", EditorStyles.boldLabel);
-            
+
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
             GUILayout.BeginVertical();
-            
+
             // Data encryption/decryption
             using (new EditorGUIFieldScope(LabelWidth))
             {
-                settings.DataEncryptionAndDecryption = EditorGUILayout.Toggle(new GUIContent("Data Encryption/Decryption", 
+                settings.DataEncryptionAndDecryption = EditorGUILayout.Toggle(new GUIContent("Data Encryption/Decryption",
                     "Generate database file with encryption, and load metadata with decryption."), settings.DataEncryptionAndDecryption);
             }
-            
+
             GUILayout.EndVertical();
             GUILayout.Space(10);
             GUILayout.EndHorizontal();
-            
 
             GUILayout.Space(20);
 
@@ -159,7 +153,7 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             GUILayout.Space(20);
-            
+
             GUILayout.EndVertical();
         }
 
@@ -167,9 +161,9 @@ namespace UniSharperEditor.Data.Metadata
         {
             EditorUtility.ClearConsole();
 
-            if (UnityEditorUtility.scriptCompilationFailed) 
+            if (UnityEditorUtility.scriptCompilationFailed)
                 return;
-            
+
             try
             {
                 var result = MetadataAssetUtility.GenerateMetadataEntityScripts();
@@ -197,7 +191,7 @@ namespace UniSharperEditor.Data.Metadata
             var scriptsGenerated = EditorPrefs.GetBool(ScriptsGeneratedPrefKey);
             if (!scriptsGenerated)
                 return;
-            
+
             UnityEditorUtility.ClearProgressBar();
             EditorPrefs.SetBool(ScriptsGeneratedPrefKey, false);
 

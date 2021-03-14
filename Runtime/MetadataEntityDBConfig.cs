@@ -18,14 +18,14 @@ namespace UniSharper.Data.Metadata
         public const long DatabaseLocalAddress = 1L;
 
         /// <summary>
-        /// The table primary key.
-        /// </summary>
-        public const string TablePrimaryKey = "EntityName";
-
-        /// <summary>
         /// The table name.
         /// </summary>
         public const string TableName = nameof(MetadataEntityDBConfig);
+
+        /// <summary>
+        /// The table primary key.
+        /// </summary>
+        public const string TablePrimaryKey = "EntityName";
 
         #endregion Fields
 

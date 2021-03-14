@@ -19,7 +19,9 @@ namespace UniSharperEditor.Data.Metadata
         [MenuItem("UniSharper/Metadata Management/Metadata Importer", false, 1)]
         internal static void ShowWindow()
         {
-            GetWindowWithRect<MetadataImporterWindow>(new Rect(0, 0, 850, 300), true, "Metadata Importer").Show();
+            var window = GetWindow<MetadataImporterWindow>("Metadata Importer", true);
+            window.minSize = new Vector2(840, 300);
+            window.Show();
         }
 
         protected override void DrawGUIWithSettings()
@@ -29,7 +31,7 @@ namespace UniSharperEditor.Data.Metadata
                 importer = new MetadataImporter(Settings);
             }
 
-            importer.DrawEditorGui();
+            importer.DrawEditorGUI();
         }
 
         #endregion Methods

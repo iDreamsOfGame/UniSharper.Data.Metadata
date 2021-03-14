@@ -16,10 +16,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         #region Methods
 
-        public override object Parse(string value, params object[] parameters)
-        {
-            return ParseNumber<T>(value);
-        }
+        public override object Parse(string value, params object[] parameters) => ParseNumber<T>(value);
 
         #endregion Methods
     }

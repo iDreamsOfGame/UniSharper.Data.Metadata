@@ -26,7 +26,7 @@ namespace UniSharper.Data.Metadata
         public const int EncryptionKeyLength = 16;
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
-        
+
         private iBoxDBContext configDBContext;
 
         #endregion Fields
@@ -81,7 +81,7 @@ namespace UniSharper.Data.Metadata
         public T GetEntity<T>(object key) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
-            T result = default;
+            var result = default(T);
             CreateDBContextForEntity<T>(entityType, context => result = context.SelectKey<T>(entityType.Name, key));
             return result;
         }
@@ -165,6 +165,26 @@ namespace UniSharper.Data.Metadata
             }
         }
 
+        private byte[] DecryptDatabaseFile(byte[] fileData)
+        {
+            using (var reader = new BinaryReader(new MemoryStream(fileData)))
+            {
+                var dataEncryptionFlagRawData = reader.ReadBytes(1);
+                var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
+
+                if (dataEncryptionFlag)
+                {
+                    var key = reader.ReadBytes(EncryptionKeyLength);
+                    var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
+                    return CryptoUtility.AesDecrypt(cipherData, key);
+                }
+                else
+                {
+                    return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
+                }
+            }
+        }
+
         private bool GetDBRawDataForEntity(Type entityType, out byte[] rawData)
         {
             if (!entityDBRawDataMap.ContainsKey(entityType))
@@ -193,26 +213,6 @@ namespace UniSharper.Data.Metadata
         {
             var config = GetMetadataEntityDBConfig<T>();
             return config?.PrimaryKey;
-        }
-
-        private byte[] DecryptDatabaseFile(byte[] fileData)
-        {
-            using (var reader = new BinaryReader(new MemoryStream(fileData)))
-            {
-                var dataEncryptionFlagRawData = reader.ReadBytes(1);
-                var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
-
-                if (dataEncryptionFlag)
-                {
-                    var key = reader.ReadBytes(EncryptionKeyLength);
-                    var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
-                    return CryptoUtility.AesDecrypt(cipherData, key);
-                }
-                else
-                {
-                    return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
-                }
-            }
         }
 
         #endregion Methods
