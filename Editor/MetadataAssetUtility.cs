@@ -340,11 +340,12 @@ namespace UniSharperEditor.Data.Metadata
                         continue;
 
                     enumValuesString.Append(",")
-                        .AppendWindowsNewLine();
+                        .Append(PlayerEnvironment.WindowsNewLine);
                 }
 
                 stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
-                    .AppendWindowsNewLine().AppendWindowsNewLine();
+                    .Append(PlayerEnvironment.WindowsNewLine)
+                    .Append(PlayerEnvironment.WindowsNewLine);
             }
 
             return stringBuilder.ToString();
@@ -364,8 +365,8 @@ namespace UniSharperEditor.Data.Metadata
                     // Add enum int value property
                     stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.PropertyMember, rowInfo.Comment, "int", rowInfo.PropertyName);
 
-                    stringBuilder.AppendWindowsNewLine()
-                        .AppendWindowsNewLine();
+                    stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
+                        .Append(PlayerEnvironment.WindowsNewLine);
 
                     // Add enum property
                     stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumProperty, rowInfo.Comment, rowInfo.Parameters[1], rowInfo.Parameters[0], rowInfo.PropertyName);
@@ -378,8 +379,8 @@ namespace UniSharperEditor.Data.Metadata
                 if (i >= length - 1)
                     continue;
 
-                stringBuilder.AppendWindowsNewLine()
-                    .AppendWindowsNewLine();
+                stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
+                    .Append(PlayerEnvironment.WindowsNewLine);
             }
 
             return stringBuilder.ToString();
