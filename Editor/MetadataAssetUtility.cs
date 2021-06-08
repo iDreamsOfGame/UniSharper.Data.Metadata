@@ -194,15 +194,17 @@ namespace UniSharperEditor.Data.Metadata
 
                 if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
                     continue;
-                
+
+                propertyName = propertyName.Trim().ToTitleCase();
+                propertyType = propertyType.Trim().ToLower();
                 comment = FormatCommentString(comment.Trim());
 
                 object[] arguments = null;
 
-                if (propertyType.Trim().ToLower().Equals("enum"))
+                if (propertyType.Equals("enum"))
                 {
                     arguments = new object[3];
-                    arguments[0] = propertyName.Trim().ToTitleCase();
+                    arguments[0] = propertyName;
                     arguments[1] = $"{propertyName}Enum";
 
                     var enumValues = new List<string>
