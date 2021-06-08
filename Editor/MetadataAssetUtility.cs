@@ -1,4 +1,4 @@
-﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
+// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
 // See LICENSE in the project root for license information.
 
 using System;
@@ -154,13 +154,17 @@ namespace UniSharperEditor.Data.Metadata
 
                 for (int j = 0, propertiesCount = rawInfoList.Count; j < propertiesCount; ++j)
                 {
-                    var cellValue = table.Rows[i][j].ToString().Trim();
+                    var cellValue = table.Rows[i][j].ToString();
+                    
+                    if(string.IsNullOrEmpty(cellValue))
+                        continue;
+                    
                     var rowInfo = rawInfoList[j];
                     var typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
 
                     if (typeParser != null)
                     {
-                        var value = typeParser.Parse(cellValue, rowInfo.Parameters);
+                        var value = typeParser.Parse(cellValue.Trim(), rowInfo.Parameters);
                         entityData.SetObjectPropertyValue(rowInfo.PropertyName, value);
                     }
                     else
@@ -184,19 +188,21 @@ namespace UniSharperEditor.Data.Metadata
 
             for (var i = 0; i < columnCount; i++)
             {
-                var propertyName = rows[settings.EntityPropertyNameRowIndex][i].ToString().Trim().ToTitleCase();
-                var propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString().Trim().ToLower();
-                var comment = FormatCommentString(rows[settings.EntityPropertyCommentRowIndex][i].ToString().Trim());
+                var propertyName = rows[settings.EntityPropertyNameRowIndex][i].ToString();
+                var propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString();
+                var comment = rows[settings.EntityPropertyCommentRowIndex][i].ToString();
 
                 if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
                     continue;
+                
+                comment = FormatCommentString(comment.Trim());
 
                 object[] arguments = null;
 
-                if (propertyType.Equals("enum"))
+                if (propertyType.Trim().ToLower().Equals("enum"))
                 {
                     arguments = new object[3];
-                    arguments[0] = propertyName;
+                    arguments[0] = propertyName.Trim().ToTitleCase();
                     arguments[1] = $"{propertyName}Enum";
 
                     var enumValues = new List<string>
@@ -217,7 +223,7 @@ namespace UniSharperEditor.Data.Metadata
                     arguments[2] = enumValues.ToArray();
                     propertyName = $"{propertyName}IntValue";
                 }
-
+                
                 list.Add(new MetadataEntityRawInfo(comment, propertyType, propertyName, arguments));
             }
 
@@ -339,13 +345,11 @@ namespace UniSharperEditor.Data.Metadata
                     if (j >= enumValueList.Length - 1)
                         continue;
 
-                    enumValuesString.Append(",")
-                        .Append(PlayerEnvironment.WindowsNewLine);
+                    enumValuesString.Append(",").Append(PlayerEnvironment.WindowsNewLine);
                 }
 
                 stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
-                    .Append(PlayerEnvironment.WindowsNewLine)
-                    .Append(PlayerEnvironment.WindowsNewLine);
+                    .Append(PlayerEnvironment.WindowsNewLine).Append(PlayerEnvironment.WindowsNewLine);
             }
 
             return stringBuilder.ToString();
