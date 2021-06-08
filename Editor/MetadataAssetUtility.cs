@@ -155,10 +155,6 @@ namespace UniSharperEditor.Data.Metadata
                 for (int j = 0, propertiesCount = rawInfoList.Count; j < propertiesCount; ++j)
                 {
                     var cellValue = table.Rows[i][j].ToString();
-                    
-                    if(string.IsNullOrEmpty(cellValue))
-                        continue;
-                    
                     var rowInfo = rawInfoList[j];
                     var typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
 
