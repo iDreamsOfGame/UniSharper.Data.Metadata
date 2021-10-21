@@ -57,7 +57,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
             if (!string.IsNullOrEmpty(value))
             {
-                targetType.InvokeStaticMethod("TryParse", new Type[4]
+                targetType.InvokeStaticMethod("TryParse", new[]
                 {
                     typeof(string), typeof(NumberStyles), typeof(CultureInfo), targetType.MakeByRefType()
                 }, ref args);

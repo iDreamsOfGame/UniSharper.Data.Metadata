@@ -24,13 +24,8 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         #region Methods
 
-        public override object Parse(string value, params object[] parameters)
-        {
-            if (string.IsNullOrEmpty(value))
-                return new string[] { };
-
-            return value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries); ;
-        }
+        public override object Parse(string value, params object[] parameters) 
+            => string.IsNullOrEmpty(value) ? new string[] { } : value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
 
         #endregion Methods
     }

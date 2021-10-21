@@ -17,7 +17,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private const int MaxIntValue = 5;
 
-        private static readonly string ScriptsGeneratedPrefKey = $"{typeof(MetadataImporter).FullName}.MetadataImporterscriptsGenerated";
+        private static readonly string ScriptsGeneratedPrefKey = $"{typeof(MetadataImporter).FullName}.MetadataImporterScriptsGenerated";
 
         private readonly MetadataAssetSettings settings;
 

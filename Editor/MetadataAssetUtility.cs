@@ -19,6 +19,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
 using UnityEditorUtility = UnityEditor.EditorUtility;
+// ReSharper disable RedundantArgumentDefaultValue
 
 namespace UniSharperEditor.Data.Metadata
 {
@@ -27,6 +28,8 @@ namespace UniSharperEditor.Data.Metadata
         #region Fields
 
         private const string UnityPackageName = "io.github.idreamsofgame.unisharper.data.metadata";
+
+        private const string ExcelFileExtension = ".xlsx";
 
         private static string tempFolderPath;
 
@@ -161,7 +164,7 @@ namespace UniSharperEditor.Data.Metadata
                     if (typeParser != null)
                     {
                         var value = typeParser.Parse(cellValue.Trim(), rowInfo.Parameters);
-                        entityData.SetObjectPropertyValue(rowInfo.PropertyName, value);
+                        entityData.SetPropertyValue(rowInfo.PropertyName, value);
                     }
                     else
                     {
@@ -238,28 +241,26 @@ namespace UniSharperEditor.Data.Metadata
             var settings = MetadataAssetSettings.Load();
             var rawData = File.ReadAllBytes(filePath);
             var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
-            using (var writer = new BinaryWriter(new MemoryStream()))
+            using var writer = new BinaryWriter(new MemoryStream());
+            // Write flag to judge if data need to decryption
+            writer.Write(dataEncryptionFlag);
+
+            if (settings.DataEncryptionAndDecryption)
             {
-                // Write flag to judge if data need to decryption
-                writer.Write(dataEncryptionFlag);
-
-                if (settings.DataEncryptionAndDecryption)
-                {
-                    // Write key and cipher data
-                    var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
-                    var cipherData = CryptoUtility.AesEncrypt(rawData, key);
-                    writer.Write(key);
-                    writer.Write(cipherData);
-                }
-                else
-                {
-                    // Write raw data
-                    writer.Write(rawData);
-                }
-
-                var bufferData = ((MemoryStream)writer.BaseStream).GetBuffer();
-                File.WriteAllBytes(filePath, bufferData);
+                // Write key and cipher data
+                var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
+                var cipherData = CryptoUtility.AesEncrypt(rawData, key);
+                writer.Write(key);
+                writer.Write(cipherData);
             }
+            else
+            {
+                // Write raw data
+                writer.Write(rawData);
+            }
+
+            var bufferData = ((MemoryStream)writer.BaseStream).GetBuffer();
+            File.WriteAllBytes(filePath, bufferData);
         }
 
         private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, int, int> action)
@@ -289,22 +290,18 @@ namespace UniSharperEditor.Data.Metadata
                 var fileName = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
 
-                using (var stream = File.Open(path, FileMode.Open, FileAccess.Read))
-                {
-                    using (var reader = fileExtension != null && fileExtension.Equals(".xlsx") ? ExcelReaderFactory.CreateOpenXmlReader(stream) : ExcelReaderFactory.CreateBinaryReader(stream))
-                    {
-                        var result = reader.AsDataSet();
+                using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var reader = fileExtension is ExcelFileExtension ? ExcelReaderFactory.CreateOpenXmlReader(stream) : ExcelReaderFactory.CreateBinaryReader(stream);
+                var result = reader.AsDataSet();
 
-                        if (result.Tables.Count > 0)
-                        {
-                            var table = result.Tables[0];
-                            action?.Invoke(table, fileName, i, paths.Length);
-                        }
-                        else
-                        {
-                            UnityDebug.LogError("Excel file should have a table at least!");
-                        }
-                    }
+                if (result.Tables.Count > 0)
+                {
+                    var table = result.Tables[0];
+                    action?.Invoke(table, fileName, i, paths.Length);
+                }
+                else
+                {
+                    UnityDebug.LogError("Excel file should have a table at least!");
                 }
             }
         }

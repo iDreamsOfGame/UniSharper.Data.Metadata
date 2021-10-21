@@ -82,7 +82,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
         private static IPropertyTypeConverter CreateTypeConverter(string typeString, string propertyName)
         {
             var type = GetConverterType(typeString);
-            return (IPropertyTypeConverter)type?.InvokeConstructor(new object[1] { propertyName });
+            return (IPropertyTypeConverter)type?.InvokeConstructor(new object[] { propertyName });
         }
 
         private static Type GetConverterType(string typeString)

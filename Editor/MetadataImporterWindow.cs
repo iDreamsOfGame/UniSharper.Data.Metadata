@@ -19,18 +19,20 @@ namespace UniSharperEditor.Data.Metadata
         [MenuItem("UniSharper/Metadata Management/Metadata Importer", false, 1)]
         internal static void ShowWindow()
         {
-            var window = GetWindow<MetadataImporterWindow>("Metadata Importer", true);
-            window.minSize = new Vector2(840, 300);
+            const float width = 840;
+            const float height = 300;
+            const string title = "Metadata Importer";
+            var position = new Vector2((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f);
+            var size = new Vector2(width, height);
+            var rect = new Rect(position, size);
+            var window = GetWindowWithRect<MetadataImporterWindow>(rect, true, title);
+            window.minSize = window.maxSize = size;
             window.Show();
         }
 
         protected override void DrawGUIWithSettings()
         {
-            if (importer == null)
-            {
-                importer = new MetadataImporter(Settings);
-            }
-
+            importer ??= new MetadataImporter(Settings);
             importer.DrawEditorGUI();
         }
 
