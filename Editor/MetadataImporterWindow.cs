@@ -8,13 +8,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class MetadataImporterWindow : MetadataEditorWindow
     {
-        #region Fields
-
         private MetadataImporter importer;
-
-        #endregion Fields
-
-        #region Methods
 
         [MenuItem("UniSharper/Metadata Management/Metadata Importer", false, 1)]
         internal static void ShowWindow()
@@ -35,7 +29,5 @@ namespace UniSharperEditor.Data.Metadata
             importer ??= new MetadataImporter(Settings);
             importer.DrawEditorGUI();
         }
-
-        #endregion Methods
     }
 }

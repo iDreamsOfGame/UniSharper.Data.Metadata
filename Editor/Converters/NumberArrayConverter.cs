@@ -5,16 +5,10 @@ namespace UniSharperEditor.Data.Metadata.Converters
 {
     internal class NumberArrayConverter<T> : ArrayConverter
     {
-        #region Constructors
-
         internal NumberArrayConverter(string propertyName)
             : base(propertyName)
         {
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         public override object Parse(string value, params object[] parameters)
         {
@@ -28,7 +22,5 @@ namespace UniSharperEditor.Data.Metadata.Converters
             }
             return result;
         }
-
-        #endregion Methods
     }
 }

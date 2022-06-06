@@ -5,20 +5,14 @@ namespace UniSharperEditor.Data.Metadata.Converters
 {
     internal class BooleanArrayConverter : ArrayConverter
     {
-        #region Constructors
-
         internal BooleanArrayConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        #endregion Constructors
-
-        #region Methods
-
         public override object Parse(string value, params object[] parameters)
         {
-            if (!(base.Parse(value) is string[] array))
+            if (base.Parse(value) is not string[] array)
                 return null;
 
             var result = new bool[array.Length];
@@ -28,7 +22,5 @@ namespace UniSharperEditor.Data.Metadata.Converters
             }
             return result;
         }
-
-        #endregion Methods
     }
 }

@@ -12,14 +12,12 @@ namespace UniSharperEditor.Data.Metadata.Converters
     /// </summary>
     internal static class PropertyTypeConverterFactory
     {
-        #region Fields
-
-        private static readonly Dictionary<Type, IPropertyTypeConverter> ConvertersCache = new Dictionary<Type, IPropertyTypeConverter>();
+        private static readonly Dictionary<Type, IPropertyTypeConverter> ConvertersCache = new();
 
         /// <summary>
         /// The map of Type parsers.
         /// </summary>
-        private static readonly Dictionary<string, Type> ConvertersMap = new Dictionary<string, Type>()
+        private static readonly Dictionary<string, Type> ConvertersMap = new()
         {
             { "string", typeof(PropertyTypeConverter) },
             { "bool", typeof(BooleanConverter) },
@@ -49,10 +47,6 @@ namespace UniSharperEditor.Data.Metadata.Converters
             { "short[]", typeof(NumberArrayConverter<short>) },
             { "ushort[]", typeof(NumberArrayConverter<ushort>) }
         };
-
-        #endregion Fields
-
-        #region Methods
 
         internal static IPropertyTypeConverter GetTypeConverter(string typeString, string propertyName)
         {
@@ -85,16 +79,7 @@ namespace UniSharperEditor.Data.Metadata.Converters
             return (IPropertyTypeConverter)type?.InvokeConstructor(new object[] { propertyName });
         }
 
-        private static Type GetConverterType(string typeString)
-        {
-            if (!string.IsNullOrEmpty(typeString) && ConvertersMap.ContainsKey(typeString))
-            {
-                return ConvertersMap[typeString];
-            }
-
-            return null;
-        }
-
-        #endregion Methods
+        private static Type GetConverterType(string typeString) => 
+            !string.IsNullOrEmpty(typeString) && ConvertersMap.ContainsKey(typeString) ? ConvertersMap[typeString] : null;
     }
 }

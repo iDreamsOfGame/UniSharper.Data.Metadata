@@ -7,26 +7,14 @@ namespace UniSharperEditor.Data.Metadata.Converters
 {
     internal class ArrayConverter : PropertyTypeConverter
     {
-        #region Fields
-
-        private static readonly char[] ArrayElementSeparator = new char[] { '|' };
-
-        #endregion Fields
-
-        #region Constructors
+        private static readonly char[] ArrayElementSeparator = { '|' };
 
         internal ArrayConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        #endregion Constructors
-
-        #region Methods
-
-        public override object Parse(string value, params object[] parameters) 
-            => string.IsNullOrEmpty(value) ? new string[] { } : value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
-
-        #endregion Methods
+        public override object Parse(string value, params object[] parameters) => 
+            string.IsNullOrEmpty(value) ? new string[] { } : value.Split(ArrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
     }
 }

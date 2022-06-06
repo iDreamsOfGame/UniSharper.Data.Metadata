@@ -9,22 +9,12 @@ namespace UniSharperEditor.Data.Metadata.Converters
 {
     internal class PropertyTypeConverter : IPropertyTypeConverter
     {
-        #region Constructors
-
         internal PropertyTypeConverter(string propertyName)
         {
             PropertyName = propertyName;
         }
 
-        #endregion Constructors
-
-        #region Properties
-
         protected string PropertyName { get; }
-
-        #endregion Properties
-
-        #region Methods
 
         public virtual object Parse(string value, params object[] parameters)
         {
@@ -65,7 +55,5 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
             return (T)args[3];
         }
-
-        #endregion Methods
     }
 }

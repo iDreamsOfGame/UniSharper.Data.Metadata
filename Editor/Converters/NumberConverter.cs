@@ -5,19 +5,11 @@ namespace UniSharperEditor.Data.Metadata.Converters
 {
     internal class NumberConverter<T> : PropertyTypeConverter
     {
-        #region Constructors
-
         internal NumberConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        #endregion Constructors
-
-        #region Methods
-
         public override object Parse(string value, params object[] parameters) => ParseNumber<T>(value);
-
-        #endregion Methods
     }
 }

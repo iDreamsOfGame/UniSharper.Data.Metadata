@@ -10,8 +10,6 @@ namespace UniSharper.Data.Metadata
     /// </summary>
     public class MetadataEntityDBConfig
     {
-        #region Fields
-
         /// <summary>
         /// The database local address.
         /// </summary>
@@ -26,10 +24,14 @@ namespace UniSharper.Data.Metadata
         /// The table primary key.
         /// </summary>
         public const string TablePrimaryKey = "EntityName";
-
-        #endregion Fields
-
-        #region Constructors
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetadataEntityDBConfig"/> class.
+        /// </summary>
+        [Preserve]
+        public MetadataEntityDBConfig()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataEntityDBConfig"/> class.
@@ -44,18 +46,6 @@ namespace UniSharper.Data.Metadata
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MetadataEntityDBConfig"/> class.
-        /// </summary>
-        [Preserve]
-        public MetadataEntityDBConfig()
-        {
-        }
-
-        #endregion Constructors
-
-        #region Properties
-
-        /// <summary>
         /// Gets or sets the name of the entity.
         /// </summary>
         /// <value>The name of the entity.</value>
@@ -66,7 +56,5 @@ namespace UniSharper.Data.Metadata
         /// </summary>
         /// <value>The name of the primary key.</value>
         public string PrimaryKey { get; set; }
-
-        #endregion Properties
     }
 }

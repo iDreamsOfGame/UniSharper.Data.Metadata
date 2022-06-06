@@ -18,8 +18,6 @@ namespace UniSharper.Data.Metadata
     /// <seealso cref="MetadataManager"/>
     public sealed class MetadataManager : Singleton<MetadataManager>
     {
-        #region Fields
-
         /// <summary>
         /// Key length of encryption.
         /// </summary>
@@ -29,19 +27,11 @@ namespace UniSharper.Data.Metadata
 
         private iBoxDBContext configDBContext;
 
-        #endregion Fields
-
-        #region Constructors
-
         [Preserve]
         private MetadataManager()
         {
             entityDBRawDataMap = new Dictionary<Type, byte[]>();
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Gets all entities of the entity type.
@@ -210,7 +200,5 @@ namespace UniSharper.Data.Metadata
             var config = GetMetadataEntityDBConfig<T>();
             return config?.PrimaryKey;
         }
-
-        #endregion Methods
     }
 }

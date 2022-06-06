@@ -8,8 +8,6 @@ namespace UniSharper.Data.Metadata.Parsers
     /// </summary>
     internal interface IPropertyTypeConverter
     {
-        #region Methods
-
         /// <summary>
         /// Parses the specified value.
         /// </summary>
@@ -17,7 +15,5 @@ namespace UniSharper.Data.Metadata.Parsers
         /// <param name="parameters">The parameters.</param>
         /// <returns>The parsed data.</returns>
         object Parse(string value, params object[] parameters);
-
-        #endregion Methods
     }
 }

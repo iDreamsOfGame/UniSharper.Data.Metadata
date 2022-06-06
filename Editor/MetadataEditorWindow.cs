@@ -8,13 +8,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal abstract class MetadataEditorWindow : EditorWindow
     {
-        #region Fields
-
         private MetadataAssetSettings settings;
-
-        #endregion Fields
-
-        #region Properties
 
         protected MetadataAssetSettings Settings
         {
@@ -28,10 +22,6 @@ namespace UniSharperEditor.Data.Metadata
                 return settings;
             }
         }
-
-        #endregion Properties
-
-        #region Methods
 
         protected virtual void DrawGUIWithoutSettings()
         {
@@ -64,7 +54,5 @@ namespace UniSharperEditor.Data.Metadata
                 DrawGUIWithSettings();
             }
         }
-
-        #endregion Methods
     }
 }

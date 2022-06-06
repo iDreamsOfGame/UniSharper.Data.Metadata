@@ -16,8 +16,6 @@ namespace UniSharperEditor.Data.Metadata
     /// <seealso cref="UniSharperEditor.SettingsScriptableObject"/>
     public class MetadataAssetSettings : SettingsScriptableObject
     {
-        #region Fields
-
         private const string MetadataFolderName = "Metadata";
 
         private const string MetadataPersistentStoresFolderName = "Data";
@@ -60,10 +58,6 @@ namespace UniSharperEditor.Data.Metadata
         [ReadOnlyField]
         [SerializeField]
         private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
-
-        #endregion Fields
-
-        #region Properties
 
         internal bool DataEncryptionAndDecryption
         {
@@ -182,10 +176,6 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        #endregion Properties
-
-        #region Methods
-
         internal static MetadataAssetSettings Create()
         {
             MetadataAssetSettings settings;
@@ -240,7 +230,5 @@ namespace UniSharperEditor.Data.Metadata
                 entityScriptNamespace = $"{(string.IsNullOrEmpty(PlayerSettings.productName) ? "Project" : PlayerSettings.productName)}.Metadata.Entities";
             }
         }
-
-        #endregion Methods
     }
 }

@@ -12,8 +12,6 @@ namespace UniSharper.Data.Metadata
     /// </summary>
     public abstract class MetadataEntity
     {
-        #region Methods
-
         /// <summary>
         /// Returns a <see cref="System.String"/> that represents this instance.
         /// </summary>
@@ -32,7 +30,5 @@ namespace UniSharper.Data.Metadata
             outputBuilder.AppendFormat("{0}({1})", base.ToString(), propertiesBuilder.ToString(0, propertiesBuilder.Length - 2));
             return outputBuilder.ToString();
         }
-
-        #endregion Methods
     }
 }

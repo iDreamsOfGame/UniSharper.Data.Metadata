@@ -11,8 +11,6 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class MetadataImporter
     {
-        #region Fields
-
         private const float LabelWidth = 275f;
 
         private const int MaxIntValue = 5;
@@ -21,18 +19,10 @@ namespace UniSharperEditor.Data.Metadata
 
         private readonly MetadataAssetSettings settings;
 
-        #endregion Fields
-
-        #region Constructors
-
         internal MetadataImporter(MetadataAssetSettings settings)
         {
             this.settings = settings;
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         internal void DrawEditorGUI()
         {
@@ -223,7 +213,5 @@ namespace UniSharperEditor.Data.Metadata
                     UnityEditorUtility.ClearProgressBar();
             }
         }
-
-        #endregion Methods
     }
 }

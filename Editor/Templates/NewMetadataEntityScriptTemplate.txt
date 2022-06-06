@@ -19,7 +19,6 @@ namespace #NAMESPACE#
 		/// </summary>
 		[Preserve]
 		public #SCRIPT_NAME#()
-			: base()
 		{
 		}
 	}

@@ -25,17 +25,11 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal static class MetadataAssetUtility
     {
-        #region Fields
-
         private const string UnityPackageName = "io.github.idreamsofgame.unisharper.data.metadata";
 
         private const string ExcelFileExtension = ".xlsx";
 
         private static string tempFolderPath;
-
-        #endregion Fields
-
-        #region Properties
 
         private static string TempFolderPath
         {
@@ -55,10 +49,6 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        #endregion Properties
-
-        #region Methods
-
         internal static bool CreateMetadataDatabaseFiles()
         {
             var result = false;
@@ -70,9 +60,9 @@ namespace UniSharperEditor.Data.Metadata
 
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
             {
-                result = (table != null);
-                if (!result)
+                if (table == null)
                     return;
+                
                 var entityClassName = fileName.ToTitleCase();
                 var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
                 var progress = (float)(index + 1) / length;
@@ -119,15 +109,14 @@ namespace UniSharperEditor.Data.Metadata
             {
                 ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
                 {
-                    result = (table != null);
-                    if (result)
-                    {
-                        var info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
-                        var progress = (float)(index + 1) / length;
-                        UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
-                        result = GenerateMetadataEntityScript(settings, fileName, rawInfoList);
-                    }
+                    if (table == null) 
+                        return;
+                    
+                    var info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
+                    var progress = (float)(index + 1) / length;
+                    UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                    var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
+                    result = GenerateMetadataEntityScript(settings, fileName, rawInfoList);
                 });
             }
 
@@ -421,10 +410,11 @@ namespace UniSharperEditor.Data.Metadata
         private static void InsertEntityData<T>(string dbFolderPath, string tableName, IList<MetadataEntityRawInfo> rowInfos, IList<MetadataEntity> entityDataList, int index) where T : MetadataEntity
         {
             var dbLocalAddress = index + 2L;
+            const string dbName = nameof(MetadataEntityDBConfig);
 
             using (var configDbContext = new iBoxDBContext(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress))
             {
-                configDbContext.EnsureTable<MetadataEntityDBConfig>(nameof(MetadataEntityDBConfig), MetadataEntityDBConfig.TablePrimaryKey);
+                configDbContext.EnsureTable<MetadataEntityDBConfig>(dbName, MetadataEntityDBConfig.TablePrimaryKey);
                 configDbContext.Open();
                 var tablePrimaryKey = rowInfos[0].PropertyName;
                 var success = configDbContext.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
@@ -458,14 +448,8 @@ namespace UniSharperEditor.Data.Metadata
             CopyDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
         }
 
-        #endregion Methods
-
-        #region Structs
-
         private readonly struct MetadataEntityRawInfo
         {
-            #region Constructors
-
             public MetadataEntityRawInfo(string comment, string propertyType, string propertyName, params object[] parameters)
             {
                 Comment = comment;
@@ -474,10 +458,6 @@ namespace UniSharperEditor.Data.Metadata
                 Parameters = parameters;
             }
 
-            #endregion Constructors
-
-            #region Properties
-
             public string Comment { get; }
 
             public object[] Parameters { get; }
@@ -485,10 +465,6 @@ namespace UniSharperEditor.Data.Metadata
             public string PropertyName { get; }
 
             public string PropertyType { get; }
-
-            #endregion Properties
         }
-
-        #endregion Structs
     }
 }
