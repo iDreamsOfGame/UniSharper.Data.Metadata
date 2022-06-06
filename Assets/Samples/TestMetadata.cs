@@ -15,29 +15,17 @@ namespace UniSharper.Data.Metadata.Samples
 		/// <summary>
 		/// ID
 		/// </summary>
-		public long ID
-		{
-			get;
-			set;
-		}
+		public long ID { get; set; }
 
 		/// <summary>
 		/// 名称
 		/// </summary>
-		public string Name
-		{
-			get;
-			set;
-		}
+		public string Name { get; set; }
 
 		/// <summary>
 		/// 年龄
 		/// </summary>
-		public int Age
-		{
-			get;
-			set;
-		}
+		public int Age { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TestMetadata"/> class.
