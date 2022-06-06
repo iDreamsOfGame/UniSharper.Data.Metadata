@@ -6,20 +6,10 @@ namespace UniSharper.Data.Metadata.Samples
 {
     public class MetadataSample : MonoBehaviour
     {
-        #region Fields
-
         [SerializeField]
-        private Canvas canvas = null;
-
-        #endregion Fields
-
-        #region Properties
+        private Canvas canvas;
 
         private MetadataManager MetadataManager => MetadataManager.Instance;
-
-        #endregion Properties
-
-        #region Methods
 
         private void AddText(string text)
         {
@@ -40,7 +30,7 @@ namespace UniSharper.Data.Metadata.Samples
             var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/MetadataEntityDBConfig.db.bytes");
             MetadataManager.Initialize(binAsset.bytes);
 
-            // Load DB data of EmapleMetadata
+            // Load DB data of ExampleMetadata
             binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/SampleMetadata.db.bytes");
             MetadataManager.LoadEntityDatabase<SampleMetadata>(binAsset.bytes);
 
@@ -64,14 +54,12 @@ namespace UniSharper.Data.Metadata.Samples
             var testMetadata = MetadataManager.GetEntity<TestMetadata>(2L);
             AddText(testMetadata.Name);
 
-            var exampleMetadatas = MetadataManager.GetAllEntities<SampleMetadata>();
-            AddText(string.Format("The count of entity 'ExampleMetadata': {0}", exampleMetadatas.Length));
+            var exampleMetadataCollection = MetadataManager.GetAllEntities<SampleMetadata>();
+            AddText($"The count of entity 'ExampleMetadata': {exampleMetadataCollection.Length}");
 
             var testMetadataList = MetadataManager.GetEntities<TestMetadata>("Age", 30);
 
             Debug.Log(testMetadataList.Length);
         }
-
-        #endregion Methods
     }
 }

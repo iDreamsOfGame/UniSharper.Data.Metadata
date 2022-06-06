@@ -186,7 +186,6 @@ namespace UniSharper.Data.Metadata.Samples
 		/// </summary>
 		[Preserve]
 		public SampleMetadata()
-			: base()
 		{
 		}
 	}

@@ -32,7 +32,6 @@ namespace UniSharper.Data.Metadata.Samples
 		/// </summary>
 		[Preserve]
 		public TestMetadata()
-			: base()
 		{
 		}
 	}
