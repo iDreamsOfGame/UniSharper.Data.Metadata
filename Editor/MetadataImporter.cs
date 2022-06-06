@@ -175,13 +175,13 @@ namespace UniSharperEditor.Data.Metadata
                 }
                 else
                 {
-                    UnityEditorUtility.DisplayDialog("Error", "Failed to generate metadata entity scripts!", "OK");
+                    if (UnityEditorUtility.DisplayDialog("Error", "Failed to generate metadata entity scripts!", "OK"))
+                        UnityEditorUtility.ClearProgressBar();
                 }
             }
-            catch (System.Exception)
+            catch (System.Exception e)
             {
-                UnityEditorUtility.ClearProgressBar();
-                throw;
+                Debug.LogException(e);
             }
         }
 
@@ -203,22 +203,24 @@ namespace UniSharperEditor.Data.Metadata
 
                     if (result)
                     {
-                        UnityEditorUtility.DisplayDialog("Success", "Build success!", "OK");
+                        if (UnityEditorUtility.DisplayDialog("Success", "Build success!", "OK"))
+                            UnityEditorUtility.ClearProgressBar();
                     }
                     else
                     {
-                        UnityEditorUtility.DisplayDialog("Error", "Failed to create metadata database files!", "OK");
+                        if (UnityEditorUtility.DisplayDialog("Error", "Failed to create metadata database files!", "OK"))
+                            UnityEditorUtility.ClearProgressBar();
                     }
                 }
-                catch (System.Exception)
+                catch (System.Exception e)
                 {
-                    UnityEditorUtility.ClearProgressBar();
-                    throw;
+                    Debug.LogException(e);
                 }
             }
             else
             {
-                UnityEditorUtility.DisplayDialog("Error", "Failed to compile metadata entity scripts!", "OK");
+                if (UnityEditorUtility.DisplayDialog("Error", "Failed to compile metadata entity scripts!", "OK"))
+                    UnityEditorUtility.ClearProgressBar();
             }
         }
 

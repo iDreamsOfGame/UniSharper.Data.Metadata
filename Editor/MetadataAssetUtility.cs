@@ -112,7 +112,8 @@ namespace UniSharperEditor.Data.Metadata
 
             if (string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath))
             {
-                UnityEditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK");
+                if (UnityEditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK"))
+                    UnityEditorUtility.ClearProgressBar();
             }
             else
             {
@@ -343,7 +344,7 @@ namespace UniSharperEditor.Data.Metadata
                     enumValuesString.Append(",").Append(PlayerEnvironment.WindowsNewLine);
                 }
 
-                stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
+                stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
                     .Append(PlayerEnvironment.WindowsNewLine).Append(PlayerEnvironment.WindowsNewLine);
             }
 
@@ -362,17 +363,17 @@ namespace UniSharperEditor.Data.Metadata
                 if (propertyType.Equals("enum"))
                 {
                     // Add enum int value property
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.PropertyMember, rowInfo.Comment, "int", rowInfo.PropertyName);
+                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rowInfo.Comment, "int", rowInfo.PropertyName);
 
                     stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
                         .Append(PlayerEnvironment.WindowsNewLine);
 
                     // Add enum property
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.EnumProperty, rowInfo.Comment, rowInfo.Parameters[1], rowInfo.Parameters[0], rowInfo.PropertyName);
+                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumProperty, rowInfo.Comment, rowInfo.Parameters[1], rowInfo.Parameters[0], rowInfo.PropertyName);
                 }
                 else
                 {
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemeberFormatString.PropertyMember, rowInfo.Comment, propertyType, rowInfo.PropertyName);
+                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rowInfo.Comment, propertyType, rowInfo.PropertyName);
                 }
 
                 if (i >= length - 1)
