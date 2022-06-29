@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "com.github.exceldatareader.exceldatareader": "3.6.0",
-    "com.unity.ide.rider": "3.0.14",
+    "com.unity.ide.rider": "3.0.15",
     "com.unity.test-framework": "1.1.31",
     "com.unity.ugui": "1.0.0",
-    "io.github.idreamsofgame.resharp.data.iboxdb": "1.0.0",
+    "io.github.idreamsofgame.resharp.data.iboxdb": "2.0.1",
     "io.github.idreamsofgame.unisharper.core": "1.11.2",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
