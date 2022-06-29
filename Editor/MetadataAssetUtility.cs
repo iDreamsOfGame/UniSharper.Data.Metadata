@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ExcelDataReader;
 using JetBrains.Annotations;
-using ReSharp.Data.iBoxDB;
+using ReSharp.Data.IBoxDB;
 using ReSharp.Security.Cryptography;
 using UniSharper;
 using UniSharper.Data.Metadata;
@@ -138,7 +138,6 @@ namespace UniSharperEditor.Data.Metadata
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings, DataTable table, Type entityClassType, List<MetadataEntityRawInfo> rawInfoList)
         {
             var list = new List<MetadataEntity>();
-
             var rowCount = table.Rows.Count;
 
             for (var i = settings.EntityDataStartingRowIndex; i < rowCount; ++i)
@@ -196,11 +195,7 @@ namespace UniSharperEditor.Data.Metadata
                     arguments[0] = propertyName;
                     arguments[1] = $"{propertyName}Enum";
 
-                    var enumValues = new List<string>
-                    {
-                        "None"
-                    };
-
+                    var enumValues = new List<string> { "None" };
                     for (var j = settings.EntityDataStartingRowIndex; j < rows.Count; j++)
                     {
                         var enumValue = rows[j][i].ToString().Trim();
@@ -318,8 +313,7 @@ namespace UniSharperEditor.Data.Metadata
                     continue;
 
                 var enumValuesString = new StringBuilder();
-                var enumValueList = rowInfo.Parameters[2] as string[];
-                if (enumValueList == null)
+                if (rowInfo.Parameters[2] is not string[] enumValueList)
                     continue;
 
                 for (var j = 0; j < enumValueList.Length; j++)
@@ -412,35 +406,34 @@ namespace UniSharperEditor.Data.Metadata
             var dbLocalAddress = index + 2L;
             const string dbName = nameof(MetadataEntityDBConfig);
 
-            using (var configDbContext = new iBoxDBContext(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress))
+            using var configDBAdapter = new IBoxDBAdapter(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
+            configDBAdapter.EnsureTable<MetadataEntityDBConfig>(dbName, MetadataEntityDBConfig.TablePrimaryKey);
+            configDBAdapter.Open();
+            var tablePrimaryKey = rowInfos[0].PropertyName;
+            var success = configDBAdapter.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
+            // var success = configDBAdapter.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
+
+            if (!success)
+                return;
+            
+            var dataList = new T[entityDataList.Count];
+
+            for (var i = 0; i < entityDataList.Count; i++)
             {
-                configDbContext.EnsureTable<MetadataEntityDBConfig>(dbName, MetadataEntityDBConfig.TablePrimaryKey);
-                configDbContext.Open();
-                var tablePrimaryKey = rowInfos[0].PropertyName;
-                var success = configDbContext.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
+                dataList[i] = (T)entityDataList[i];
+            }
 
-                if (!success) return;
-                var dataList = new T[entityDataList.Count];
+            using var dataDBAdapter = new IBoxDBAdapter(TempFolderPath, dbLocalAddress);
+            dataDBAdapter.EnsureTable<T>(typeof(T).Name, tablePrimaryKey);
+            dataDBAdapter.Open();
 
-                for (var i = 0; i < entityDataList.Count; i++)
+            foreach (var data in dataList)
+            {
+                var result = dataDBAdapter.Insert(tableName, data);
+
+                if (!result)
                 {
-                    dataList[i] = (T)entityDataList[i];
-                }
-
-                using (var dbContext = new iBoxDBContext(TempFolderPath, dbLocalAddress))
-                {
-                    dbContext.EnsureTable<T>(typeof(T).Name, tablePrimaryKey);
-                    dbContext.Open();
-
-                    foreach (var data in dataList)
-                    {
-                        var result = dbContext.Insert(tableName, data);
-
-                        if (!result)
-                        {
-                            Debug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
-                        }
-                    }
+                    Debug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
                 }
             }
 
