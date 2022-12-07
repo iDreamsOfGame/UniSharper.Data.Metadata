@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
 // See LICENSE in the project root for license information.
 
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,10 +27,17 @@ namespace UniSharperEditor.Data.Metadata
         protected virtual void DrawGUIWithoutSettings()
         {
             GUILayout.Space(50);
-            if (GUILayout.Button("Create Metadata Settings"))
+
+            try
             {
-                settings = MetadataAssetSettings.Create();
+                if (GUILayout.Button("Create Metadata Settings"))
+                    settings = MetadataAssetSettings.Create();
             }
+            catch (Exception)
+            {
+                // ignored
+            }
+
             GUILayout.Space(20);
             GUILayout.BeginHorizontal();
             GUILayout.Space(50);

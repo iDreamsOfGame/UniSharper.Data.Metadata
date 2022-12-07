@@ -8,19 +8,18 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class MetadataImporterWindow : MetadataEditorWindow
     {
+        private static readonly Vector2Int Size = new(840, 350);
+
         private MetadataImporter importer;
 
         [MenuItem("UniSharper/Metadata Management/Metadata Importer", false, 1)]
         internal static void ShowWindow()
         {
-            const float width = 840;
-            const float height = 300;
             const string title = "Metadata Importer";
-            var position = new Vector2((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f);
-            var size = new Vector2(width, height);
-            var rect = new Rect(position, size);
+            var position = new Vector2((Screen.width - Size.x) * 0.5f, (Screen.height - Size.y) * 0.5f);
+            var rect = new Rect(position, Size);
             var window = GetWindowWithRect<MetadataImporterWindow>(rect, true, title);
-            window.minSize = window.maxSize = size;
+            window.minSize = window.maxSize = Size;
             window.Show();
         }
 

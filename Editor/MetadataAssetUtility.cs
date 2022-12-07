@@ -55,15 +55,16 @@ namespace UniSharperEditor.Data.Metadata
             var settings = MetadataAssetSettings.Load();
             MetadataAssetSettings.CreateMetadataPersistentStoreFolder(settings);
             DeleteTempDbFiles();
+            
+            GetChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
-
-            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
+            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, fileNameWithoutExtension, index, length) =>
             {
                 if (table == null)
                     return;
                 
-                var entityClassName = fileName.ToTitleCase();
+                var entityClassName = fileNameWithoutExtension.ToTitleCase();
                 var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
                 var progress = (float)(index + 1) / length;
                 UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
@@ -74,7 +75,9 @@ namespace UniSharperEditor.Data.Metadata
                 if (entityClassType != null)
                 {
                     var entityDataList = CreateEntityDataList(settings, table, entityClassType, rawInfoList);
-                    typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData", new[] { entityClassType }, new object[] { dbFolderPath, entityClassName, rawInfoList, entityDataList, index });
+                    typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData", 
+                        new[] { entityClassType }, 
+                        new object[] { dbFolderPath, entityClassName, rawInfoList, entityDataList, index });
                     result = true;
                 }
                 else
@@ -107,21 +110,90 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
+                GetChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+                
+                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, fileNameWithoutExtension, index, length) =>
                 {
                     if (table == null) 
                         return;
-                    
-                    var info = $"Generating Metadata Entity Script: {fileName}.cs... {index + 1}/{length}";
+
+                    // Remove redundant entity script.
+                    if (settings.DeleteRedundantMetadataAndEntityScripts && deletedExcelFiles.Count > 0 && deletedExcelFiles.Contains(fileName))
+                    {
+                        DeleteMetadataEntityScript(settings, fileName);
+                        return;
+                    }
+
+                    var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
                     var progress = (float)(index + 1) / length;
                     UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
                     var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
-                    result = GenerateMetadataEntityScript(settings, fileName, rawInfoList);
+                    result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
                 });
             }
 
             UnityEditorUtility.ClearProgressBar();
             return result;
+        }
+
+        internal static void SaveExcelWorkbookFileHashMap()
+        {
+            var settings = MetadataAssetSettings.Load();
+            var paths = FileUtility.GetExcelFilePathCollection(settings.ExcelWorkbookFilesFolderPath);
+            if (paths.Length == 0)
+                return;
+            
+            var fileHashMap = new Dictionary<string, string>();
+            foreach (var path in paths)
+            {
+                var fileName = Path.GetFileName(path);
+                var rawData = File.ReadAllBytes(path);
+                var hashString = CryptoUtility.Md5HashEncrypt(Encoding.UTF8.GetString(rawData));
+                fileHashMap.Add(fileName, hashString);
+            }
+            
+            ExcelWorkbookFileHashMap.Save(fileHashMap);
+        }
+        
+        private static void GetChangedExcelWorkbookFiles(out List<string> addedExcelFiles, out List<string> updatedExcelFiles, out List<string> deletedExcelFiles)
+        {
+            addedExcelFiles = new List<string>();
+            updatedExcelFiles = new List<string>();
+            deletedExcelFiles = new List<string>();
+            
+            var oldHashMap = ExcelWorkbookFileHashMap.Load();
+            var settings = MetadataAssetSettings.Load();
+            var paths = FileUtility.GetExcelFilePathCollection(settings.ExcelWorkbookFilesFolderPath);
+            if (paths.Length == 0)
+            {
+                if (oldHashMap.Count > 0)
+                    deletedExcelFiles = oldHashMap.Keys.ToList();
+                return;
+            }
+
+            var newHashMap = new Dictionary<string, string>();
+            foreach (var path in paths)
+            {
+                var fileName = Path.GetFileName(path);
+                var rawData = File.ReadAllBytes(path);
+                var hashString = CryptoUtility.Md5HashEncrypt(Encoding.UTF8.GetString(rawData));
+                newHashMap.Add(fileName, hashString);
+
+                if (oldHashMap.ContainsKey(fileName))
+                {
+                    // Updated file.
+                    if (!string.IsNullOrEmpty(oldHashMap[fileName]) && oldHashMap[fileName] != hashString)
+                        updatedExcelFiles.Add(fileName);
+                }
+                else
+                {
+                    // New file.
+                    addedExcelFiles.Add(fileName);
+                }
+            }
+            
+            // Find deleted files.
+            deletedExcelFiles.AddRange(oldHashMap.Keys.Where(fileName => !newHashMap.ContainsKey(fileName)));
         }
 
         private static void CopyDatabaseFile(string dbFolderPath, long dbLocalAddress, string entityName = null)
@@ -248,7 +320,7 @@ namespace UniSharperEditor.Data.Metadata
             File.WriteAllBytes(filePath, bufferData);
         }
 
-        private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, int, int> action)
+        private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, string, int, int> action)
         {
             if (string.IsNullOrEmpty(excelFilesFolderPath))
             {
@@ -257,32 +329,32 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             // Find *.xls and *.xlsx
-            var paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
-            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
-            paths = paths.Union(xlsxFilePaths).ToArray();
-
+            var paths = FileUtility.GetExcelFilePathCollection(excelFilesFolderPath);
             if (paths.Length == 0)
             {
                 UnityDebug.LogError("No excel files found!");
 
-                action?.Invoke(null, null, -1, -1);
+                action?.Invoke(null, null, null, -1, -1);
                 return;
             }
 
             for (var i = 0; i < paths.Length; i++)
             {
                 var path = paths[i];
-                var fileName = Path.GetFileNameWithoutExtension(path);
+                var fileName = Path.GetFileName(path);
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
 
                 using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = fileExtension is ExcelFileExtension ? ExcelReaderFactory.CreateOpenXmlReader(stream) : ExcelReaderFactory.CreateBinaryReader(stream);
+                using var reader = fileExtension is ExcelFileExtension 
+                    ? ExcelReaderFactory.CreateOpenXmlReader(stream) 
+                    : ExcelReaderFactory.CreateBinaryReader(stream);
                 var result = reader.AsDataSet();
 
                 if (result.Tables.Count > 0)
                 {
                     var table = result.Tables[0];
-                    action?.Invoke(table, fileName, i, paths.Length);
+                    action?.Invoke(table, fileName, fileNameWithoutExtension, i, paths.Length);
                 }
                 else
                 {
@@ -380,17 +452,29 @@ namespace UniSharperEditor.Data.Metadata
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, GenerateEntityScriptEnumString(rawInfoList));
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
 
-                var scriptStorePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
-                var assetPath = EditorPath.ConvertToAssetPath(scriptStorePath);
-                File.WriteAllText(scriptStorePath, scriptTextContent, new UTF8Encoding(true));
-                AssetDatabase.ImportAsset(assetPath);
+                var scriptFilePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
+                var scriptAssetPath = EditorPath.ConvertToAssetPath(scriptFilePath);
+                File.WriteAllText(scriptFilePath, scriptTextContent, new UTF8Encoding(true));
+                AssetDatabase.ImportAsset(scriptAssetPath);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                UnityDebug.LogError(ex.ToString());
+                UnityDebug.LogError(exception.ToString());
                 return false;
             }
+        }
+
+        private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string entityScriptName)
+        {
+            var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
+            if (AssetDatabase.DeleteAsset(scriptFilePath)) 
+                return;
+            
+            // Plan B: Try delete file by using class FileUtil.
+            var scriptMetaFilePath = $"{scriptFilePath}.meta";
+            FileUtil.DeleteFileOrDirectory(scriptFilePath);
+            FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
         }
 
         private static Type GetEntityClassType(MetadataAssetSettings settings, string entityClassName)
@@ -406,12 +490,11 @@ namespace UniSharperEditor.Data.Metadata
             var dbLocalAddress = index + 2L;
             const string dbName = nameof(MetadataEntityDBConfig);
 
-            using var configDBAdapter = new IBoxDBAdapter(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
-            configDBAdapter.EnsureTable<MetadataEntityDBConfig>(dbName, MetadataEntityDBConfig.TablePrimaryKey);
-            configDBAdapter.Open();
+            using var dbAdapter = new IBoxDBAdapter(TempFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
+            dbAdapter.EnsureTable<MetadataEntityDBConfig>(dbName, MetadataEntityDBConfig.TablePrimaryKey);
+            dbAdapter.Open();
             var tablePrimaryKey = rowInfos[0].PropertyName;
-            var success = configDBAdapter.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
-            // var success = configDBAdapter.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
+            var success = dbAdapter.Insert(new MetadataEntityDBConfig(tableName, tablePrimaryKey));
 
             if (!success)
                 return;

@@ -16,20 +16,24 @@ namespace UniSharperEditor.Data.Metadata
     /// <seealso cref="UniSharperEditor.SettingsScriptableObject"/>
     public class MetadataAssetSettings : SettingsScriptableObject
     {
-        private const string MetadataFolderName = "Metadata";
+        public const string MetadataFolderName = "Metadata";
 
-        private const string MetadataPersistentStoresFolderName = "Data";
+        public const string MetadataPersistentStoresFolderName = "Data";
+        
+        public static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
+
+        public static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
             $"{CryptoUtility.Md5HashEncrypt(Directory.GetCurrentDirectory(), false)}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
 
-        private static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
-
-        private static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
-
         [ReadOnlyField]
         [SerializeField]
         private bool dataEncryptionAndDecryption;
+
+        [ReadOnlyField]
+        [SerializeField]
+        private bool deleteRedundantMetadataAndEntityScripts;
 
         [ReadOnlyField]
         [SerializeField]
@@ -68,6 +72,19 @@ namespace UniSharperEditor.Data.Metadata
                     return;
 
                 dataEncryptionAndDecryption = value;
+                Save();
+            }
+        }
+
+        internal bool DeleteRedundantMetadataAndEntityScripts
+        {
+            get => deleteRedundantMetadataAndEntityScripts;
+            set
+            {
+                if (deleteRedundantMetadataAndEntityScripts.Equals(value))
+                    return;
+
+                deleteRedundantMetadataAndEntityScripts = value;
                 Save();
             }
         }
