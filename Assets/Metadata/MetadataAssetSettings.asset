@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac11de8897fd24852af739fb020bb7c3, type: 3}
   m_Name: MetadataAssetSettings
   m_EditorClassIdentifier: 
+  dataEncryptionAndDecryption: 1
+  deleteRedundantMetadataAndEntityScripts: 1
   entityDataStartingRowIndex: 3
   entityPropertyCommentRowIndex: 0
   entityPropertyNameRowIndex: 2
   entityPropertyTypeRowIndex: 1
   entityScriptNamespace: UniSharper.Data.Metadata.Samples
-  entityScriptsStorePath: Assets/Samples
+  entityScriptsStorePath: Assets/Samples/Metadata
   metadataPersistentStorePath: Assets/Metadata/Data
-  dataEncryptionAndDecryption: 1
