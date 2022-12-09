@@ -19,7 +19,7 @@ namespace UniSharperEditor.Data.Metadata
         public const string MetadataFolderName = "Metadata";
 
         public const string MetadataPersistentStoresFolderName = "Data";
-        
+
         public static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
 
         public static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";

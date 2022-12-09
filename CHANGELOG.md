@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cache MD5 of excel files to reduce the change of metadata database files.
+- Cache MD5 of excel files to determine whether update metadata database file in Project or not.
+- Adds **Delete Redundant Metadata?** option to determine whether delete redundant metadata database files and entity scripts or not.
 
 
 
