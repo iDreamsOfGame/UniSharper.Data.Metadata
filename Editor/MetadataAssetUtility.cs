@@ -16,9 +16,7 @@ using UniSharper;
 using UniSharper.Data.Metadata;
 using UniSharperEditor.Data.Metadata.Converters;
 using UnityEditor;
-using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
-using UnityEditorUtility = UnityEditor.EditorUtility;
 
 // ReSharper disable RedundantArgumentDefaultValue
 
@@ -60,15 +58,16 @@ namespace UniSharperEditor.Data.Metadata
             GetChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
-            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, fileNameWithoutExtension, index, length) =>
+            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
             {
                 if (table == null)
                     return;
 
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                 var entityClassName = fileNameWithoutExtension.ToTitleCase();
                 var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
                 var progress = (float)(index + 1) / length;
-                UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                EditorUtility.DisplayProgressBar("Hold on...", info, progress);
 
                 var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
                 var entityClassType = GetEntityClassType(settings, entityClassName);
@@ -98,7 +97,7 @@ namespace UniSharperEditor.Data.Metadata
             // Try delete redundant metadata database file.
             TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
 
-            UnityEditorUtility.ClearProgressBar();
+            EditorUtility.ClearProgressBar();
             return result;
         }
 
@@ -110,30 +109,31 @@ namespace UniSharperEditor.Data.Metadata
 
             if (string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath))
             {
-                if (UnityEditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK"))
-                    UnityEditorUtility.ClearProgressBar();
+                if (EditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK"))
+                    EditorUtility.ClearProgressBar();
             }
             else
             {
-                GetChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+                GetChangedExcelWorkbookFiles(out _, out _, out var deletedExcelFiles);
 
                 // Try delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
-                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, fileNameWithoutExtension, index, length) =>
+                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, name, index, length) =>
                 {
                     if (table == null)
                         return;
 
+                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
                     var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
                     var progress = (float)(index + 1) / length;
-                    UnityEditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                    EditorUtility.DisplayProgressBar("Hold on...", info, progress);
                     var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
                     result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
                 });
             }
 
-            UnityEditorUtility.ClearProgressBar();
+            EditorUtility.ClearProgressBar();
             return result;
         }
 
@@ -208,9 +208,9 @@ namespace UniSharperEditor.Data.Metadata
             AssetDatabase.ImportAsset(assetFilePath);
         }
 
-        private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings, 
-            DataTable table, 
-            Type entityClassType, 
+        private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings,
+            DataTable table,
+            Type entityClassType,
             List<MetadataEntityRawInfo> rawInfoList)
         {
             var list = new List<MetadataEntity>();
@@ -324,7 +324,7 @@ namespace UniSharperEditor.Data.Metadata
             File.WriteAllBytes(filePath, bufferData);
         }
 
-        private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, string, int, int> action)
+        private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, int, int> action)
         {
             if (string.IsNullOrEmpty(excelFilesFolderPath))
             {
@@ -338,7 +338,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 UnityDebug.LogError("No excel files found!");
 
-                action?.Invoke(null, null, null, -1, -1);
+                action?.Invoke(null, null, -1, -1);
                 return;
             }
 
@@ -346,7 +346,6 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var path = paths[i];
                 var fileName = Path.GetFileName(path);
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
                 var fileExtension = Path.GetExtension(path);
 
                 using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -358,7 +357,7 @@ namespace UniSharperEditor.Data.Metadata
                 if (result.Tables.Count > 0)
                 {
                     var table = result.Tables[0];
-                    action?.Invoke(table, fileName, fileNameWithoutExtension, i, paths.Length);
+                    action?.Invoke(table, fileName, i, paths.Length);
                 }
                 else
                 {
@@ -513,7 +512,7 @@ namespace UniSharperEditor.Data.Metadata
 
                 if (!result)
                 {
-                    Debug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
+                    UnityDebug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
                 }
             }
 
