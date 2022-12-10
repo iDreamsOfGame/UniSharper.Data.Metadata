@@ -1,65 +1,89 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UniSharper.Data.Metadata.Samples
 {
     public class MetadataSample : MonoBehaviour
     {
         [SerializeField]
-        private Canvas canvas;
+        private RectTransform content;
 
+        [SerializeField]
+        private MetadataEntityPropertyItem propertyItemTemplate;
+        
         private MetadataManager MetadataManager => MetadataManager.Instance;
-
-        private void AddText(string text)
-        {
-            var go = new GameObject
-            {
-                name = "Text",
-                layer = LayerMask.NameToLayer("UI")
-            };
-            var textFiled = go.AddComponent<Text>();
-            textFiled.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
-            textFiled.text = text;
-            textFiled.alignment = TextAnchor.MiddleCenter;
-            go.transform.SetParent(canvas.transform, false);
-        }
 
         private void Awake()
         {
+            propertyItemTemplate.Visible = false;
+            
             var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/MetadataEntityDBConfig.db.bytes");
             MetadataManager.Initialize(binAsset.bytes);
-
+        
             // Load DB data of ExampleMetadata
             binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/SampleMetadata.db.bytes");
             MetadataManager.LoadEntityDatabase<SampleMetadata>(binAsset.bytes);
-
-            // Load DB data of TestMetadata
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/TestMetadata.db.bytes");
-            MetadataManager.LoadEntityDatabase<TestMetadata>(binAsset.bytes);
-        }
-
-        private void OnDestroy()
-        {
-            MetadataManager.Dispose();
         }
 
         private void Start()
         {
             var metadata = MetadataManager.GetEntity<SampleMetadata>(1L);
-            AddText(metadata.TestString);
-            AddText(metadata.TestEnum.ToString());
-            Debug.Log(MetadataManager.GetEntity<SampleMetadata>(2L));
 
-            var testMetadata = MetadataManager.GetEntity<TestMetadata>(2L);
-            AddText(testMetadata.Name);
+            AddPropertyItem(nameof(metadata.StringSample), metadata.StringSample);
+            AddPropertyItem(nameof(metadata.BooleanSample), metadata.BooleanSample);
+            AddPropertyItem(nameof(metadata.ByteSample), metadata.ByteSample);
+            AddPropertyItem(nameof(metadata.SByteSample), metadata.SByteSample);
+            AddPropertyItem(nameof(metadata.Int16Sample), metadata.Int16Sample);
+            AddPropertyItem(nameof(metadata.UInt16Sample), metadata.UInt16Sample);
+            AddPropertyItem(nameof(metadata.Int32Sample), metadata.Int32Sample);
+            AddPropertyItem(nameof(metadata.UInt32Sample), metadata.UInt32Sample);
+            AddPropertyItem(nameof(metadata.Int64Sample), metadata.Int64Sample);
+            AddPropertyItem(nameof(metadata.UInt64Sample), metadata.UInt64Sample);
+            AddPropertyItem(nameof(metadata.SingleSample), metadata.SingleSample);
+            AddPropertyItem(nameof(metadata.DoubleSample), metadata.DoubleSample);
+            AddPropertyItem(nameof(metadata.DecimalSample), metadata.DecimalSample);
+            AddPropertyItem(nameof(metadata.EnumSample), metadata.EnumSample);
 
-            var exampleMetadataCollection = MetadataManager.GetAllEntities<SampleMetadata>();
-            AddText($"The count of entity 'ExampleMetadata': {exampleMetadataCollection.Length}");
+            // Array
+            AddPropertyItem(nameof(metadata.StringArraySample), ToString(metadata.StringArraySample));
+            AddPropertyItem(nameof(metadata.BooleanArraySample), ToString(metadata.BooleanArraySample));
+            AddPropertyItem(nameof(metadata.ByteArraySample), ToString(metadata.ByteArraySample));
+            AddPropertyItem(nameof(metadata.SByteArraySample), ToString(metadata.SByteArraySample));
+            AddPropertyItem(nameof(metadata.Int16ArraySample), ToString(metadata.Int16ArraySample));
+            AddPropertyItem(nameof(metadata.UInt16ArraySample), ToString(metadata.UInt16ArraySample));
+            AddPropertyItem(nameof(metadata.Int32ArraySample), ToString(metadata.Int32ArraySample));
+            AddPropertyItem(nameof(metadata.UInt32ArraySample), ToString(metadata.UInt32ArraySample));
+            AddPropertyItem(nameof(metadata.Int64ArraySample), ToString(metadata.Int64ArraySample));
+            AddPropertyItem(nameof(metadata.UInt64ArraySample), ToString(metadata.UInt64ArraySample));
+            AddPropertyItem(nameof(metadata.SingleArraySample), ToString(metadata.SingleArraySample));
+            AddPropertyItem(nameof(metadata.DoubleArraySample), ToString(metadata.DoubleArraySample));
+            AddPropertyItem(nameof(metadata.DecimalArraySample), ToString(metadata.DecimalArraySample));
+        }
+        
+        private void OnDestroy()
+        {
+            MetadataManager.Dispose();
+        }
 
-            var testMetadataList = MetadataManager.GetEntities<TestMetadata>("Age", 30);
+        private void AddPropertyItem(string key, object value)
+        {
+            if (!propertyItemTemplate)
+                return;
+            
+            var instance = Instantiate(propertyItemTemplate, content);
+            if (!instance)
+                return;
 
-            Debug.Log(testMetadataList.Length);
+            instance.LabelText = $"{key}: {value}";
+            instance.Visible = true;
+        }
+        
+        private static string ToString<T>(IEnumerable<T> array)
+        {
+            var values = array.Select(item => item.ToString()).ToList();
+            return string.Join(", ", values);
         }
     }
 }
