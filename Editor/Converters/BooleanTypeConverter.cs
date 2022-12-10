@@ -3,13 +3,13 @@
 
 namespace UniSharperEditor.Data.Metadata.Converters
 {
-    internal class NumberConverter<T> : PropertyTypeConverter
+    internal class BooleanTypeConverter : PropertyTypeConverter
     {
-        internal NumberConverter(string propertyName)
+        internal BooleanTypeConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        public override object Parse(string value, params object[] parameters) => ParseNumber<T>(value);
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => ParseBoolean(value);
     }
 }

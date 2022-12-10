@@ -26,42 +26,153 @@ namespace UniSharperEditor.Data.Metadata
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
             $"{CryptoUtility.Md5HashEncrypt(Directory.GetCurrentDirectory(), false)}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
-
-        [ReadOnlyField]
-        [SerializeField]
-        private bool dataEncryptionAndDecryption;
-
-        [ReadOnlyField]
-        [SerializeField]
-        private bool deleteRedundantMetadataAndEntityScripts;
-
-        [ReadOnlyField]
-        [SerializeField]
+        
+        [SerializeField, ReadOnlyField]
+        private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
+        
+        [SerializeField, ReadOnlyField]
+        private string entityScriptsStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, EditorEnvironment.DefaultScriptsFolderName));
+        
+        [SerializeField, ReadOnlyField]
+        private string entityScriptNamespace;
+        
+        [SerializeField, ReadOnlyField]
+        private int entityPropertyCommentRowIndex;
+        
+        [SerializeField, ReadOnlyField]
+        private int entityPropertyTypeRowIndex = 1;
+        
+        [SerializeField, ReadOnlyField]
+        private int entityPropertyNameRowIndex = 2;
+        
+        [SerializeField, ReadOnlyField]
         private int entityDataStartingRowIndex = 3;
 
-        [ReadOnlyField]
-        [SerializeField]
-        private int entityPropertyCommentRowIndex;
+        [SerializeField, ReadOnlyField]
+        private char arrayElementSeparator = '|';
+        
+        [SerializeField, ReadOnlyField]
+        private bool dataEncryptionAndDecryption;
+        
+        [SerializeField, ReadOnlyField]
+        private bool deleteRedundantMetadataAndEntityScripts;
+        
+        internal string ExcelWorkbookFilesFolderPath
+        {
+            get
+            {
+                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
+                return EditorPrefs.GetString(key, string.Empty);
+            }
+            set
+            {
+                if (ExcelWorkbookFilesFolderPath.Equals(value))
+                    return;
 
-        [ReadOnlyField]
-        [SerializeField]
-        private int entityPropertyNameRowIndex = 2;
+                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
+                EditorPrefs.SetString(key, value);
+            }
+        }
+        
+        internal string MetadataPersistentStorePath
+        {
+            get => metadataPersistentStorePath;
+            set
+            {
+                if (metadataPersistentStorePath.Equals(value))
+                    return;
 
-        [ReadOnlyField]
-        [SerializeField]
-        private int entityPropertyTypeRowIndex = 1;
+                metadataPersistentStorePath = value;
+                Save();
+            }
+        }
+        
+        internal string EntityScriptsStorePath
+        {
+            get => entityScriptsStorePath;
+            set
+            {
+                if (entityScriptsStorePath.Equals(value))
+                    return;
 
-        [ReadOnlyField]
-        [SerializeField]
-        private string entityScriptNamespace;
+                entityScriptsStorePath = value;
+                Save();
+            }
+        }
+        
+        internal string EntityScriptNamespace
+        {
+            get => entityScriptNamespace;
+            set
+            {
+                if (entityScriptNamespace.Equals(value))
+                    return;
 
-        [ReadOnlyField]
-        [SerializeField]
-        private string entityScriptsStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, EditorEnvironment.DefaultScriptsFolderName));
+                entityScriptNamespace = value;
+                Save();
+            }
+        }
+        
+        internal int EntityPropertyCommentRowIndex
+        {
+            get => entityPropertyCommentRowIndex;
+            set
+            {
+                if (entityPropertyCommentRowIndex.Equals(value))
+                    return;
+                entityPropertyCommentRowIndex = value;
+                Save();
+            }
+        }
+        
+        internal int EntityPropertyTypeRowIndex
+        {
+            get => entityPropertyTypeRowIndex;
+            set
+            {
+                if (entityPropertyTypeRowIndex.Equals(value))
+                    return;
+                entityPropertyTypeRowIndex = value;
+                Save();
+            }
+        }
 
-        [ReadOnlyField]
-        [SerializeField]
-        private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
+        internal int EntityPropertyNameRowIndex
+        {
+            get => entityPropertyNameRowIndex;
+            set
+            {
+                if (entityPropertyNameRowIndex.Equals(value))
+                    return;
+                entityPropertyNameRowIndex = value;
+                Save();
+            }
+        }
+
+        internal int EntityDataStartingRowIndex
+        {
+            get => entityDataStartingRowIndex;
+            set
+            {
+                if (entityDataStartingRowIndex.Equals(value))
+                    return;
+                entityDataStartingRowIndex = value;
+                Save();
+            }
+        }
+
+        internal char ArrayElementSeparator
+        {
+            get => arrayElementSeparator;
+            set
+            {
+                if (arrayElementSeparator.Equals(value))
+                    return;
+
+                arrayElementSeparator = value;
+                Save();
+            }
+        }
 
         internal bool DataEncryptionAndDecryption
         {
@@ -85,110 +196,6 @@ namespace UniSharperEditor.Data.Metadata
                     return;
 
                 deleteRedundantMetadataAndEntityScripts = value;
-                Save();
-            }
-        }
-
-        internal int EntityDataStartingRowIndex
-        {
-            get => entityDataStartingRowIndex;
-            set
-            {
-                if (entityDataStartingRowIndex.Equals(value))
-                    return;
-                entityDataStartingRowIndex = value;
-                Save();
-            }
-        }
-
-        internal int EntityPropertyCommentRowIndex
-        {
-            get => entityPropertyCommentRowIndex;
-            set
-            {
-                if (entityPropertyCommentRowIndex.Equals(value))
-                    return;
-                entityPropertyCommentRowIndex = value;
-                Save();
-            }
-        }
-
-        internal int EntityPropertyNameRowIndex
-        {
-            get => entityPropertyNameRowIndex;
-            set
-            {
-                if (entityPropertyNameRowIndex.Equals(value))
-                    return;
-                entityPropertyNameRowIndex = value;
-                Save();
-            }
-        }
-
-        internal int EntityPropertyTypeRowIndex
-        {
-            get => entityPropertyTypeRowIndex;
-            set
-            {
-                if (entityPropertyTypeRowIndex.Equals(value))
-                    return;
-                entityPropertyTypeRowIndex = value;
-                Save();
-            }
-        }
-
-        internal string EntityScriptNamespace
-        {
-            get => entityScriptNamespace;
-            set
-            {
-                if (entityScriptNamespace.Equals(value))
-                    return;
-
-                entityScriptNamespace = value;
-                Save();
-            }
-        }
-
-        internal string EntityScriptsStorePath
-        {
-            get => entityScriptsStorePath;
-            set
-            {
-                if (entityScriptsStorePath.Equals(value))
-                    return;
-
-                entityScriptsStorePath = value;
-                Save();
-            }
-        }
-
-        internal string ExcelWorkbookFilesFolderPath
-        {
-            get
-            {
-                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                return EditorPrefs.GetString(key, string.Empty);
-            }
-            set
-            {
-                if (ExcelWorkbookFilesFolderPath.Equals(value))
-                    return;
-
-                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                EditorPrefs.SetString(key, value);
-            }
-        }
-
-        internal string MetadataPersistentStorePath
-        {
-            get => metadataPersistentStorePath;
-            set
-            {
-                if (metadataPersistentStorePath.Equals(value))
-                    return;
-
-                metadataPersistentStorePath = value;
                 Save();
             }
         }

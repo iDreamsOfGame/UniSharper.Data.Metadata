@@ -3,16 +3,16 @@
 
 namespace UniSharperEditor.Data.Metadata.Converters
 {
-    internal class NumberArrayConverter<T> : ArrayConverter
+    internal class NumberArrayTypeConverter<T> : ArrayTypeConverter
     {
-        internal NumberArrayConverter(string propertyName)
+        internal NumberArrayTypeConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        public override object Parse(string value, params object[] parameters)
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
-            if (!(base.Parse(value) is string[] array))
+            if (base.Parse(arrayElementSeparator, value) is not string[] array)
                 return null;
 
             var result = new T[array.Length];

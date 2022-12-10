@@ -5,14 +5,14 @@ using System;
 
 namespace UniSharperEditor.Data.Metadata.Converters
 {
-    internal class EnumConverter : PropertyTypeConverter
+    internal class EnumTypeConverter : PropertyTypeConverter
     {
-        internal EnumConverter(string propertyName)
+        internal EnumTypeConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        public override object Parse(string value, params object[] parameters)
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             if (string.IsNullOrEmpty(value)) 
                 return 0;

@@ -14,7 +14,6 @@ using ReSharp.Data.IBoxDB;
 using ReSharp.Security.Cryptography;
 using UniSharper;
 using UniSharper.Data.Metadata;
-using UniSharperEditor.Data.Metadata.Converters;
 using UnityEditor;
 using UnityDebug = UnityEngine.Debug;
 
@@ -55,7 +54,7 @@ namespace UniSharperEditor.Data.Metadata
             MetadataAssetSettings.CreateMetadataPersistentStoreFolder(settings);
             DeleteTempDbFiles();
 
-            GetChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+            FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
@@ -114,7 +113,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                GetChangedExcelWorkbookFiles(out _, out _, out var deletedExcelFiles);
+                FindChangedExcelWorkbookFiles(out _, out _, out var deletedExcelFiles);
 
                 // Try delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
@@ -156,7 +155,7 @@ namespace UniSharperEditor.Data.Metadata
             ExcelWorkbookFileHashMap.Save(fileHashMap);
         }
 
-        private static void GetChangedExcelWorkbookFiles(out List<string> addedExcelFiles, out List<string> updatedExcelFiles, out List<string> deletedExcelFiles)
+        private static void FindChangedExcelWorkbookFiles(out List<string> addedExcelFiles, out List<string> updatedExcelFiles, out List<string> deletedExcelFiles)
         {
             addedExcelFiles = new List<string>();
             updatedExcelFiles = new List<string>();
@@ -211,7 +210,7 @@ namespace UniSharperEditor.Data.Metadata
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings,
             DataTable table,
             Type entityClassType,
-            List<MetadataEntityRawInfo> rawInfoList)
+            List<EntityPropertyRawInfo> rawInfoList)
         {
             var list = new List<MetadataEntity>();
             var rowCount = table.Rows.Count;
@@ -228,7 +227,8 @@ namespace UniSharperEditor.Data.Metadata
 
                     if (typeParser != null)
                     {
-                        var value = typeParser.Parse(cellValue.Trim(), rowInfo.Parameters);
+                        var arrayElementSeparator = settings.ArrayElementSeparator;
+                        var value = typeParser.Parse(arrayElementSeparator, cellValue.Trim(), rowInfo.Parameters);
                         entityData.SetPropertyValue(rowInfo.PropertyName, value);
                     }
                     else
@@ -243,50 +243,29 @@ namespace UniSharperEditor.Data.Metadata
             return list;
         }
 
-        private static List<MetadataEntityRawInfo> CreateMetadataEntityRawInfoList(MetadataAssetSettings settings, DataTable table)
+        private static List<EntityPropertyRawInfo> CreateMetadataEntityRawInfoList(MetadataAssetSettings settings, DataTable table)
         {
             var columns = table.Columns;
             var rows = table.Rows;
             var columnCount = columns.Count;
-            var list = new List<MetadataEntityRawInfo>();
+            var list = new List<EntityPropertyRawInfo>();
 
-            for (var i = 0; i < columnCount; i++)
+            for (var column = 0; column < columnCount; column++)
             {
-                var propertyName = rows[settings.EntityPropertyNameRowIndex][i].ToString();
-                var propertyType = rows[settings.EntityPropertyTypeRowIndex][i].ToString();
-                var comment = rows[settings.EntityPropertyCommentRowIndex][i].ToString();
+                var propertyName = rows[settings.EntityPropertyNameRowIndex][column].ToString();
+                var propertyType = rows[settings.EntityPropertyTypeRowIndex][column].ToString();
+                var comment = rows[settings.EntityPropertyCommentRowIndex][column].ToString();
 
                 if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
                     continue;
 
                 propertyName = propertyName.Trim().ToTitleCase();
-                propertyType = propertyType.Trim().ToLower();
+                propertyType = propertyType.Trim();
                 comment = FormatCommentString(comment.Trim());
 
-                object[] arguments = null;
-
-                if (propertyType.Equals("enum"))
-                {
-                    arguments = new object[3];
-                    arguments[0] = propertyName;
-                    arguments[1] = $"{propertyName}Enum";
-
-                    var enumValues = new List<string> { "None" };
-                    for (var j = settings.EntityDataStartingRowIndex; j < rows.Count; j++)
-                    {
-                        var enumValue = rows[j][i].ToString().Trim();
-
-                        if (!string.IsNullOrEmpty(enumValue))
-                        {
-                            enumValues.AddUnique(enumValue);
-                        }
-                    }
-
-                    arguments[2] = enumValues.ToArray();
-                    propertyName = $"{propertyName}IntValue";
-                }
-
-                list.Add(new MetadataEntityRawInfo(comment, propertyType, propertyName, arguments));
+                var editor = PropertyRawInfoEditorFactory.GetEditor(propertyType, settings, table);
+                var rawInfo = editor?.Edit(column, comment, propertyType, propertyName) ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
+                list.Add(rawInfo);
             }
 
             return list;
@@ -376,7 +355,7 @@ namespace UniSharperEditor.Data.Metadata
             return regex.Replace(comment, PlayerEnvironment.WindowsNewLine + "\t\t/// ");
         }
 
-        private static string GenerateEntityScriptEnumString(List<MetadataEntityRawInfo> rawInfoList)
+        private static string GenerateEntityScriptEnumString(List<EntityPropertyRawInfo> rawInfoList)
         {
             var stringBuilder = new StringBuilder();
 
@@ -384,7 +363,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var rowInfo = rawInfoList[i];
 
-                if (!rowInfo.PropertyType.Equals("enum"))
+                if (!rowInfo.PropertyType.Equals(PropertyTypeNames.Enum))
                     continue;
 
                 var enumValuesString = new StringBuilder();
@@ -409,29 +388,22 @@ namespace UniSharperEditor.Data.Metadata
             return stringBuilder.ToString();
         }
 
-        private static string GenerateEntityScriptPropertiesString(List<MetadataEntityRawInfo> rawInfoList)
+        private static string GenerateEntityScriptPropertiesString(List<EntityPropertyRawInfo> rawInfoList)
         {
             var stringBuilder = new StringBuilder();
 
             for (int i = 0, length = rawInfoList.Count; i < length; ++i)
             {
-                var rowInfo = rawInfoList[i];
-                var propertyType = rowInfo.PropertyType;
-
-                if (propertyType.Equals("enum"))
+                var rawInfo = rawInfoList[i];
+                var propertyType = rawInfo.PropertyType;
+                var editor = EntityScriptPropertyStringEditorFactory.GetEditor(propertyType);
+                if (editor != null)
                 {
-                    // Add enum int value property
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rowInfo.Comment, "int", rowInfo.PropertyName);
-
-                    stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
-                        .Append(PlayerEnvironment.WindowsNewLine);
-
-                    // Add enum property
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumProperty, rowInfo.Comment, rowInfo.Parameters[1], rowInfo.Parameters[0], rowInfo.PropertyName);
+                    editor.Edit(stringBuilder, rawInfo);
                 }
                 else
                 {
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rowInfo.Comment, propertyType, rowInfo.PropertyName);
+                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rawInfo.Comment, propertyType, rawInfo.PropertyName);
                 }
 
                 if (i >= length - 1)
@@ -444,12 +416,13 @@ namespace UniSharperEditor.Data.Metadata
             return stringBuilder.ToString();
         }
 
-        private static bool GenerateMetadataEntityScript(MetadataAssetSettings settings, string entityScriptName, List<MetadataEntityRawInfo> rawInfoList)
+        private static bool GenerateMetadataEntityScript(MetadataAssetSettings settings, string entityScriptName, List<EntityPropertyRawInfo> rawInfoList)
         {
             try
             {
                 entityScriptName = entityScriptName.ToTitleCase();
-                var scriptTextContent = ScriptTemplate.LoadScriptTemplateFile("NewMetadataEntityScriptTemplate.txt", UnityPackageName);
+                const string templateFileName = "NewMetadataEntityScriptTemplate.txt";
+                var scriptTextContent = ScriptTemplate.LoadScriptTemplateFile(templateFileName, UnityPackageName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Namespace, settings.EntityScriptNamespace);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.ScriptName, entityScriptName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, GenerateEntityScriptEnumString(rawInfoList));
@@ -478,7 +451,7 @@ namespace UniSharperEditor.Data.Metadata
         [UsedImplicitly]
         private static void InsertEntityData<T>(string dbFolderPath,
             string tableName,
-            IList<MetadataEntityRawInfo> rowInfos,
+            IList<EntityPropertyRawInfo> rowInfos,
             IList<MetadataEntity> entityDataList,
             int index,
             bool updateDatabaseFile = true) where T : MetadataEntity
@@ -572,25 +545,6 @@ namespace UniSharperEditor.Data.Metadata
             var scriptMetaFilePath = $"{databaseFilePath}.meta";
             FileUtil.DeleteFileOrDirectory(databaseFilePath);
             FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
-        }
-
-        private readonly struct MetadataEntityRawInfo
-        {
-            public MetadataEntityRawInfo(string comment, string propertyType, string propertyName, params object[] parameters)
-            {
-                Comment = comment;
-                PropertyType = propertyType;
-                PropertyName = propertyName;
-                Parameters = parameters;
-            }
-
-            public string Comment { get; }
-
-            public object[] Parameters { get; }
-
-            public string PropertyName { get; }
-
-            public string PropertyType { get; }
         }
     }
 }

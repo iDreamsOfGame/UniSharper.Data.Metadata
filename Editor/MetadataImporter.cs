@@ -21,9 +21,9 @@ namespace UniSharperEditor.Data.Metadata
 
         private readonly MetadataAssetSettings settings;
 
-        private static GUIStyle titleBoxGUIStyle; // GUIStyle used to draw the results of the search
+        private static GUIStyle titleBoxGUIStyle;
 
-        public static GUIStyle BoxGUIStyle
+        private static GUIStyle BoxGUIStyle
         {
             get
             {
@@ -50,7 +50,7 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        public static readonly GUILayoutOption TitleBoxHeight = GUILayout.Height(30);
+        private static readonly GUILayoutOption TitleBoxHeight = GUILayout.Height(30);
 
         internal MetadataImporter(MetadataAssetSettings settings)
         {
@@ -241,6 +241,17 @@ namespace UniSharperEditor.Data.Metadata
         {
             const string title = "Other Settings";
             DrawTitleLabel(title);
+            
+            // Array element separator
+            using (new UniEditorGUILayout.FieldScope(LabelWidth))
+            {
+                var arrayElementSeparatorString = settings.ArrayElementSeparator.ToString();
+                arrayElementSeparatorString = EditorGUILayout.TextField(new GUIContent("Array Element Separator",
+                    "A character that delimits the substrings in cell to generate array elements."), arrayElementSeparatorString);
+                
+                if (!string.IsNullOrEmpty(arrayElementSeparatorString) && arrayElementSeparatorString.Length > 0)
+                    settings.ArrayElementSeparator = arrayElementSeparatorString[0];
+            }
 
             // Data encryption/decryption
             using (new UniEditorGUILayout.FieldScope(LabelWidth))

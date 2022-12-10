@@ -3,7 +3,7 @@
 
 using System;
 using System.Globalization;
-using UniSharper.Data.Metadata.Parsers;
+using UnityEngine;
 
 namespace UniSharperEditor.Data.Metadata.Converters
 {
@@ -16,14 +16,14 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
         protected string PropertyName { get; }
 
-        public virtual object Parse(string value, params object[] parameters)
+        public virtual object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
-            if (string.IsNullOrEmpty(value))
+            if (!string.IsNullOrEmpty(value))
             {
+                value = value.Trim();
                 return value;
             }
 
-            value = value.Trim();
             return value;
         }
 
@@ -55,5 +55,27 @@ namespace UniSharperEditor.Data.Metadata.Converters
 
             return (T)args[3];
         }
+        
+        protected static Vector2 ParseUnityEngineVector2(string value) => value.ToVector2();
+
+        protected static Vector2Int ParseUnityEngineVector2Int(string value) => value.ToVector2Int();
+        
+        protected static Vector3 ParseUnityEngineVector3(string value) => value.ToVector3();
+        
+        protected static Vector3Int ParseUnityEngineVector3Int(string value) => value.ToVector3Int();
+        
+        protected static Vector4 ParseUnityEngineVector4(string value) => value.ToVector4();
+
+        protected static RangeInt ParseUnityEngineRangeInt(string value) => value.ToRangeInt();
+
+        protected static Quaternion ParseUnityEngineQuaternion(string value) => value.ToQuaternion();
+
+        protected static Rect ParseUnityEngineRect(string value) => value.ToRect();
+
+        protected static RectInt ParseUnityEngineRectInt(string value) => value.ToRectInt();
+
+        protected static Color ParseUnityEngineColor(string value) => value.ToColor();
+
+        protected static Color32 ParseUnityEngineColor32(string value) => value.ToColor32();
     }
 }

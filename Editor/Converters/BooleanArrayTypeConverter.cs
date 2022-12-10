@@ -3,16 +3,16 @@
 
 namespace UniSharperEditor.Data.Metadata.Converters
 {
-    internal class BooleanArrayConverter : ArrayConverter
+    internal class BooleanArrayTypeConverter : ArrayTypeConverter
     {
-        internal BooleanArrayConverter(string propertyName)
+        internal BooleanArrayTypeConverter(string propertyName)
             : base(propertyName)
         {
         }
 
-        public override object Parse(string value, params object[] parameters)
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
-            if (base.Parse(value) is not string[] array)
+            if (base.Parse(arrayElementSeparator, value) is not string[] array)
                 return null;
 
             var result = new bool[array.Length];
