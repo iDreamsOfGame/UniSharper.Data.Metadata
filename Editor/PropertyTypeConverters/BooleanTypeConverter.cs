@@ -5,11 +5,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class BooleanTypeConverter : PropertyTypeConverter
     {
-        internal BooleanTypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => ParseBoolean(value);
     }
 }

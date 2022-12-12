@@ -7,11 +7,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class UnityColor32TypeConverter : PropertyTypeConverter
     {
-        internal UnityColor32TypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             var color32 = value.ToColor32();

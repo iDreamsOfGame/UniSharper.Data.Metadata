@@ -5,11 +5,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class NumberArrayTypeConverter<T> : ArrayTypeConverter
     {
-        internal NumberArrayTypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             if (base.Parse(arrayElementSeparator, value) is not string[] array)

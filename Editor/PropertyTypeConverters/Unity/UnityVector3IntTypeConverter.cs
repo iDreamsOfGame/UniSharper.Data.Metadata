@@ -7,11 +7,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class UnityVector3IntTypeConverter : PropertyTypeConverter
     {
-        internal UnityVector3IntTypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-        
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             var vector3Int = value.ToVector3Int();

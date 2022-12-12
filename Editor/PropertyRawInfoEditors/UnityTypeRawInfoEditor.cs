@@ -7,12 +7,12 @@ namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
 {
     internal class UnityTypeRawInfoEditor : PropertyRawInfoEditor
     {
-        public UnityTypeRawInfoEditor(MetadataAssetSettings settings, DataTable table)
-            : base(settings, table)
+        public UnityTypeRawInfoEditor(MetadataAssetSettings settings)
+            : base(settings)
         {
         }
 
-        public override EntityPropertyRawInfo Edit(int column, string comment, string propertyType, string propertyName)
+        public override EntityPropertyRawInfo Edit(DataTable table, int column, string comment, string propertyType, string propertyName)
         {
             var parameters = new object[1];
             parameters[0] = propertyName;

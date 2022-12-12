@@ -7,11 +7,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class ArrayTypeConverter : PropertyTypeConverter
     {
-        internal ArrayTypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => 
             string.IsNullOrEmpty(value) ? new string[] { } : value.Split(arrayElementSeparator, StringSplitOptions.RemoveEmptyEntries);
     }

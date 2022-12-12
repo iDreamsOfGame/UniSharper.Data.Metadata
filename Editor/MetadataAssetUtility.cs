@@ -25,8 +25,6 @@ namespace UniSharperEditor.Data.Metadata
     {
         private const string UnityPackageName = "io.github.idreamsofgame.unisharper.data.metadata";
 
-        private const string ExcelFileExtension = ".xlsx";
-
         private static string tempFolderPath;
 
         private static string TempFolderPath
@@ -223,7 +221,7 @@ namespace UniSharperEditor.Data.Metadata
                 {
                     var cellValue = table.Rows[i][j].ToString();
                     var rowInfo = rawInfoList[j];
-                    var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType, rowInfo.PropertyName);
+                    var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType);
 
                     if (typeParser != null)
                     {
@@ -263,8 +261,8 @@ namespace UniSharperEditor.Data.Metadata
                 propertyType = propertyType.Trim();
                 comment = FormatCommentString(comment.Trim());
 
-                var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType, settings, table);
-                var rawInfo = editor?.Edit(column, comment, propertyType, propertyName) ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
+                var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType, settings);
+                var rawInfo = editor?.Edit(table, column, comment, propertyType, propertyName) ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
                 list.Add(rawInfo);
             }
 
@@ -316,7 +314,6 @@ namespace UniSharperEditor.Data.Metadata
             if (paths.Length == 0)
             {
                 UnityDebug.LogError("No excel files found!");
-
                 action?.Invoke(null, null, -1, -1);
                 return;
             }
@@ -325,12 +322,9 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var path = paths[i];
                 var fileName = Path.GetFileName(path);
-                var fileExtension = Path.GetExtension(path);
 
-                using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = fileExtension is ExcelFileExtension
-                    ? ExcelReaderFactory.CreateOpenXmlReader(stream)
-                    : ExcelReaderFactory.CreateBinaryReader(stream);
+                using var stream = File.OpenRead(path);
+                using var reader = ExcelReaderFactory.CreateReader(stream);
                 var result = reader.AsDataSet();
 
                 if (result.Tables.Count > 0)

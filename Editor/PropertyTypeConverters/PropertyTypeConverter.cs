@@ -8,13 +8,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class PropertyTypeConverter : IPropertyTypeConverter
     {
-        internal PropertyTypeConverter(string propertyName)
-        {
-            PropertyName = propertyName;
-        }
-
-        protected string PropertyName { get; }
-
         public virtual object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             if (string.IsNullOrEmpty(value)) 

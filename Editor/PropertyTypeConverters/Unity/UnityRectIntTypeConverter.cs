@@ -7,11 +7,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class UnityRectIntTypeConverter : PropertyTypeConverter
     {
-        internal UnityRectIntTypeConverter(string propertyName)
-            : base(propertyName)
-        {
-        }
-        
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             var rectInt = value.ToRectInt();
