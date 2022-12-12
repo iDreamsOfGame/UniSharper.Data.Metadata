@@ -5,7 +5,7 @@ using System;
 using System.Globalization;
 using UnityEngine;
 
-namespace UniSharperEditor.Data.Metadata.Converters
+namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class PropertyTypeConverter : IPropertyTypeConverter
     {
@@ -56,26 +56,26 @@ namespace UniSharperEditor.Data.Metadata.Converters
             return (T)args[3];
         }
         
-        protected static Vector2 ParseUnityEngineVector2(string value) => value.ToVector2();
+        protected static Vector2 ParseUnityVector2(string value) => value.ToVector2();
 
-        protected static Vector2Int ParseUnityEngineVector2Int(string value) => value.ToVector2Int();
+        protected static Vector2Int ParseUnityVector2Int(string value) => value.ToVector2Int();
         
-        protected static Vector3 ParseUnityEngineVector3(string value) => value.ToVector3();
+        protected static Vector3 ParseUnityVector3(string value) => value.ToVector3();
         
-        protected static Vector3Int ParseUnityEngineVector3Int(string value) => value.ToVector3Int();
+        protected static Vector3Int ParseUnityVector3Int(string value) => value.ToVector3Int();
         
-        protected static Vector4 ParseUnityEngineVector4(string value) => value.ToVector4();
+        protected static Vector4 ParseUnityVector4(string value) => value.ToVector4();
 
-        protected static RangeInt ParseUnityEngineRangeInt(string value) => value.ToRangeInt();
+        protected static RangeInt ParseUnityRangeInt(string value) => value.ToRangeInt();
 
-        protected static Quaternion ParseUnityEngineQuaternion(string value) => value.ToQuaternion();
+        protected static Quaternion ParseUnityQuaternion(string value) => value.ToQuaternion();
 
-        protected static Rect ParseUnityEngineRect(string value) => value.ToRect();
+        protected static Rect ParseUnityRect(string value) => value.ToRect();
 
-        protected static RectInt ParseUnityEngineRectInt(string value) => value.ToRectInt();
+        protected static RectInt ParseUnityRectInt(string value) => value.ToRectInt();
 
-        protected static Color ParseUnityEngineColor(string value) => value.ToColor();
+        protected static Color ParseUnityColor(string value) => value.ToColor();
 
-        protected static Color32 ParseUnityEngineColor32(string value) => value.ToColor32();
+        protected static Color32 ParseUnityColor32(string value) => value.ToColor32();
     }
 }

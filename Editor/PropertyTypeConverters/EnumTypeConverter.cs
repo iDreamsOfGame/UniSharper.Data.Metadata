@@ -3,7 +3,7 @@
 
 using System;
 
-namespace UniSharperEditor.Data.Metadata.Converters
+namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
     internal class EnumTypeConverter : PropertyTypeConverter
     {

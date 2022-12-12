@@ -3,14 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using UniSharperEditor.Data.Metadata.Converters;
+using ReSharp.Patterns;
+using UniSharperEditor.Data.Metadata.PropertyTypeConverters;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal static class PropertyTypeConverterFactory
+    internal class PropertyTypeConverterFactory : CachingFactoryTemplate<PropertyTypeConverterFactory, string, IPropertyTypeConverter>
     {
-        private static readonly Dictionary<Type, IPropertyTypeConverter> ConvertersCache = new();
-        
         private static readonly Dictionary<string, Type> PropertyTypeConverterTypeMap = new()
         {
             { PropertyTypeNames.String, typeof(PropertyTypeConverter) },
@@ -27,6 +26,17 @@ namespace UniSharperEditor.Data.Metadata
             { PropertyTypeNames.Int16, typeof(NumberTypeConverter<short>) },
             { PropertyTypeNames.UInt16, typeof(NumberTypeConverter<ushort>) },
             { PropertyTypeNames.Enum, typeof(EnumTypeConverter) },
+            { PropertyTypeNames.UnityVector2, typeof(UnityVector2TypeConverter) },
+            { PropertyTypeNames.UnityVector2Int, typeof(UnityVector2IntTypeConverter) },
+            { PropertyTypeNames.UnityVector3, typeof(UnityVector3TypeConverter) },
+            { PropertyTypeNames.UnityVector3Int, typeof(UnityVector3IntTypeConverter) },
+            { PropertyTypeNames.UnityVector4, typeof(UnityVector4TypeConverter) },
+            { PropertyTypeNames.UnityRangeInt, typeof(UnityRangeIntTypeConverter) },
+            { PropertyTypeNames.UnityQuaternion, typeof(UnityQuaternionTypeConverter) },
+            { PropertyTypeNames.UnityRect, typeof(UnityRectTypeConverter) },
+            { PropertyTypeNames.UnityRectInt, typeof(UnityRectIntTypeConverter) },
+            { PropertyTypeNames.UnityColor, typeof(UnityColorTypeConverter) },
+            { PropertyTypeNames.UnityColor32, typeof(UnityColor32TypeConverter) },
             { PropertyTypeNames.StringArray, typeof(ArrayTypeConverter) },
             { PropertyTypeNames.BooleanArray, typeof(BooleanArrayTypeConverter) },
             { PropertyTypeNames.ByteArray, typeof(NumberArrayTypeConverter<byte>) },
@@ -42,31 +52,9 @@ namespace UniSharperEditor.Data.Metadata
             { PropertyTypeNames.UInt16Array, typeof(NumberArrayTypeConverter<ushort>) }
         };
 
-        internal static IPropertyTypeConverter GetTypeConverter(string typeString, string propertyName)
+        private PropertyTypeConverterFactory()
+            : base(PropertyTypeConverterTypeMap)
         {
-            if (string.IsNullOrEmpty(typeString))
-                return null;
-
-            var type = GetConverterType(typeString);
-
-            if (type == null)
-                return null;
-
-            if (ConvertersCache.TryGetValue(type, out var typeParser))
-                return typeParser;
-
-            typeParser = CreateTypeConverter(typeString, propertyName);
-            ConvertersCache.Add(type, typeParser);
-            return typeParser;
         }
-
-        private static IPropertyTypeConverter CreateTypeConverter(string typeString, string propertyName)
-        {
-            var type = GetConverterType(typeString);
-            return (IPropertyTypeConverter)type?.InvokeConstructor(new object[] { propertyName });
-        }
-
-        private static Type GetConverterType(string typeString) => 
-            !string.IsNullOrEmpty(typeString) && PropertyTypeConverterTypeMap.TryGetValue(typeString, out var type) ? type : null;
     }
 }

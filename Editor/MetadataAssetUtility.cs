@@ -223,7 +223,7 @@ namespace UniSharperEditor.Data.Metadata
                 {
                     var cellValue = table.Rows[i][j].ToString();
                     var rowInfo = rawInfoList[j];
-                    var typeParser = PropertyTypeConverterFactory.GetTypeConverter(rowInfo.PropertyType, rowInfo.PropertyName);
+                    var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType, rowInfo.PropertyName);
 
                     if (typeParser != null)
                     {
@@ -263,7 +263,7 @@ namespace UniSharperEditor.Data.Metadata
                 propertyType = propertyType.Trim();
                 comment = FormatCommentString(comment.Trim());
 
-                var editor = PropertyRawInfoEditorFactory.GetEditor(propertyType, settings, table);
+                var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType, settings, table);
                 var rawInfo = editor?.Edit(column, comment, propertyType, propertyName) ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
                 list.Add(rawInfo);
             }
@@ -396,7 +396,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var rawInfo = rawInfoList[i];
                 var propertyType = rawInfo.PropertyType;
-                var editor = EntityScriptPropertyStringEditorFactory.GetEditor(propertyType);
+                var editor = EntityScriptPropertyStringEditorFactory.Instance.GetInstance(propertyType);
                 if (editor != null)
                 {
                     editor.Edit(stringBuilder, rawInfo);

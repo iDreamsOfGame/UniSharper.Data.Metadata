@@ -8,7 +8,7 @@ namespace UniSharperEditor.Data.Metadata.EntityScriptPropertyStringEditors
         public override void Edit(StringBuilder stringBuilder, EntityPropertyRawInfo rawInfo)
         {
             // Add enum int value property
-            stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rawInfo.Comment, "int", rawInfo.PropertyName);
+            stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rawInfo.Comment, PropertyTypeNames.Int32, rawInfo.PropertyName);
 
             stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
                 .Append(PlayerEnvironment.WindowsNewLine);

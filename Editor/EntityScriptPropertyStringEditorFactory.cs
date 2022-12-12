@@ -1,43 +1,34 @@
+// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
+// See LICENSE in the project root for license information.
+
 using System;
 using System.Collections.Generic;
+using ReSharp.Patterns;
 using UniSharperEditor.Data.Metadata.EntityScriptPropertyStringEditors;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal static class EntityScriptPropertyStringEditorFactory
+    internal class EntityScriptPropertyStringEditorFactory : CachingFactoryTemplate<EntityScriptPropertyStringEditorFactory, string, IEntityScriptPropertyStringEditor>
     {
-        private static readonly Dictionary<Type, IEntityScriptPropertyStringEditor> EditorsCache = new();
-
         private static readonly Dictionary<string, Type> PropertyTypeStringEditorTypeMap = new()
         {
-            { PropertyTypeNames.Enum, typeof(EnumPropertyStringEditor) }
+            { PropertyTypeNames.Enum, typeof(EnumPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector2, typeof(UnityVector2PropertyStringEditor) },
+            { PropertyTypeNames.UnityVector2Int, typeof(UnityVector2IntPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3, typeof(UnityVector3PropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3Int, typeof(UnityVector3IntPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector4, typeof(UnityVector4PropertyStringEditor) },
+            { PropertyTypeNames.UnityRangeInt, typeof(UnityRangeIntPropertyStringEditor) },
+            { PropertyTypeNames.UnityQuaternion, typeof(UnityQuaternionPropertyStringEditor) },
+            { PropertyTypeNames.UnityRect, typeof(UnityRectPropertyStringEditor) },
+            { PropertyTypeNames.UnityRectInt, typeof(UnityRectIntPropertyStringEditor) },
+            { PropertyTypeNames.UnityColor, typeof(UnityColorPropertyStringEditor) },
+            { PropertyTypeNames.UnityColor32, typeof(UnityColor32PropertyStringEditor) }
         };
-        
-        internal static IEntityScriptPropertyStringEditor GetEditor(string typeString)
+
+        private EntityScriptPropertyStringEditorFactory()
+            : base(PropertyTypeStringEditorTypeMap)
         {
-            if (string.IsNullOrEmpty(typeString))
-                return null;
-
-            var type = GetEditorType(typeString);
-
-            if (type == null)
-                return null;
-
-            if (EditorsCache.TryGetValue(type, out var editor))
-                return editor;
-
-            editor = CreateEditor(typeString);
-            EditorsCache.Add(type, editor);
-            return editor;
         }
-        
-        private static IEntityScriptPropertyStringEditor CreateEditor(string typeString)
-        {
-            var type = GetEditorType(typeString);
-            return (IEntityScriptPropertyStringEditor)type?.InvokeConstructor();
-        }
-        
-        private static Type GetEditorType(string typeString) => 
-            !string.IsNullOrEmpty(typeString) && PropertyTypeStringEditorTypeMap.TryGetValue(typeString, out var type) ? type : null;
     }
 }

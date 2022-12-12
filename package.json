@@ -11,7 +11,7 @@
 	"license": "MIT",
 	"dependencies": 
 	{
-		"io.github.idreamsofgame.unisharper.core": "1.12.1",
+		"io.github.idreamsofgame.unisharper.core": "1.12.4",
     	"io.github.idreamsofgame.resharp.data.iboxdb": "2.0.1",
     	"com.github.exceldatareader.exceldatareader": "3.6.0"
 	}

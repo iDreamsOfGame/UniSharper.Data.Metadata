@@ -1,44 +1,34 @@
+// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
+// See LICENSE in the project root for license information.
+
 using System;
 using System.Collections.Generic;
-using System.Data;
+using ReSharp.Patterns;
 using UniSharperEditor.Data.Metadata.EntityRawInfoEditors;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal static class PropertyRawInfoEditorFactory
+    internal class PropertyRawInfoEditorFactory : CachingFactoryTemplate<PropertyRawInfoEditorFactory, string, IPropertyRawInfoEditor>
     {
-        private static readonly Dictionary<Type, IPropertyRawInfoEditor> EditorsCache = new();
-
         private static readonly Dictionary<string, Type> PropertyTypeEditorTypeMap = new()
         {
-            { PropertyTypeNames.Enum, typeof(EnumPropertyRawInfoEditor) }
+            { PropertyTypeNames.Enum, typeof(EnumTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityVector2, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityVector2Int, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityVector3, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityVector3Int, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityVector4, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityRangeInt, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityQuaternion, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityRect, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityRectInt, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityColor, typeof(UnityTypeRawInfoEditor) },
+            { PropertyTypeNames.UnityColor32, typeof(UnityTypeRawInfoEditor) }
         };
 
-        internal static IPropertyRawInfoEditor GetEditor(string typeString, MetadataAssetSettings settings, DataTable table)
+        private PropertyRawInfoEditorFactory()
+            : base(PropertyTypeEditorTypeMap)
         {
-            if (string.IsNullOrEmpty(typeString))
-                return null;
-
-            var type = GetEditorType(typeString);
-
-            if (type == null)
-                return null;
-
-            if (EditorsCache.TryGetValue(type, out var editor))
-                return editor;
-
-            editor = CreateEditor(typeString, settings, table);
-            EditorsCache.Add(type, editor);
-            return editor;
         }
-        
-        private static IPropertyRawInfoEditor CreateEditor(string typeString, MetadataAssetSettings settings, DataTable table)
-        {
-            var type = GetEditorType(typeString);
-            return (IPropertyRawInfoEditor)type?.InvokeConstructor(new object[] { settings, table });
-        }
-        
-        private static Type GetEditorType(string typeString) => 
-            !string.IsNullOrEmpty(typeString) && PropertyTypeEditorTypeMap.TryGetValue(typeString, out var type) ? type : null;
     }
 }

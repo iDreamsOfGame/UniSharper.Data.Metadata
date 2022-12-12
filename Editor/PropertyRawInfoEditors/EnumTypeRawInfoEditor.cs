@@ -3,9 +3,9 @@ using System.Data;
 
 namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
 {
-    internal class EnumPropertyRawInfoEditor : PropertyRawInfoEditor
+    internal class EnumTypeRawInfoEditor : PropertyRawInfoEditor
     {
-        internal EnumPropertyRawInfoEditor(MetadataAssetSettings settings, DataTable table)
+        internal EnumTypeRawInfoEditor(MetadataAssetSettings settings, DataTable table)
             : base(settings, table)
         {
         }
@@ -29,7 +29,7 @@ namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
             }
 
             parameters[2] = enumValues.ToArray();
-            propertyName = $"{propertyName}IntValue";
+            propertyName = $"{propertyName}Value";
             return new EntityPropertyRawInfo(comment, propertyType, propertyName, parameters);
         }
     }
