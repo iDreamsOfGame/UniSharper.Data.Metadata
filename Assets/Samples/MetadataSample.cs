@@ -45,6 +45,17 @@ namespace UniSharper.Data.Metadata.Samples
             AddPropertyItem(nameof(metadata.DoubleSample), metadata.DoubleSample);
             AddPropertyItem(nameof(metadata.DecimalSample), metadata.DecimalSample);
             AddPropertyItem(nameof(metadata.EnumSample), metadata.EnumSample);
+            AddPropertyItem(nameof(metadata.Vector2Sample), metadata.Vector2Sample);
+            AddPropertyItem(nameof(metadata.Vector2IntSample), metadata.Vector2IntSample);
+            AddPropertyItem(nameof(metadata.Vector3Sample), metadata.Vector3Sample);
+            AddPropertyItem(nameof(metadata.Vector3IntSample), metadata.Vector3IntSample);
+            AddPropertyItem(nameof(metadata.Vector4Sample), metadata.Vector4Sample);
+            AddPropertyItem(nameof(metadata.RangeIntSample), $"({metadata.RangeIntSample.start}, {metadata.RangeIntSample.length})");
+            AddPropertyItem(nameof(metadata.QuaternionSample), metadata.QuaternionSample);
+            AddPropertyItem(nameof(metadata.RectSample), metadata.RectSample);
+            AddPropertyItem(nameof(metadata.RectIntSample), metadata.RectIntSample);
+            AddPropertyItem(nameof(metadata.ColorSample), metadata.ColorSample);
+            AddPropertyItem(nameof(metadata.Color32Sample), metadata.Color32Sample);
 
             // Array
             AddPropertyItem(nameof(metadata.StringArraySample), ToString(metadata.StringArraySample));
