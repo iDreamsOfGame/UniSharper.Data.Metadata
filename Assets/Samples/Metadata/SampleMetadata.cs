@@ -20,7 +20,7 @@ namespace UniSharper.Data.Metadata.Samples
 		public enum EnumSampleEnum
 		{
 			None,
-			TestEnumType1
+			EnumSampleType1
 		}
 
 
