@@ -3,16 +3,16 @@
 
 using System.Data;
 
-namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
+namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal class UnityTypeRawInfoEditor : PropertyRawInfoEditor
     {
-        public UnityTypeRawInfoEditor(MetadataAssetSettings settings)
-            : base(settings)
-        {
-        }
-
-        public override EntityPropertyRawInfo Edit(DataTable table, int column, string comment, string propertyType, string propertyName)
+        public override EntityPropertyRawInfo Edit(MetadataAssetSettings settings, 
+            DataTable table, 
+            int column, 
+            string comment, 
+            string propertyType, 
+            string propertyName)
         {
             var parameters = new object[1];
             parameters[0] = propertyName;

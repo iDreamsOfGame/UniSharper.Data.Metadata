@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using ExcelDataReader;
 using JetBrains.Annotations;
 using ReSharp.Data.IBoxDB;
+using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
 using UniSharper.Data.Metadata;
@@ -55,35 +56,36 @@ namespace UniSharperEditor.Data.Metadata
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
-            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
-            {
-                if (table == null)
-                    return;
-
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                var entityClassName = fileNameWithoutExtension.ToTitleCase();
-                var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
-                var progress = (float)(index + 1) / length;
-                EditorUtility.DisplayProgressBar("Hold on...", info, progress);
-
-                var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
-                var entityClassType = GetEntityClassType(settings, entityClassName);
-
-                if (entityClassType != null)
+            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
+                (table, fileName, index, length) =>
                 {
-                    var entityDataList = CreateEntityDataList(settings, table, entityClassType, rawInfoList);
-                    var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
-                    typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
-                        new[] { entityClassType },
-                        new object[] { dbFolderPath, entityClassName, rawInfoList, entityDataList, index, updateDatabaseFile });
-                    result = true;
-                }
-                else
-                {
-                    UnityDebug.LogErrorFormat(null, "Can not find the entity class: {0}.cs!", entityClassName);
-                    result = false;
-                }
-            });
+                    if (table == null)
+                        return;
+
+                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                    var entityClassName = fileNameWithoutExtension.ToTitleCase();
+                    var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
+                    var progress = (float)(index + 1) / length;
+                    EditorUtility.DisplayProgressBar("Hold on...", info, progress);
+
+                    var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
+                    var entityClassType = GetEntityClassType(settings, entityClassName);
+
+                    if (entityClassType != null)
+                    {
+                        var entityDataList = CreateEntityDataList(settings, table, entityClassType, rawInfoList);
+                        var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
+                        typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
+                            new[] { entityClassType },
+                            new object[] { dbFolderPath, entityClassName, rawInfoList, entityDataList, index, updateDatabaseFile });
+                        result = true;
+                    }
+                    else
+                    {
+                        UnityDebug.LogErrorFormat(null, "Can not find the entity class: {0}.cs!", entityClassName);
+                        result = false;
+                    }
+                });
 
             // Copy MetadataEntityDBConfig database file.
             if (result && (addedExcelFiles.Count > 0 || deletedExcelFiles.Count > 0))
@@ -116,18 +118,19 @@ namespace UniSharperEditor.Data.Metadata
                 // Try delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
-                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, name, index, length) =>
-                {
-                    if (table == null)
-                        return;
+                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
+                    (table, name, index, length) =>
+                    {
+                        if (table == null)
+                            return;
 
-                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
-                    var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
-                    var progress = (float)(index + 1) / length;
-                    EditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                    var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
-                    result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
-                });
+                        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
+                        var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
+                        var progress = (float)(index + 1) / length;
+                        EditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
+                        result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
+                    });
             }
 
             EditorUtility.ClearProgressBar();
@@ -151,6 +154,11 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             ExcelWorkbookFileHashMap.Save(fileHashMap);
+        }
+
+        internal static void ClearExcelWorkbookFileHashMap()
+        {
+            ExcelWorkbookFileHashMap.Delete();
         }
 
         private static void FindChangedExcelWorkbookFiles(out List<string> addedExcelFiles, out List<string> updatedExcelFiles, out List<string> deletedExcelFiles)
@@ -261,8 +269,9 @@ namespace UniSharperEditor.Data.Metadata
                 propertyType = propertyType.Trim();
                 comment = FormatCommentString(comment.Trim());
 
-                var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType, settings);
-                var rawInfo = editor?.Edit(table, column, comment, propertyType, propertyName) ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
+                var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType);
+                var rawInfo = editor?.Edit(settings, table, column, comment, propertyType, propertyName)
+                              ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
                 list.Add(rawInfo);
             }
 
@@ -376,7 +385,8 @@ namespace UniSharperEditor.Data.Metadata
                 }
 
                 stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
-                    .Append(PlayerEnvironment.WindowsNewLine).Append(PlayerEnvironment.WindowsNewLine);
+                    .Append(PlayerEnvironment.WindowsNewLine)
+                    .Append(PlayerEnvironment.WindowsNewLine);
             }
 
             return stringBuilder.ToString();
@@ -390,7 +400,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var rawInfo = rawInfoList[i];
                 var propertyType = rawInfo.PropertyType;
-                var editor = EntityScriptPropertyStringEditorFactory.Instance.GetInstance(propertyType);
+                var editor = PropertyStringEditorFactory.Instance.GetInstance(propertyType);
                 if (editor != null)
                 {
                     editor.Edit(stringBuilder, rawInfo);

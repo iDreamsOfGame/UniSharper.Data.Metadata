@@ -4,9 +4,9 @@
 using System.Text;
 using UniSharper;
 
-namespace UniSharperEditor.Data.Metadata.EntityScriptPropertyStringEditors
+namespace UniSharperEditor.Data.Metadata.PropertyStringEditors
 {
-    internal class EnumPropertyStringEditor : EntityScriptPropertyStringEditor
+    internal class EnumPropertyStringEditor : PropertyStringEditor
     {
         public override void Edit(StringBuilder stringBuilder, EntityPropertyRawInfo rawInfo)
         {

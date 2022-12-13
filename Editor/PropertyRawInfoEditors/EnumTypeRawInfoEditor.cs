@@ -3,17 +3,18 @@
 
 using System.Collections.Generic;
 using System.Data;
+using ReSharp.Extensions;
 
-namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
+namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal class EnumTypeRawInfoEditor : PropertyRawInfoEditor
     {
-        internal EnumTypeRawInfoEditor(MetadataAssetSettings settings)
-            : base(settings)
-        {
-        }
-        
-        public override EntityPropertyRawInfo Edit(DataTable dataTable, int column, string comment, string propertyType, string propertyName)
+        public override EntityPropertyRawInfo Edit(MetadataAssetSettings settings,
+            DataTable dataTable,
+            int column,
+            string comment,
+            string propertyType,
+            string propertyName)
         {
             var parameters = new object[3];
             parameters[0] = propertyName;
@@ -21,7 +22,7 @@ namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
 
             var enumValues = new List<string> { "None" };
             var rows = dataTable.Rows;
-            for (var row = Settings.EntityDataStartingRowIndex; row < rows.Count; row++)
+            for (var row = settings.EntityDataStartingRowIndex; row < rows.Count; row++)
             {
                 var enumValue = rows[row][column].ToString().Trim();
 

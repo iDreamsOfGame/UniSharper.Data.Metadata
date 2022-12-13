@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
 // See LICENSE in the project root for license information.
 
-using ReSharp.Patterns;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using ReSharp.Data.IBoxDB;
+using ReSharp.Extensions;
+using ReSharp.Patterns;
 using ReSharp.Security.Cryptography;
 using UnityEngine.Scripting;
 

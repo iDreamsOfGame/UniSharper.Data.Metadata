@@ -131,6 +131,15 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
+        private static void RebuildAssets()
+        {
+            // Clear cache.
+            MetadataAssetUtility.ClearExcelWorkbookFileHashMap();
+            
+            // Then build assets.
+            BuildAssets();
+        }
+
         internal void DrawEditorGUI()
         {
             if (settings == null)
@@ -153,7 +162,7 @@ namespace UniSharperEditor.Data.Metadata
                     EditorGUILayout.Space(10);
 
                     // Build Assets Button
-                    DrawBuildAssetsButton();
+                    DrawBuildButtons();
                 }
                 EditorGUILayout.EndVertical();
 
@@ -268,13 +277,18 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        private void DrawBuildAssetsButton()
+        private void DrawBuildButtons()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Build Metadata Assets", GUILayout.Width(LabelWidth), GUILayout.Height(25)))
                     BuildAssets();
+                
+                GUILayout.Space(10);
+                
+                if (GUILayout.Button("Rebuild Metadata Assets", GUILayout.Width(LabelWidth), GUILayout.Height(25)))
+                    RebuildAssets();
                 GUILayout.FlexibleSpace();
             }
             EditorGUILayout.EndHorizontal();

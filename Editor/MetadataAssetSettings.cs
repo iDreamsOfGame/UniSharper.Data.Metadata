@@ -3,6 +3,7 @@
 
 using System.IO;
 using JetBrains.Annotations;
+using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
 using UnityEditor;

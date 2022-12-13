@@ -3,12 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using ReSharp.Patterns;
-using UniSharperEditor.Data.Metadata.EntityScriptPropertyStringEditors;
+using ReSharp.Patterns.Factory;
+using UniSharperEditor.Data.Metadata.PropertyStringEditors;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal class EntityScriptPropertyStringEditorFactory : CachingFactoryTemplate<EntityScriptPropertyStringEditorFactory, string, IEntityScriptPropertyStringEditor>
+    internal class PropertyStringEditorFactory : CachingFactoryTemplate<PropertyStringEditorFactory, string, IPropertyStringEditor>
     {
         private static readonly Dictionary<string, Type> PropertyTypeStringEditorTypeMap = new()
         {
@@ -26,7 +26,7 @@ namespace UniSharperEditor.Data.Metadata
             { PropertyTypeNames.UnityColor32, typeof(UnityColor32PropertyStringEditor) }
         };
 
-        private EntityScriptPropertyStringEditorFactory()
+        private PropertyStringEditorFactory()
             : base(PropertyTypeStringEditorTypeMap)
         {
         }

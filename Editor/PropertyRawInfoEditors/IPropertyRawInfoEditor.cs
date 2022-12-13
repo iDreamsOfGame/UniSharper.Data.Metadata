@@ -3,10 +3,10 @@
 
 using System.Data;
 
-namespace UniSharperEditor.Data.Metadata.EntityRawInfoEditors
+namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal interface IPropertyRawInfoEditor
     {
-        EntityPropertyRawInfo Edit(DataTable dataTable, int column, string comment, string propertyType, string propertyName);
+        EntityPropertyRawInfo Edit(MetadataAssetSettings settings, DataTable dataTable, int column, string comment, string propertyType, string propertyName);
     }
 }

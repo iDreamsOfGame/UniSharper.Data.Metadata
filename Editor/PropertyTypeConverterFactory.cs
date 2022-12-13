@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using ReSharp.Patterns;
+using ReSharp.Patterns.Factory;
 using UniSharperEditor.Data.Metadata.PropertyTypeConverters;
 
 namespace UniSharperEditor.Data.Metadata

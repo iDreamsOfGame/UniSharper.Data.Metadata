@@ -3,9 +3,9 @@
 
 using System.Text;
 
-namespace UniSharperEditor.Data.Metadata.EntityScriptPropertyStringEditors
+namespace UniSharperEditor.Data.Metadata.PropertyStringEditors
 {
-    internal abstract class EntityScriptPropertyStringEditor : IEntityScriptPropertyStringEditor
+    internal abstract class PropertyStringEditor : IPropertyStringEditor
     {
         public abstract void Edit(StringBuilder stringBuilder, EntityPropertyRawInfo rawInfo);
     }

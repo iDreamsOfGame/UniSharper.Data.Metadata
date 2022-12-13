@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using ReSharp.Patterns;
-using UniSharperEditor.Data.Metadata.EntityRawInfoEditors;
+using ReSharp.Patterns.Factory;
+using UniSharperEditor.Data.Metadata.PropertyRawInfoEditors;
 
 namespace UniSharperEditor.Data.Metadata
 {

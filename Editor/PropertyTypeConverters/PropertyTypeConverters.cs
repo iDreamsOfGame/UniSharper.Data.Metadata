@@ -3,9 +3,32 @@
 
 using System;
 using System.Globalization;
+using ReSharp.Extensions;
 
 namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
 {
+    internal class EnumTypeConverter : PropertyTypeConverter
+    {
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
+        {
+            if (string.IsNullOrEmpty(value)) 
+                return 0;
+            
+            var enumValues = parameters[2] as string[];
+            return Array.FindIndex(enumValues ?? Array.Empty<string>(), enumValue => enumValue.Equals(value));
+        }
+    }
+    
+    internal class BooleanTypeConverter : PropertyTypeConverter
+    {
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => ParseBoolean(value);
+    }
+    
+    internal class NumberTypeConverter<T> : PropertyTypeConverter
+    {
+        public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => ParseNumber<T>(value);
+    }
+    
     internal class PropertyTypeConverter : IPropertyTypeConverter
     {
         public virtual object Parse(char arrayElementSeparator, string value, params object[] parameters)
