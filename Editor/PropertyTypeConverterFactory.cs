@@ -49,7 +49,18 @@ namespace UniSharperEditor.Data.Metadata
             { PropertyTypeNames.Int64Array, typeof(NumberArrayTypeConverter<long>) },
             { PropertyTypeNames.UInt64Array, typeof(NumberArrayTypeConverter<ulong>) },
             { PropertyTypeNames.Int16Array, typeof(NumberArrayTypeConverter<short>) },
-            { PropertyTypeNames.UInt16Array, typeof(NumberArrayTypeConverter<ushort>) }
+            { PropertyTypeNames.UInt16Array, typeof(NumberArrayTypeConverter<ushort>) },
+            { PropertyTypeNames.UnityVector2Array, typeof(UnityVector2ArrayTypeConverter) },
+            { PropertyTypeNames.UnityVector2IntArray, typeof(UnityVector2IntArrayTypeConverter) },
+            { PropertyTypeNames.UnityVector3Array, typeof(UnityVector3ArrayTypeConverter) },
+            { PropertyTypeNames.UnityVector3IntArray, typeof(UnityVector3IntArrayTypeConverter) },
+            { PropertyTypeNames.UnityVector4Array, typeof(UnityVector4ArrayTypeConverter) },
+            { PropertyTypeNames.UnityRangeIntArray, typeof(UnityRangeIntArrayTypeConverter) },
+            { PropertyTypeNames.UnityQuaternionArray, typeof(UnityQuaternionArrayTypeConverter) },
+            { PropertyTypeNames.UnityRectArray, typeof(UnityRectArrayTypeConverter) },
+            { PropertyTypeNames.UnityRectIntArray, typeof(UnityRectIntArrayTypeConverter) },
+            { PropertyTypeNames.UnityColorArray, typeof(UnityColorArrayTypeConverter) },
+            { PropertyTypeNames.UnityColor32Array, typeof(UnityColor32ArrayTypeConverter) }
         };
 
         private PropertyTypeConverterFactory()

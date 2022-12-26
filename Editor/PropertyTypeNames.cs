@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    public static class PropertyTypeNames
+    internal sealed class PropertyTypeNames
     {
         internal const string String = "string";
 
@@ -82,5 +82,40 @@ namespace UniSharperEditor.Data.Metadata
         internal const string Int16Array = "short[]";
 
         internal const string UInt16Array = "ushort[]";
+
+        internal static readonly string UnityVector2Array = $"{UnityVector2}[]";
+        
+        internal static readonly string UnityVector2IntArray = $"{UnityVector2Int}[]";
+
+        internal static readonly string UnityVector3Array = $"{UnityVector3}[]";
+        
+        internal static readonly string UnityVector3IntArray = $"{UnityVector3Int}[]";
+        
+        internal static readonly string UnityVector4Array = $"{UnityVector4}[]";
+        
+        internal static readonly string UnityRangeIntArray = $"{UnityRangeInt}[]";
+        
+        internal static readonly string UnityQuaternionArray = $"{UnityQuaternion}[]";
+        
+        internal static readonly string UnityRectArray = $"{UnityRect}[]";
+        
+        internal static readonly string UnityRectIntArray = $"{UnityRectInt}[]";
+        
+        internal static readonly string UnityColorArray = $"{UnityColor}[]";
+        
+        internal static readonly string UnityColor32Array = $"{UnityColor32}[]";
+
+        internal static bool IsUnityTypeArray(string typeString) 
+            => typeString.Equals(UnityVector2Array) 
+               || typeString.Equals(UnityVector2IntArray) 
+               || typeString.Equals(UnityVector3Array)
+               || typeString.Equals(UnityVector3IntArray)
+               || typeString.Equals(UnityVector4Array)
+               || typeString.Equals(UnityRangeIntArray)
+               || typeString.Equals(UnityQuaternionArray)
+               || typeString.Equals(UnityRectArray)
+               || typeString.Equals(UnityRectIntArray)
+               || typeString.Equals(UnityColorArray)
+               || typeString.Equals(UnityColor32Array);
     }
 }

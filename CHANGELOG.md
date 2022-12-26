@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.3.0] - 2022-12-26
+
+### Added
+
+- Surport UnityEngine type array parsing: **Vector2[]**/**Vector2Int[]**/**Vector3[]**/**Vector3Int[]**/**Vector4[]**/**RangeInt[]**/**Quaternion[]**/**Rect[]**/**RectInt[]**/**Color[]**/**Color32[]**.
+
+
+
 ## [2.2.0] - 2022-12-10
 
 ### Added

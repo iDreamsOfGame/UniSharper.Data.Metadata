@@ -13,17 +13,28 @@ namespace UniSharperEditor.Data.Metadata
         private static readonly Dictionary<string, Type> PropertyTypeStringEditorTypeMap = new()
         {
             { PropertyTypeNames.Enum, typeof(EnumPropertyStringEditor) },
-            { PropertyTypeNames.UnityVector2, typeof(UnityVector2PropertyStringEditor) },
-            { PropertyTypeNames.UnityVector2Int, typeof(UnityVector2IntPropertyStringEditor) },
-            { PropertyTypeNames.UnityVector3, typeof(UnityVector3PropertyStringEditor) },
-            { PropertyTypeNames.UnityVector3Int, typeof(UnityVector3IntPropertyStringEditor) },
-            { PropertyTypeNames.UnityVector4, typeof(UnityVector4PropertyStringEditor) },
-            { PropertyTypeNames.UnityRangeInt, typeof(UnityRangeIntPropertyStringEditor) },
-            { PropertyTypeNames.UnityQuaternion, typeof(UnityQuaternionPropertyStringEditor) },
-            { PropertyTypeNames.UnityRect, typeof(UnityRectPropertyStringEditor) },
-            { PropertyTypeNames.UnityRectInt, typeof(UnityRectIntPropertyStringEditor) },
-            { PropertyTypeNames.UnityColor, typeof(UnityColorPropertyStringEditor) },
-            { PropertyTypeNames.UnityColor32, typeof(UnityColor32PropertyStringEditor) }
+            { PropertyTypeNames.UnityVector2, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityVector2Int, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3Int, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityVector4, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityRangeInt, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityQuaternion, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityRect, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityRectInt, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityColor, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityColor32, typeof(UnityTypePropertyStringEditor) },
+            { PropertyTypeNames.UnityVector2Array, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector2IntArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3Array, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector3IntArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityVector4Array, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityRangeIntArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityQuaternionArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityRectArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityRectIntArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityColorArray, typeof(UnityTypeArrayPropertyStringEditor) },
+            { PropertyTypeNames.UnityColor32Array, typeof(UnityTypeArrayPropertyStringEditor) }
         };
 
         private PropertyStringEditorFactory()

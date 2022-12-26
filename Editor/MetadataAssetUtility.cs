@@ -362,33 +362,54 @@ namespace UniSharperEditor.Data.Metadata
         {
             var stringBuilder = new StringBuilder();
 
-            for (int i = 0, length = rawInfoList.Count; i < length; ++i)
+            foreach (var rawInfo in rawInfoList.Where(rowInfo => rowInfo.PropertyType.Equals(PropertyTypeNames.Enum)))
             {
-                var rowInfo = rawInfoList[i];
-
-                if (!rowInfo.PropertyType.Equals(PropertyTypeNames.Enum))
-                    continue;
-
                 var enumValuesString = new StringBuilder();
-                if (rowInfo.Parameters[2] is not string[] enumValueList)
+                if (rawInfo.Parameters[2] is not string[] enumValueList)
                     continue;
-
+            
                 for (var j = 0; j < enumValueList.Length; j++)
                 {
                     var enumValue = enumValueList[j];
                     enumValuesString.Append($"\t\t\t{enumValue}");
-
+            
                     if (j >= enumValueList.Length - 1)
                         continue;
-
+            
                     enumValuesString.Append(",").Append(PlayerEnvironment.WindowsNewLine);
                 }
 
-                stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumDefinition, rowInfo.Comment, rowInfo.Parameters[1], enumValuesString)
-                    .Append(PlayerEnvironment.WindowsNewLine)
-                    .Append(PlayerEnvironment.WindowsNewLine);
+                if (stringBuilder.Length > 0)
+                    stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
+                        .Append(PlayerEnvironment.WindowsNewLine);
+                
+                stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumDefinition, rawInfo.Comment, rawInfo.Parameters[1], enumValuesString);
             }
 
+            if (stringBuilder.Length > 0)
+                stringBuilder.Append(PlayerEnvironment.WindowsNewLine);
+            
+            return stringBuilder.ToString();
+        }
+
+        private static string GenerateEntityScriptFieldsString(List<EntityPropertyRawInfo> rawInfoList)
+        {
+            var stringBuilder = new StringBuilder();
+            
+            foreach (var rawInfo in rawInfoList.Where(rowInfo => PropertyTypeNames.IsUnityTypeArray(rowInfo.PropertyType)))
+            {
+                if (stringBuilder.Length > 0)
+                    stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
+                        .Append(PlayerEnvironment.WindowsNewLine);
+
+                var fieldType = rawInfo.PropertyType;
+                var fieldName = (rawInfo.Parameters[1] as string).ToCamelCase();
+                stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PrivateField, fieldType, fieldName);
+            }
+
+            if (stringBuilder.Length > 0)
+                stringBuilder.Append(PlayerEnvironment.WindowsNewLine);
+            
             return stringBuilder.ToString();
         }
 
@@ -407,7 +428,7 @@ namespace UniSharperEditor.Data.Metadata
                 }
                 else
                 {
-                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.PropertyMember, rawInfo.Comment, propertyType, rawInfo.PropertyName);
+                    stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.AutoImplementedProperty, rawInfo.Comment, propertyType, rawInfo.PropertyName);
                 }
 
                 if (i >= length - 1)
@@ -426,10 +447,27 @@ namespace UniSharperEditor.Data.Metadata
             {
                 entityScriptName = entityScriptName.ToTitleCase();
                 const string templateFileName = "NewMetadataEntityScriptTemplate.txt";
+                var newLineStringLength = PlayerEnvironment.WindowsNewLine.Length;
                 var scriptTextContent = ScriptTemplate.LoadScriptTemplateFile(templateFileName, UnityPackageName);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Namespace, settings.EntityScriptNamespace);
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.ScriptName, entityScriptName);
-                scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, GenerateEntityScriptEnumString(rawInfoList));
+
+                // Enum string
+                var enumString = GenerateEntityScriptEnumString(rawInfoList);
+                var startIndex = scriptTextContent.IndexOf(ScriptTemplate.Placeholders.EnumInsideOfClass, StringComparison.Ordinal);
+                if (string.IsNullOrEmpty(enumString))
+                    scriptTextContent = scriptTextContent.Remove(startIndex - newLineStringLength, newLineStringLength);
+                
+                scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, enumString);
+
+                // Fields string
+                var fieldsString = GenerateEntityScriptFieldsString(rawInfoList);
+                startIndex = scriptTextContent.IndexOf(ScriptTemplate.Placeholders.Fields, StringComparison.Ordinal);
+                if (string.IsNullOrEmpty(fieldsString))
+                    scriptTextContent = scriptTextContent.Remove(startIndex - newLineStringLength, newLineStringLength);
+                
+                scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Fields, fieldsString);
+                
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
 
                 var scriptFilePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
