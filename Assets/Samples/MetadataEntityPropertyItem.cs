@@ -23,5 +23,10 @@ namespace UniSharper.Data.Metadata.Samples
         {
             set => label.text = value;
         }
+
+        public bool Bold
+        {
+            set => label.fontStyle = value ? FontStyle.Bold : FontStyle.Normal;
+        }
     }
 }

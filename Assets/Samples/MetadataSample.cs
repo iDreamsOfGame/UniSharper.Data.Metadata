@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,14 +23,30 @@ namespace UniSharper.Data.Metadata.Samples
             var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/MetadataEntityDBConfig.db.bytes");
             MetadataManager.Initialize(binAsset.bytes);
         
-            // Load DB data of ExampleMetadata
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/SampleMetadata.db.bytes");
-            MetadataManager.LoadEntityDatabase<SampleMetadata>(binAsset.bytes);
+            // Load DB data of Metadata
+            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/GenericTypeSampleMetadata.db.bytes");
+            MetadataManager.LoadEntityDatabase<GenericTypeSampleMetadata>(binAsset.bytes);
+            
+            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/UnityTypeSampleMetadata.db.bytes");
+            MetadataManager.LoadEntityDatabase<UnityTypeSampleMetadata>(binAsset.bytes);
         }
 
         private void Start()
         {
-            var metadata = MetadataManager.GetEntity<SampleMetadata>(1L);
+            AddGenericTypeSampleMetadataItems();
+            AddUnityTypeSampleMetadataItems();
+        }
+        
+        private void OnDestroy()
+        {
+            MetadataManager.Dispose();
+        }
+
+        private void AddGenericTypeSampleMetadataItems()
+        {
+            AddTitleItem("Generic Type");
+            
+            var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(1L);
 
             AddPropertyItem(nameof(metadata.StringSample), metadata.StringSample);
             AddPropertyItem(nameof(metadata.BooleanSample), metadata.BooleanSample);
@@ -45,18 +62,7 @@ namespace UniSharper.Data.Metadata.Samples
             AddPropertyItem(nameof(metadata.DoubleSample), metadata.DoubleSample);
             AddPropertyItem(nameof(metadata.DecimalSample), metadata.DecimalSample);
             AddPropertyItem(nameof(metadata.EnumSample), metadata.EnumSample);
-            AddPropertyItem(nameof(metadata.Vector2Sample), metadata.Vector2Sample);
-            AddPropertyItem(nameof(metadata.Vector2IntSample), metadata.Vector2IntSample);
-            AddPropertyItem(nameof(metadata.Vector3Sample), metadata.Vector3Sample);
-            AddPropertyItem(nameof(metadata.Vector3IntSample), metadata.Vector3IntSample);
-            AddPropertyItem(nameof(metadata.Vector4Sample), metadata.Vector4Sample);
-            AddPropertyItem(nameof(metadata.RangeIntSample), $"({metadata.RangeIntSample.start}, {metadata.RangeIntSample.length})");
-            AddPropertyItem(nameof(metadata.QuaternionSample), metadata.QuaternionSample);
-            AddPropertyItem(nameof(metadata.RectSample), metadata.RectSample);
-            AddPropertyItem(nameof(metadata.RectIntSample), metadata.RectIntSample);
-            AddPropertyItem(nameof(metadata.ColorSample), metadata.ColorSample);
-            AddPropertyItem(nameof(metadata.Color32Sample), metadata.Color32Sample);
-
+            
             // Array
             AddPropertyItem(nameof(metadata.StringArraySample), ToString(metadata.StringArraySample));
             AddPropertyItem(nameof(metadata.BooleanArraySample), ToString(metadata.BooleanArraySample));
@@ -72,10 +78,48 @@ namespace UniSharper.Data.Metadata.Samples
             AddPropertyItem(nameof(metadata.DoubleArraySample), ToString(metadata.DoubleArraySample));
             AddPropertyItem(nameof(metadata.DecimalArraySample), ToString(metadata.DecimalArraySample));
         }
-        
-        private void OnDestroy()
+
+        private void AddUnityTypeSampleMetadataItems()
         {
-            MetadataManager.Dispose();
+            AddTitleItem("Unity Type");
+            
+            var metadata = MetadataManager.GetEntity<UnityTypeSampleMetadata>(1L);
+            
+            AddPropertyItem(nameof(metadata.Vector2Sample), metadata.Vector2Sample);
+            AddPropertyItem(nameof(metadata.Vector2IntSample), metadata.Vector2IntSample);
+            AddPropertyItem(nameof(metadata.Vector3Sample), metadata.Vector3Sample);
+            AddPropertyItem(nameof(metadata.Vector3IntSample), metadata.Vector3IntSample);
+            AddPropertyItem(nameof(metadata.Vector4Sample), metadata.Vector4Sample);
+            AddPropertyItem(nameof(metadata.RangeIntSample), $"({metadata.RangeIntSample.start}, {metadata.RangeIntSample.length})");
+            AddPropertyItem(nameof(metadata.QuaternionSample), metadata.QuaternionSample);
+            AddPropertyItem(nameof(metadata.RectSample), metadata.RectSample);
+            AddPropertyItem(nameof(metadata.RectIntSample), metadata.RectIntSample);
+            AddPropertyItem(nameof(metadata.ColorSample), metadata.ColorSample);
+            AddPropertyItem(nameof(metadata.Color32Sample), metadata.Color32Sample);
+
+            // Array
+            AddPropertyItem(nameof(metadata.Vector2ArraySample), ToString(metadata.Vector2ArraySample));
+            AddPropertyItem(nameof(metadata.Vector2IntArraySample), ToString(metadata.Vector2IntArraySample));
+            AddPropertyItem(nameof(metadata.Vector3ArraySample), ToString(metadata.Vector3ArraySample));
+            AddPropertyItem(nameof(metadata.Vector3IntArraySample), ToString(metadata.Vector3IntArraySample));
+            AddPropertyItem(nameof(metadata.Vector4ArraySample), ToString(metadata.Vector4ArraySample));
+            AddPropertyItem(nameof(metadata.RangeIntArraySample), ToRangeIntArrayString(metadata.RangeIntArraySample));
+            AddPropertyItem(nameof(metadata.QuaternionArraySample), ToString(metadata.QuaternionArraySample));
+            AddPropertyItem(nameof(metadata.RectArraySample), ToString(metadata.RectArraySample));
+            AddPropertyItem(nameof(metadata.RectIntArraySample), ToString(metadata.RectIntArraySample));
+            AddPropertyItem(nameof(metadata.ColorArraySample), ToString(metadata.ColorArraySample));
+            AddPropertyItem(nameof(metadata.Color32ArraySample), ToString(metadata.Color32ArraySample));
+        }
+
+        private void AddTitleItem(string title)
+        {
+            var instance = Instantiate(propertyItemTemplate, content);
+            if (!instance)
+                return;
+            
+            instance.LabelText = title;
+            instance.Bold = true;
+            instance.Visible = true;
         }
 
         private void AddPropertyItem(string key, object value)
@@ -89,6 +133,19 @@ namespace UniSharper.Data.Metadata.Samples
 
             instance.LabelText = $"{key}: {value}";
             instance.Visible = true;
+        }
+
+        private static string ToRangeIntArrayString(RangeInt[] array)
+        {
+            var stringBuilder = new StringBuilder();
+            foreach (var item in array)
+            {
+                if (stringBuilder.Length > 0)
+                    stringBuilder.Append("|");
+                
+                stringBuilder.Append($"({item.start}, {item.length})");
+            }
+            return stringBuilder.ToString();
         }
         
         private static string ToString<T>(IEnumerable<T> array)
