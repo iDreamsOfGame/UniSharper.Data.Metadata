@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
+using UniSharperEditor.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -63,7 +64,7 @@ namespace UniSharperEditor.Data.Metadata
             get
             {
                 var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                return EditorPrefs.GetString(key, string.Empty);
+                return EditorPrefsUtility.GetString(key, string.Empty);
             }
             set
             {
@@ -71,7 +72,7 @@ namespace UniSharperEditor.Data.Metadata
                     return;
 
                 var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                EditorPrefs.SetString(key, value);
+                EditorPrefsUtility.SetString(key, value);
             }
         }
         

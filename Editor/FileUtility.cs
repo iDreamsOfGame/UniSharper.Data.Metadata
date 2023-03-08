@@ -13,7 +13,7 @@ namespace UniSharperEditor.Data.Metadata
             var paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
             var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
             paths = paths.Union(xlsxFilePaths).ToArray();
-            return paths;
+            return (from path in paths let fileName = Path.GetFileName(path) where !fileName.StartsWith("~$") select path).ToArray();
         }
     }
 }

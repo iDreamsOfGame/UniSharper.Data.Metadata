@@ -333,17 +333,30 @@ namespace UniSharperEditor.Data.Metadata
                 var fileName = Path.GetFileName(path);
 
                 using var stream = File.OpenRead(path);
-                using var reader = ExcelReaderFactory.CreateReader(stream);
-                var result = reader.AsDataSet();
 
-                if (result.Tables.Count > 0)
+                try
                 {
-                    var table = result.Tables[0];
-                    action?.Invoke(table, fileName, i, paths.Length);
+                    using var reader = ExcelReaderFactory.CreateReader(stream);
+                    if (reader != null)
+                    {
+                        var result = reader.AsDataSet();
+                        if (result is { Tables: { Count: > 0 } })
+                        {
+                            var table = result.Tables[0];
+                            if (table != null)
+                                action?.Invoke(table, fileName, i, paths.Length);
+                        }
+                        else
+                        {
+                            UnityDebug.LogError("Excel file should have a table at least!");
+                        }
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    UnityDebug.LogError("Excel file should have a table at least!");
+                    UnityDebug.LogError($"fileName: {fileName}, error: {e}");
+                    EditorUtility.ClearProgressBar();
+                    throw;
                 }
             }
         }
