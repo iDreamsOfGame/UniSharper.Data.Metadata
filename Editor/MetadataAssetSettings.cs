@@ -16,7 +16,7 @@ namespace UniSharperEditor.Data.Metadata
     /// Class used to get and set the metadata settings object. Implements the <see cref="UniSharperEditor.SettingsScriptableObject"/>
     /// </summary>
     /// <seealso cref="UniSharperEditor.SettingsScriptableObject"/>
-    public class MetadataAssetSettings : SettingsScriptableObject
+    public class MetadataAssetSettings : SettingsScriptableObject<MetadataAssetSettings>
     {
         public const string MetadataFolderName = "Metadata";
 
