@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
+using UniSharper.UniSharper.Core.Runtime;
 using UniSharperEditor.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -22,7 +23,7 @@ namespace UniSharperEditor.Data.Metadata
 
         public const string MetadataPersistentStoresFolderName = "Data";
 
-        public static readonly string MetadataFolderPath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, MetadataFolderName));
+        public static readonly string MetadataFolderPath = PlayerPath.GetAssetPath(MetadataFolderName);
 
         public static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
@@ -31,9 +32,9 @@ namespace UniSharperEditor.Data.Metadata
         
         [SerializeField, ReadOnlyField]
         private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
-        
+
         [SerializeField, ReadOnlyField]
-        private string entityScriptsStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(EditorEnvironment.AssetsFolderName, EditorEnvironment.DefaultScriptsFolderName));
+        private string entityScriptsStorePath = PlayerPath.GetAssetPath(EditorEnvironment.DefaultScriptsFolderName);
         
         [SerializeField, ReadOnlyField]
         private string entityScriptNamespace;
