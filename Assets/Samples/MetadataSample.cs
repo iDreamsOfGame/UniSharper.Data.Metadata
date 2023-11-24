@@ -20,14 +20,14 @@ namespace UniSharper.Data.Metadata.Samples
         {
             propertyItemTemplate.Visible = false;
             
-            var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/MetadataEntityDBConfig.db.bytes");
+            var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath("Metadata/Data/MetadataEntityDBConfig.db.bytes"));
             MetadataManager.Initialize(binAsset.bytes);
         
             // Load DB data of Metadata
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/GenericTypeSampleMetadata.db.bytes");
+            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath("Metadata/Data/GenericTypeSampleMetadata.db.bytes"));
             MetadataManager.LoadEntityDatabase<GenericTypeSampleMetadata>(binAsset.bytes);
             
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Metadata/Data/UnityTypeSampleMetadata.db.bytes");
+            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath("Metadata/Data/UnityTypeSampleMetadata.db.bytes"));
             MetadataManager.LoadEntityDatabase<UnityTypeSampleMetadata>(binAsset.bytes);
         }
 
