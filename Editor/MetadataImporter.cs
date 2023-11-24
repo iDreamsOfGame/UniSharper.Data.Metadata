@@ -206,9 +206,9 @@ namespace UniSharperEditor.Data.Metadata
                 string.Empty,
                 LabelWidth);
 
-            if (EditorPath.IsAssetPath(metadataPersistentStoreAbsolutePath))
+            if (EditorPath.TryGetAssetPath(metadataPersistentStoreAbsolutePath, out var metadataPersistentStoreAssetPath))
             {
-                settings.MetadataPersistentStorePath = EditorPath.ConvertToAssetPath(metadataPersistentStoreAbsolutePath);
+                settings.MetadataPersistentStorePath = metadataPersistentStoreAssetPath;
             }
             else
             {
@@ -224,9 +224,9 @@ namespace UniSharperEditor.Data.Metadata
                 string.Empty,
                 LabelWidth);
 
-            if (EditorPath.IsAssetPath(entityScriptsStoreAbsolutePath))
+            if (EditorPath.TryGetAssetPath(entityScriptsStoreAbsolutePath, out var entityScriptsStoreAssetPath))
             {
-                settings.EntityScriptsStorePath = EditorPath.ConvertToAssetPath(entityScriptsStoreAbsolutePath);
+                settings.EntityScriptsStorePath = entityScriptsStoreAssetPath;
             }
             else
             {

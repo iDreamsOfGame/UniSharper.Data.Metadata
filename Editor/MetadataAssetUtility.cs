@@ -34,7 +34,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 if (string.IsNullOrEmpty(tempFolderPath))
                 {
-                    tempFolderPath = EditorPath.ConvertToAbsolutePath("Temp", "UniSharper", "UniSharper.Data.Metadata", "Data");
+                    tempFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp", "UniSharper", "UniSharper.Data.Metadata", "Data");
                 }
 
                 if (!Directory.Exists(tempFolderPath))
@@ -55,7 +55,7 @@ namespace UniSharperEditor.Data.Metadata
 
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
-            var dbFolderPath = EditorPath.ConvertToAbsolutePath(settings.MetadataPersistentStorePath);
+            var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
             ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
                 (table, fileName, index, length) =>
                 {
@@ -209,7 +209,7 @@ namespace UniSharperEditor.Data.Metadata
             var destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
             FileUtil.ReplaceFile(sourceFilePath, destFilePath);
             EncryptFileRawData(destFilePath);
-            var assetFilePath = EditorPath.ConvertToAssetPath(destFilePath);
+            var assetFilePath = EditorPath.GetAssetPath(destFilePath);
             AssetDatabase.ImportAsset(assetFilePath);
         }
 
@@ -483,8 +483,8 @@ namespace UniSharperEditor.Data.Metadata
                 
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
 
-                var scriptFilePath = EditorPath.ConvertToAbsolutePath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
-                var scriptAssetPath = EditorPath.ConvertToAssetPath(scriptFilePath);
+                var scriptFilePath = EditorPath.GetFullPath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
+                var scriptAssetPath = EditorPath.GetAssetPath(scriptFilePath);
                 File.WriteAllText(scriptFilePath, scriptTextContent, new UTF8Encoding(true));
                 AssetDatabase.ImportAsset(scriptAssetPath);
                 return true;

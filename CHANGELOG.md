@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.5.0] - 2023-11-24
+
+### Added
+
+- **Metadata Persistent Store Path** supports package path, e.g. **Packages/com.xxx.xxx**.
+- **Entity Scripts Store Path** supports package path, e.g. **Packages/com.xxx.xxx**.
+
+
+
 ## [2.3.0] - 2022-12-26
 
 ### Added
