@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
-using UniSharper.UniSharper.Core.Runtime;
 using UniSharperEditor.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -235,7 +234,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (!Directory.Exists(MetadataFolderPath))
             {
-                AssetDatabase.CreateFolder("Assets", MetadataFolderName);
+                AssetDatabase.CreateFolder(PlayerEnvironment.AssetsFolderName, MetadataFolderName);
             }
         }
 
