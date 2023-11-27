@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Linq;
+using UniSharper;
 
 namespace UniSharperEditor.Data.Metadata
 {
@@ -10,8 +11,8 @@ namespace UniSharperEditor.Data.Metadata
     {
         public static string[] GetExcelFilePathCollection(string excelFilesFolderPath)
         {
-            var paths = Directory.GetFiles(excelFilesFolderPath, "*.xls", SearchOption.AllDirectories);
-            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, "*.xlsx", SearchOption.AllDirectories);
+            var paths = Directory.GetFiles(excelFilesFolderPath, SearchPattern.ExcelFiles, SearchOption.AllDirectories);
+            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, SearchPattern.ExcelXFiles, SearchOption.AllDirectories);
             paths = paths.Union(xlsxFilePaths).ToArray();
             return (from path in paths let fileName = Path.GetFileName(path) where !fileName.StartsWith("~$") select path).ToArray();
         }
