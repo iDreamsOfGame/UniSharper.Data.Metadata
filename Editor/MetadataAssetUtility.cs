@@ -224,13 +224,12 @@ namespace UniSharperEditor.Data.Metadata
             for (var i = settings.EntityDataStartingRowIndex; i < rowCount; ++i)
             {
                 var entityData = (MetadataEntity)entityClassType.InvokeConstructor();
-
-                for (int j = 0, propertiesCount = rawInfoList.Count; j < propertiesCount; ++j)
+                foreach (var rowInfo in rawInfoList)
                 {
-                    var cellValue = table.Rows[i][j].ToString();
-                    var rowInfo = rawInfoList[j];
+                    var column = rowInfo.Column;
+                    var cellValue = table.Rows[i][column].ToString();
                     var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType);
-
+                    
                     if (typeParser != null)
                     {
                         var arrayElementSeparator = settings.ArrayElementSeparator;
@@ -262,8 +261,20 @@ namespace UniSharperEditor.Data.Metadata
                 var propertyType = rows[settings.EntityPropertyTypeRowIndex][column].ToString();
                 var comment = rows[settings.EntityPropertyCommentRowIndex][column].ToString();
 
-                if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
+                if (string.IsNullOrEmpty(propertyName))
+                {
+                    UnityDebug.Log($"Invalid property name at column index {column}, column data will be ignored!");
                     continue;
+                }
+
+                if (string.IsNullOrEmpty(propertyType))
+                {
+                    UnityDebug.Log(string.IsNullOrEmpty(propertyName)
+                        ? $"Invalid property type at column index {column}, column data will be ignored!"
+                        : $"Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored!");
+                    
+                    continue;
+                }
 
                 propertyName = propertyName.Trim().ToTitleCase();
                 propertyType = propertyType.Trim();
@@ -271,7 +282,7 @@ namespace UniSharperEditor.Data.Metadata
 
                 var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType);
                 var rawInfo = editor?.Edit(settings, table, column, comment, propertyType, propertyName)
-                              ?? new EntityPropertyRawInfo(comment, propertyType, propertyName);
+                              ?? new EntityPropertyRawInfo(column, comment, propertyType, propertyName);
                 list.Add(rawInfo);
             }
 

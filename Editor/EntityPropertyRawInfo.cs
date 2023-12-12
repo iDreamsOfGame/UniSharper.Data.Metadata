@@ -8,13 +8,19 @@ namespace UniSharperEditor.Data.Metadata
     /// </summary>
     internal readonly struct EntityPropertyRawInfo
     {
-        public EntityPropertyRawInfo(string comment, string propertyType, string propertyName, params object[] parameters)
+        public EntityPropertyRawInfo(int column, string comment, string propertyType, string propertyName, params object[] parameters)
         {
+            Column = column;
             Comment = comment;
             PropertyType = propertyType;
             PropertyName = propertyName;
             Parameters = parameters;
         }
+
+        /// <summary>
+        /// The index of column in excel data table.
+        /// </summary>
+        public int Column { get; }
 
         /// <summary>
         /// The comment content of entity property.

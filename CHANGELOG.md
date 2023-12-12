@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.5.4] - 2023-12-12
+
+### Fixed
+
+- Fixed invalid property name or type cause metadata generation incorrect.
+
+
+
 ## [2.5.0] - 2023-11-24
 
 ### Added

@@ -102,7 +102,7 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
                 NumberOfConstructorParameters
             };
             propertyName = $"{propertyName}Value";
-            return new EntityPropertyRawInfo(comment, propertyType, propertyName, parameters);
+            return new EntityPropertyRawInfo(column, comment, propertyType, propertyName, parameters);
         }
     }
 }
