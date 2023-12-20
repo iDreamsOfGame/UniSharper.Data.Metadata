@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.Scripting;
 using UniSharper.Data.Metadata;
 using UnityEngine;
+
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 
@@ -37,6 +38,15 @@ namespace UniSharper.Data.Metadata.Samples
 		private Color[] colorArraySample;
 
 		private Color32[] color32ArraySample;
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="UnityTypeSampleMetadata"/> class.
+		/// </summary>
+		[Preserve]
+		public UnityTypeSampleMetadata()
+		{
+		}
 
 		/// <summary>
 		/// ID
@@ -462,14 +472,6 @@ namespace UniSharper.Data.Metadata.Samples
 				color32ArraySample = list.ToArray();
 				return color32ArraySample;
 			}
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="UnityTypeSampleMetadata"/> class.
-		/// </summary>
-		[Preserve]
-		public UnityTypeSampleMetadata()
-		{
 		}
 	}
 }

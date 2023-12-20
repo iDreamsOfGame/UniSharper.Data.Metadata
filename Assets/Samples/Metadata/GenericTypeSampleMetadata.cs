@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.Scripting;
 using UniSharper.Data.Metadata;
 using UnityEngine;
+
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 
@@ -23,6 +24,15 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			None,
 			EnumSampleType1
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="GenericTypeSampleMetadata"/> class.
+		/// </summary>
+		[Preserve]
+		public GenericTypeSampleMetadata()
+		{
 		}
 
 		/// <summary>
@@ -169,13 +179,5 @@ namespace UniSharper.Data.Metadata.Samples
 		/// Decimal Array Value
 		/// </summary>
 		public decimal[] DecimalArraySample { get; set; }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="GenericTypeSampleMetadata"/> class.
-		/// </summary>
-		[Preserve]
-		public GenericTypeSampleMetadata()
-		{
-		}
 	}
 }
