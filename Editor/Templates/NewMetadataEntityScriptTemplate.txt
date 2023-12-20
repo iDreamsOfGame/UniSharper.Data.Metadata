@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.Scripting;
 using UniSharper.Data.Metadata;
 using UnityEngine;
+
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
 
@@ -18,7 +19,6 @@ namespace #NAMESPACE#
 	{
 #ENUM_INSIDE_OF_CLASS#
 #FIELDS#
-#PROPERTIES#
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="#SCRIPT_NAME#"/> class.
@@ -27,5 +27,7 @@ namespace #NAMESPACE#
 		public #SCRIPT_NAME#()
 		{
 		}
+
+#PROPERTIES#
 	}
 }
