@@ -7,6 +7,11 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal interface IPropertyRawInfoEditor
     {
-        EntityPropertyRawInfo Edit(MetadataAssetSettings settings, DataTable dataTable, int column, string comment, string propertyType, string propertyName);
+        EntityPropertyRawInfo Edit(MetadataAssetSettings settings,
+            DataTable dataTable,
+            int column,
+            string comment,
+            string propertyType,
+            string propertyName);
     }
 }
