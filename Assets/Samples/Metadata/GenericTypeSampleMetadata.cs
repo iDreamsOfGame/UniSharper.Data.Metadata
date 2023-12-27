@@ -2,9 +2,11 @@
 // ReSharper disable RedundantUsingDirective
 
 using System.Collections.Generic;
-using UnityEngine.Scripting;
 using UniSharper.Data.Metadata;
+using UniSharper.Extensions;
 using UnityEngine;
+using UnityEngine.Scripting;
+using ColorUtility = UniSharper.Extensions.ColorUtility;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global

@@ -2,9 +2,11 @@
 // ReSharper disable RedundantUsingDirective
 
 using System.Collections.Generic;
-using UnityEngine.Scripting;
 using UniSharper.Data.Metadata;
+using UniSharper.Extensions;
 using UnityEngine;
+using UnityEngine.Scripting;
+using ColorUtility = UniSharper.Extensions.ColorUtility;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
@@ -175,17 +177,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (vector2ArraySample != null)
-					return vector2ArraySample;
+				if (vector2ArraySample  == null)
+					Vector2Utility.TryParseArray(Vector2ArraySampleValue, out vector2ArraySample);
 
-				var list = new List<Vector2>();
-				for (var i = 0; i < Vector2ArraySampleValue.Length; i += 2)
-				{
-					var parameter1 = Vector2ArraySampleValue[i];
-					var parameter2 = Vector2ArraySampleValue[i + 1];
-					list.Add(new Vector2(parameter1, parameter2));
-				}
-				vector2ArraySample = list.ToArray();
 				return vector2ArraySample;
 			}
 		}
@@ -202,17 +196,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (vector2IntArraySample != null)
-					return vector2IntArraySample;
+				if (vector2IntArraySample  == null)
+					Vector2IntUtility.TryParseArray(Vector2IntArraySampleValue, out vector2IntArraySample);
 
-				var list = new List<Vector2Int>();
-				for (var i = 0; i < Vector2IntArraySampleValue.Length; i += 2)
-				{
-					var parameter1 = Vector2IntArraySampleValue[i];
-					var parameter2 = Vector2IntArraySampleValue[i + 1];
-					list.Add(new Vector2Int(parameter1, parameter2));
-				}
-				vector2IntArraySample = list.ToArray();
 				return vector2IntArraySample;
 			}
 		}
@@ -229,18 +215,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (vector3ArraySample != null)
-					return vector3ArraySample;
+				if (vector3ArraySample  == null)
+					Vector3Utility.TryParseArray(Vector3ArraySampleValue, out vector3ArraySample);
 
-				var list = new List<Vector3>();
-				for (var i = 0; i < Vector3ArraySampleValue.Length; i += 3)
-				{
-					var parameter1 = Vector3ArraySampleValue[i];
-					var parameter2 = Vector3ArraySampleValue[i + 1];
-					var parameter3 = Vector3ArraySampleValue[i + 2];
-					list.Add(new Vector3(parameter1, parameter2, parameter3));
-				}
-				vector3ArraySample = list.ToArray();
 				return vector3ArraySample;
 			}
 		}
@@ -257,18 +234,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (vector3IntArraySample != null)
-					return vector3IntArraySample;
+				if (vector3IntArraySample  == null)
+					Vector3IntUtility.TryParseArray(Vector3IntArraySampleValue, out vector3IntArraySample);
 
-				var list = new List<Vector3Int>();
-				for (var i = 0; i < Vector3IntArraySampleValue.Length; i += 3)
-				{
-					var parameter1 = Vector3IntArraySampleValue[i];
-					var parameter2 = Vector3IntArraySampleValue[i + 1];
-					var parameter3 = Vector3IntArraySampleValue[i + 2];
-					list.Add(new Vector3Int(parameter1, parameter2, parameter3));
-				}
-				vector3IntArraySample = list.ToArray();
 				return vector3IntArraySample;
 			}
 		}
@@ -285,19 +253,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (vector4ArraySample != null)
-					return vector4ArraySample;
+				if (vector4ArraySample  == null)
+					Vector4Utility.TryParseArray(Vector4ArraySampleValue, out vector4ArraySample);
 
-				var list = new List<Vector4>();
-				for (var i = 0; i < Vector4ArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = Vector4ArraySampleValue[i];
-					var parameter2 = Vector4ArraySampleValue[i + 1];
-					var parameter3 = Vector4ArraySampleValue[i + 2];
-					var parameter4 = Vector4ArraySampleValue[i + 3];
-					list.Add(new Vector4(parameter1, parameter2, parameter3, parameter4));
-				}
-				vector4ArraySample = list.ToArray();
 				return vector4ArraySample;
 			}
 		}
@@ -314,17 +272,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (rangeIntArraySample != null)
-					return rangeIntArraySample;
+				if (rangeIntArraySample  == null)
+					RangeIntUtility.TryParseArray(RangeIntArraySampleValue, out rangeIntArraySample);
 
-				var list = new List<RangeInt>();
-				for (var i = 0; i < RangeIntArraySampleValue.Length; i += 2)
-				{
-					var parameter1 = RangeIntArraySampleValue[i];
-					var parameter2 = RangeIntArraySampleValue[i + 1];
-					list.Add(new RangeInt(parameter1, parameter2));
-				}
-				rangeIntArraySample = list.ToArray();
 				return rangeIntArraySample;
 			}
 		}
@@ -341,19 +291,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (quaternionArraySample != null)
-					return quaternionArraySample;
+				if (quaternionArraySample  == null)
+					QuaternionUtility.TryParseArray(QuaternionArraySampleValue, out quaternionArraySample);
 
-				var list = new List<Quaternion>();
-				for (var i = 0; i < QuaternionArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = QuaternionArraySampleValue[i];
-					var parameter2 = QuaternionArraySampleValue[i + 1];
-					var parameter3 = QuaternionArraySampleValue[i + 2];
-					var parameter4 = QuaternionArraySampleValue[i + 3];
-					list.Add(new Quaternion(parameter1, parameter2, parameter3, parameter4));
-				}
-				quaternionArraySample = list.ToArray();
 				return quaternionArraySample;
 			}
 		}
@@ -370,19 +310,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (rectArraySample != null)
-					return rectArraySample;
+				if (rectArraySample  == null)
+					RectUtility.TryParseArray(RectArraySampleValue, out rectArraySample);
 
-				var list = new List<Rect>();
-				for (var i = 0; i < RectArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = RectArraySampleValue[i];
-					var parameter2 = RectArraySampleValue[i + 1];
-					var parameter3 = RectArraySampleValue[i + 2];
-					var parameter4 = RectArraySampleValue[i + 3];
-					list.Add(new Rect(parameter1, parameter2, parameter3, parameter4));
-				}
-				rectArraySample = list.ToArray();
 				return rectArraySample;
 			}
 		}
@@ -399,19 +329,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (rectIntArraySample != null)
-					return rectIntArraySample;
+				if (rectIntArraySample  == null)
+					RectIntUtility.TryParseArray(RectIntArraySampleValue, out rectIntArraySample);
 
-				var list = new List<RectInt>();
-				for (var i = 0; i < RectIntArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = RectIntArraySampleValue[i];
-					var parameter2 = RectIntArraySampleValue[i + 1];
-					var parameter3 = RectIntArraySampleValue[i + 2];
-					var parameter4 = RectIntArraySampleValue[i + 3];
-					list.Add(new RectInt(parameter1, parameter2, parameter3, parameter4));
-				}
-				rectIntArraySample = list.ToArray();
 				return rectIntArraySample;
 			}
 		}
@@ -428,19 +348,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (colorArraySample != null)
-					return colorArraySample;
+				if (colorArraySample  == null)
+					ColorUtility.TryParseArray(ColorArraySampleValue, out colorArraySample);
 
-				var list = new List<Color>();
-				for (var i = 0; i < ColorArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = ColorArraySampleValue[i];
-					var parameter2 = ColorArraySampleValue[i + 1];
-					var parameter3 = ColorArraySampleValue[i + 2];
-					var parameter4 = ColorArraySampleValue[i + 3];
-					list.Add(new Color(parameter1, parameter2, parameter3, parameter4));
-				}
-				colorArraySample = list.ToArray();
 				return colorArraySample;
 			}
 		}
@@ -457,19 +367,9 @@ namespace UniSharper.Data.Metadata.Samples
 		{
 			get
 			{
-				if (color32ArraySample != null)
-					return color32ArraySample;
+				if (color32ArraySample  == null)
+					Color32Utility.TryParseArray(Color32ArraySampleValue, out color32ArraySample);
 
-				var list = new List<Color32>();
-				for (var i = 0; i < Color32ArraySampleValue.Length; i += 4)
-				{
-					var parameter1 = Color32ArraySampleValue[i];
-					var parameter2 = Color32ArraySampleValue[i + 1];
-					var parameter3 = Color32ArraySampleValue[i + 2];
-					var parameter4 = Color32ArraySampleValue[i + 3];
-					list.Add(new Color32(parameter1, parameter2, parameter3, parameter4));
-				}
-				color32ArraySample = list.ToArray();
 				return color32ArraySample;
 			}
 		}
