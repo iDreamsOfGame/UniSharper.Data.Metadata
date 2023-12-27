@@ -56,8 +56,7 @@ namespace UniSharperEditor.Data.Metadata
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
-            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
-                (table, fileName, index, length) =>
+            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, fileName, index, length) =>
                 {
                     if (table == null)
                         return;
@@ -82,7 +81,7 @@ namespace UniSharperEditor.Data.Metadata
                     }
                     else
                     {
-                        UnityDebug.LogErrorFormat(null, "Can not find the entity class: {0}.cs!", entityClassName);
+                        UnityDebug.LogError($"Can not find the entity class: {entityClassName}{FileExtensions.CSharpScriptFile}!");
                         result = false;
                     }
                 });
@@ -118,8 +117,7 @@ namespace UniSharperEditor.Data.Metadata
                 // Try delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
-                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
-                    (table, name, index, length) =>
+                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath, (table, name, index, length) =>
                     {
                         if (table == null)
                             return;
@@ -205,7 +203,9 @@ namespace UniSharperEditor.Data.Metadata
         private static void CopyMetadataDatabaseFile(string dbFolderPath, long dbLocalAddress, string entityName = null)
         {
             var sourceFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(TempFolderPath, $"db{dbLocalAddress}.box"));
-            var newFileName = dbLocalAddress > 1 ? $"{entityName}.db.bytes" : "MetadataEntityDBConfig.db.bytes";
+            var newFileName = dbLocalAddress > 1
+                ? $"{entityName}{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryFile}"
+                : $"{nameof(MetadataEntityDBConfig)}{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryFile}";
             var destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
             FileUtil.ReplaceFile(sourceFilePath, destFilePath);
             EncryptFileRawData(destFilePath);
@@ -229,7 +229,7 @@ namespace UniSharperEditor.Data.Metadata
                     var column = rowInfo.Column;
                     var cellValue = table.Rows[i][column].ToString();
                     var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType);
-                    
+
                     if (typeParser != null)
                     {
                         var arrayElementSeparator = settings.ArrayElementSeparator;
@@ -272,7 +272,7 @@ namespace UniSharperEditor.Data.Metadata
                     UnityDebug.Log(string.IsNullOrEmpty(propertyName)
                         ? $"Invalid property type at column index {column}, column data will be ignored!"
                         : $"Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored!");
-                    
+
                     continue;
                 }
 
@@ -391,35 +391,35 @@ namespace UniSharperEditor.Data.Metadata
                 var enumValuesString = new StringBuilder();
                 if (rawInfo.Parameters[2] is not string[] enumValueList)
                     continue;
-            
+
                 for (var j = 0; j < enumValueList.Length; j++)
                 {
                     var enumValue = enumValueList[j];
                     enumValuesString.Append($"\t\t\t{enumValue}");
-            
+
                     if (j >= enumValueList.Length - 1)
                         continue;
-            
+
                     enumValuesString.Append(",").Append(PlayerEnvironment.WindowsNewLine);
                 }
 
                 if (stringBuilder.Length > 0)
                     stringBuilder.Append(PlayerEnvironment.WindowsNewLine)
                         .Append(PlayerEnvironment.WindowsNewLine);
-                
+
                 stringBuilder.AppendFormat(ScriptTemplate.ClassMemberFormatString.EnumDefinition, rawInfo.Comment, rawInfo.Parameters[1], enumValuesString);
             }
 
             if (stringBuilder.Length > 0)
                 stringBuilder.Append(PlayerEnvironment.WindowsNewLine);
-            
+
             return stringBuilder.ToString();
         }
 
         private static string GenerateEntityScriptFieldsString(List<EntityPropertyRawInfo> rawInfoList)
         {
             var stringBuilder = new StringBuilder();
-            
+
             foreach (var rawInfo in rawInfoList.Where(rowInfo => PropertyTypeNames.IsUnityTypeArray(rowInfo.PropertyType)))
             {
                 if (stringBuilder.Length > 0)
@@ -433,7 +433,7 @@ namespace UniSharperEditor.Data.Metadata
 
             if (stringBuilder.Length > 0)
                 stringBuilder.Append(PlayerEnvironment.WindowsNewLine);
-            
+
             return stringBuilder.ToString();
         }
 
@@ -481,7 +481,7 @@ namespace UniSharperEditor.Data.Metadata
                 var startIndex = scriptTextContent.IndexOf(ScriptTemplate.Placeholders.EnumInsideOfClass, StringComparison.Ordinal);
                 if (string.IsNullOrEmpty(enumString))
                     scriptTextContent = scriptTextContent.Remove(startIndex - newLineStringLength, newLineStringLength);
-                
+
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.EnumInsideOfClass, enumString);
 
                 // Fields string
@@ -489,12 +489,12 @@ namespace UniSharperEditor.Data.Metadata
                 startIndex = scriptTextContent.IndexOf(ScriptTemplate.Placeholders.Fields, StringComparison.Ordinal);
                 if (string.IsNullOrEmpty(fieldsString))
                     scriptTextContent = scriptTextContent.Remove(startIndex - newLineStringLength, newLineStringLength);
-                
+
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Fields, fieldsString);
-                
+
                 scriptTextContent = scriptTextContent.Replace(ScriptTemplate.Placeholders.Properties, GenerateEntityScriptPropertiesString(rawInfoList));
 
-                var scriptFilePath = EditorPath.GetFullPath(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
+                var scriptFilePath = EditorPath.GetFullPath(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
                 var scriptAssetPath = EditorPath.GetAssetPath(scriptFilePath);
                 File.WriteAllText(scriptFilePath, scriptTextContent, new UTF8Encoding(true));
                 AssetDatabase.ImportAsset(scriptAssetPath);
@@ -576,12 +576,12 @@ namespace UniSharperEditor.Data.Metadata
         private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string excelFileName)
         {
             var entityScriptName = Path.GetFileNameWithoutExtension(excelFileName);
-            var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}.cs");
+            var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
             if (AssetDatabase.DeleteAsset(scriptFilePath))
                 return;
 
             // Plan B: Try delete file by using class FileUtil.
-            var scriptMetaFilePath = $"{scriptFilePath}.meta";
+            var scriptMetaFilePath = $"{scriptFilePath}{FileExtensions.UnityMetaFile}";
             FileUtil.DeleteFileOrDirectory(scriptFilePath);
             FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
         }
@@ -602,13 +602,13 @@ namespace UniSharperEditor.Data.Metadata
         private static void DeleteMetadataDatabaseFile(MetadataAssetSettings settings, string excelFileName)
         {
             var metadataName = Path.GetFileNameWithoutExtension(excelFileName);
-            var databaseFilePath = Path.Combine(settings.MetadataPersistentStorePath, $"{metadataName}.db");
+            var databaseFilePath = Path.Combine(settings.MetadataPersistentStorePath, $"{metadataName}{FileExtensions.DatabaseFile}");
             if (AssetDatabase.DeleteAsset(databaseFilePath))
                 return;
 
             // Plan B: Try delete file by using class FileUtil.
-            databaseFilePath = $"{databaseFilePath}.bytes";
-            var scriptMetaFilePath = $"{databaseFilePath}.meta";
+            databaseFilePath = $"{databaseFilePath}{FileExtensions.UnityBinaryFile}";
+            var scriptMetaFilePath = $"{databaseFilePath}{FileExtensions.UnityMetaFile}";
             FileUtil.DeleteFileOrDirectory(databaseFilePath);
             FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
         }
