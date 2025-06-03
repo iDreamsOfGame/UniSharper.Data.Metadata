@@ -89,7 +89,10 @@ namespace UniSharperEditor.Data.Metadata
                     {
                         UnityDebug.LogError($"Can not find the entity class: {entityClassName}{FileExtensions.CSharpScriptFile}!");
                         result = false;
+                        return;
                     }
+                    
+                    EditorUtility.ClearProgressBar();
                 });
 
             // Copy MetadataEntityDBConfig database file.
@@ -138,6 +141,7 @@ namespace UniSharperEditor.Data.Metadata
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
                         var rawInfoList = CreateMetadataEntityRawInfoList(settings, table);
                         result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
+                        EditorUtility.ClearProgressBar();
                     });
             }
 
