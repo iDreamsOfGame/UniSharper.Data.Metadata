@@ -18,7 +18,7 @@ namespace UniSharperEditor.Data.Metadata
         }
 
         /// <summary>
-        /// The index of column in excel data table.
+        /// The index of column in Excel data table.
         /// </summary>
         public int Column { get; }
 

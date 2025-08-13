@@ -24,7 +24,7 @@ namespace UniSharperEditor.Data.Metadata
 
         public static readonly string MetadataFolderPath = PlayerPath.GetAssetPath(MetadataFolderName);
 
-        public static readonly string SettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
+        public static readonly string DefaultSettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
             $"{CryptoUtility.Md5HashEncrypt(Directory.GetCurrentDirectory(), null, false)}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
@@ -206,7 +206,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             MetadataAssetSettings settings;
 
-            if (File.Exists(SettingsAssetPath))
+            if (File.Exists(DefaultSettingsAssetPath))
             {
                 settings = Load();
             }
@@ -216,7 +216,7 @@ namespace UniSharperEditor.Data.Metadata
                 CreateMetadataAssetsRootFolder();
                 CreateMetadataPersistentStoreFolder(settings);
                 CreateEntityScriptsStoreFolder(settings);
-                AssetDatabase.CreateAsset(settings, SettingsAssetPath);
+                AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
             }
 
             return settings;
@@ -226,6 +226,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (Directory.Exists(settings.EntityScriptsStorePath))
                 return;
+            
             Directory.CreateDirectory(settings.EntityScriptsStorePath);
             AssetDatabase.ImportAsset(settings.EntityScriptsStorePath);
         }
@@ -233,28 +234,42 @@ namespace UniSharperEditor.Data.Metadata
         internal static void CreateMetadataAssetsRootFolder()
         {
             if (!Directory.Exists(MetadataFolderPath))
-            {
                 AssetDatabase.CreateFolder(PlayerEnvironment.AssetsFolderName, MetadataFolderName);
-            }
         }
 
         internal static void CreateMetadataPersistentStoreFolder(MetadataAssetSettings settings)
         {
             if (Directory.Exists(settings.MetadataPersistentStorePath))
                 return;
+            
             Directory.CreateDirectory(settings.MetadataPersistentStorePath);
             AssetDatabase.ImportAsset(settings.MetadataPersistentStorePath);
         }
 
-        internal static MetadataAssetSettings Load() => File.Exists(SettingsAssetPath) ? AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(SettingsAssetPath) : null;
+        internal static MetadataAssetSettings Load()
+        {
+            if (File.Exists(DefaultSettingsAssetPath))
+                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
+
+            var guids = AssetDatabase.FindAssets($"t: {nameof(MetadataAssetSettings)}");
+            if (guids.Length > 0)
+            {
+                var guid = guids[0];
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(path);
+            }
+
+            // Find nothing, create new and load it.
+            var settings = CreateInstance<MetadataAssetSettings>();
+            AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
+            return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
+        }
 
         [UsedImplicitly]
         private void OnEnable()
         {
             if (string.IsNullOrEmpty(entityScriptNamespace))
-            {
                 entityScriptNamespace = $"{(string.IsNullOrEmpty(PlayerSettings.productName) ? "Project" : PlayerSettings.productName)}.Metadata.Entities";
-            }
         }
     }
 }

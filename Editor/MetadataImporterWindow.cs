@@ -8,7 +8,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class MetadataImporterWindow : MetadataEditorWindow
     {
-        private static readonly Vector2Int Size = new Vector2Int(840, 375);
+        private static readonly Vector2Int Size = new(840, 375);
 
         private MetadataImporter importer;
 
@@ -25,9 +25,7 @@ namespace UniSharperEditor.Data.Metadata
 
         protected override void DrawGUIWithSettings()
         {
-            if (importer == null)
-                importer = new MetadataImporter(Settings);
-            
+            importer ??= new MetadataImporter(Settings);
             importer.DrawEditorGUI();
         }
     }

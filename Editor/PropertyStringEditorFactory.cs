@@ -10,7 +10,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class PropertyStringEditorFactory : CachingFactoryTemplate<PropertyStringEditorFactory, string, IPropertyStringEditor>
     {
-        private static readonly Dictionary<string, Type> PropertyTypeStringEditorTypeMap = new Dictionary<string, Type>()
+        private static readonly Dictionary<string, Type> PropertyTypeStringEditorTypeMap = new()
         {
             { PropertyTypeNames.Enum, typeof(EnumPropertyStringEditor) },
             { PropertyTypeNames.UnityVector2, typeof(UnityTypePropertyStringEditor) },

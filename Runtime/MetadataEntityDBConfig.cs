@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Jerry Lee. All rights reserved. Licensed under the MIT License.
 // See LICENSE in the project root for license information.
 
+using ReSharp.Security.Cryptography;
 using UnityEngine.Scripting;
 
 namespace UniSharper.Data.Metadata
@@ -23,7 +24,7 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// The table primary key.
         /// </summary>
-        public const string TablePrimaryKey = "EntityName";
+        public const string TablePrimaryKey = nameof(EntityName);
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataEntityDBConfig"/> class.

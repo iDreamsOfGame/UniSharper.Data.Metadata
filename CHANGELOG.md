@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.5.15] - 2025-08-12
+
+### Fixed
+
+- Fixed long file name of excel cause build metadata failed.
+
+
+
+### Changed
+
+- The settings file **MetadataAssetSettings** can be placed anywhere in project.
+
+
+
 ## [2.5.12] - 2024-07-02
 
 ### Fixed

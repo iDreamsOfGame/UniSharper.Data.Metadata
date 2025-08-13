@@ -21,20 +21,16 @@ namespace UniSharperEditor.Data.Metadata
             if (!File.Exists(FilePath))
                 return new Dictionary<string, string>();
 
-            using (var stream = File.Open(FilePath, FileMode.Open, FileAccess.Read))
-            {
-                var reader = new BinaryFormatter();
-                return reader.Deserialize(stream) as Dictionary<string, string>;
-            }
+            using var stream = File.Open(FilePath, FileMode.Open, FileAccess.Read);
+            var reader = new BinaryFormatter();
+            return reader.Deserialize(stream) as Dictionary<string, string>;
         }
 
         public static void Save(Dictionary<string, string> hashMap)
         {
-            using (var stream = File.Open(FilePath, FileMode.OpenOrCreate))
-            {
-                var writer = new BinaryFormatter();
-                writer.Serialize(stream, hashMap);
-            }
+            using var stream = File.Open(FilePath, FileMode.OpenOrCreate);
+            var writer = new BinaryFormatter();
+            writer.Serialize(stream, hashMap);
         }
 
         public static void Delete()

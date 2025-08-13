@@ -8,6 +8,7 @@ using ReSharp.Data.IBoxDB;
 using ReSharp.Extensions;
 using ReSharp.Patterns;
 using ReSharp.Security.Cryptography;
+using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace UniSharper.Data.Metadata
@@ -23,6 +24,13 @@ namespace UniSharper.Data.Metadata
         /// Key length of encryption.
         /// </summary>
         public const int EncryptionKeyLength = 16;
+        
+        /// <summary>
+        /// Gets the real table name.
+        /// </summary>
+        /// <param name="tableName">The input table name. </param>
+        /// <returns>The real table name. </returns>
+        public static string GetRealTableName(string tableName) => tableName.Length > 32 ? CryptoUtility.Md5HashEncrypt(tableName) : tableName;
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
 
@@ -42,24 +50,27 @@ namespace UniSharper.Data.Metadata
         public T[] GetAllEntities<T>() where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
+            var tableName = GetRealTableName(entityType.Name);
             List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context.GetAll<T>(entityType.Name));
+            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.GetAll<T>(tableName));
             return results?.ToArray();
         }
 
         public T[] GetEntities<T>(string key, object value) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
+            var tableName = GetRealTableName(entityType.Name);
             List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context.Get<T>(entityType.Name, key, value));
+            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, key, value));
             return results?.ToArray();
         }
 
         public T[] GetEntities<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
+            var tableName = GetRealTableName(entityType.Name);
             List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context.Get<T>(entityType.Name, arguments, logicalOperator));
+            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, arguments, logicalOperator));
             return results?.ToArray();
         }
 
@@ -72,8 +83,9 @@ namespace UniSharper.Data.Metadata
         public T GetEntity<T>(object key) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
+            var tableName = GetRealTableName(entityType.Name);
             var result = default(T);
-            CreateDataDBAdapterForEntity<T>(entityType, context => result = context.Get<T>(entityType.Name, key));
+            CreateDataDBAdapterForEntity<T>(entityType, context => result = context?.Get<T>(tableName, key));
             return result;
         }
 
@@ -83,7 +95,9 @@ namespace UniSharper.Data.Metadata
         /// <param name="configDBData">The configuration database data.</param>
         public void Initialize(byte[] configDBData)
         {
-            if (configDBAdapter != null) return;
+            if (configDBAdapter != null) 
+                return;
+            
             var rawData = DecryptDatabaseFile(configDBData);
             configDBAdapter = new IBoxDBAdapter(rawData);
             configDBAdapter.EnsureTable<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, MetadataEntityDBConfig.TablePrimaryKey);
@@ -107,8 +121,9 @@ namespace UniSharper.Data.Metadata
         public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
         {
             var entityType = typeof(T);
+            var tableName = GetRealTableName(entityType.Name);
             List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context.Get<T>(entityType.Name, query, arguments));
+            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, query, arguments));
             return results?.ToArray();
         }
 
@@ -146,63 +161,58 @@ namespace UniSharper.Data.Metadata
                 return;
             }
 
-            using (var dataDBAdapter = new IBoxDBAdapter(dbRawData))
-            {
-                var tableName = entityType.Name;
-                var primaryKeyName = GetMetadataEntityDBPrimaryKey<T>();
-                dataDBAdapter.EnsureTable<T>(tableName, primaryKeyName);
-                dataDBAdapter.Open();
-                handler?.Invoke(dataDBAdapter);
-            }
+            using var dataDBAdapter = new IBoxDBAdapter(dbRawData);
+            var tableName = GetRealTableName(entityType.Name);
+            var primaryKeyName = GetMetadataEntityDBPrimaryKey(tableName);
+            dataDBAdapter.EnsureTable<T>(tableName, primaryKeyName);
+            dataDBAdapter.Open();
+            handler?.Invoke(dataDBAdapter);
         }
 
         private byte[] DecryptDatabaseFile(byte[] fileData)
         {
-            using (var reader = new BinaryReader(new MemoryStream(fileData)))
-            {
-                var dataEncryptionFlagRawData = reader.ReadBytes(1);
-                var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
+            using var reader = new BinaryReader(new MemoryStream(fileData));
+            var dataEncryptionFlagRawData = reader.ReadBytes(1);
+            var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
 
-                if (dataEncryptionFlag)
-                {
-                    var key = reader.ReadBytes(EncryptionKeyLength);
-                    var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
-                    return CryptoUtility.AesDecrypt(cipherData, key);
-                }
-                else
-                {
-                    return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
-                }
+            if (dataEncryptionFlag)
+            {
+                var key = reader.ReadBytes(EncryptionKeyLength);
+                var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
+                return CryptoUtility.AesDecrypt(cipherData, key);
+            }
+            else
+            {
+                return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
             }
         }
 
         private bool GetDBRawDataForEntity(Type entityType, out byte[] rawData)
         {
-            if (!entityDBRawDataMap.ContainsKey(entityType))
+            if (!entityDBRawDataMap.TryGetValue(entityType, out var value))
             {
-                throw new Exception($"No database raw data fro the type {entityType.FullName}, you should load the database raw data for this type by invoking method 'LoadEntityDatabase'!");
+                Debug.LogError($"No database raw data for the type {entityType.FullName}, you should load the database raw data for this type by invoking method 'LoadEntityDatabase'!");
+                rawData = null;
+                return false;
             }
-            else
-            {
-                rawData = entityDBRawDataMap[entityType];
-                return true;
-            }
+            
+            rawData = value;
+            return true;
         }
 
-        private MetadataEntityDBConfig GetMetadataEntityDBConfig<T>() where T : MetadataEntity
+        private MetadataEntityDBConfig GetMetadataEntityDBConfig(string entityName)
         {
             if (configDBAdapter == null)
             {
                 throw new Exception("Method 'Initialize' should be invoke first!");
             }
-
-            var entityName = typeof(T).Name;
+            
             return configDBAdapter.Get<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, entityName);
         }
 
-        private string GetMetadataEntityDBPrimaryKey<T>() where T : MetadataEntity
+        private string GetMetadataEntityDBPrimaryKey(string entityName)
         {
-            var config = GetMetadataEntityDBConfig<T>();
+            var config = GetMetadataEntityDBConfig(entityName);
             return config?.PrimaryKey;
         }
     }
