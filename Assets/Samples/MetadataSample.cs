@@ -24,22 +24,27 @@ namespace UniSharper.Data.Metadata.Samples
             MetadataManager.Initialize(binAsset.bytes);
         
             // Load DB data of Metadata
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath($"Metadata/Data/GenericTypeSampleMetadata{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryAssetFile}"));
-            MetadataManager.LoadEntityDatabase<GenericTypeSampleMetadata>(binAsset.bytes);
-            
-            binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath($"Metadata/Data/UnityTypeSampleMetadata{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryAssetFile}"));
-            MetadataManager.LoadEntityDatabase<UnityTypeSampleMetadata>(binAsset.bytes);
+            LoadMetadataAsset<GenericTypeSampleMetadata>();
+            LoadMetadataAsset<UnityTypeSampleMetadata>();
+            LoadMetadataAsset<LongFilenameDataImportTestMetadata>();
         }
 
         private void Start()
         {
             AddGenericTypeSampleMetadataItems();
             AddUnityTypeSampleMetadataItems();
+            AddLongFilenameDataImportTestMetadataItems();
         }
         
         private void OnDestroy()
         {
             MetadataManager.Dispose();
+        }
+
+        private void LoadMetadataAsset<T>() where T : MetadataEntity
+        {
+            var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath($"Metadata/Data/{typeof(T).Name}{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryAssetFile}"));
+            MetadataManager.LoadEntityDatabase<T>(binAsset.bytes);
         }
 
         private void AddGenericTypeSampleMetadataItems()
@@ -97,6 +102,40 @@ namespace UniSharper.Data.Metadata.Samples
             AddPropertyItem(nameof(metadata.ColorSample), metadata.ColorSample);
             AddPropertyItem(nameof(metadata.Color32Sample), metadata.Color32Sample);
 
+            // Array
+            AddPropertyItem(nameof(metadata.Vector2ArraySample), ToString(metadata.Vector2ArraySample));
+            AddPropertyItem(nameof(metadata.Vector2IntArraySample), ToString(metadata.Vector2IntArraySample));
+            AddPropertyItem(nameof(metadata.Vector3ArraySample), ToString(metadata.Vector3ArraySample));
+            AddPropertyItem(nameof(metadata.Vector3IntArraySample), ToString(metadata.Vector3IntArraySample));
+            AddPropertyItem(nameof(metadata.Vector4ArraySample), ToString(metadata.Vector4ArraySample));
+            AddPropertyItem(nameof(metadata.RangeIntArraySample), ToRangeIntArrayString(metadata.RangeIntArraySample));
+            AddPropertyItem(nameof(metadata.QuaternionArraySample), ToString(metadata.QuaternionArraySample));
+            AddPropertyItem(nameof(metadata.RectArraySample), ToString(metadata.RectArraySample));
+            AddPropertyItem(nameof(metadata.RectIntArraySample), ToString(metadata.RectIntArraySample));
+            AddPropertyItem(nameof(metadata.ColorArraySample), ToString(metadata.ColorArraySample));
+            AddPropertyItem(nameof(metadata.Color32ArraySample), ToString(metadata.Color32ArraySample));
+        }
+
+        private void AddLongFilenameDataImportTestMetadataItems()
+        {
+            AddTitleItem("Long Filename Data");
+            
+            var metadata = MetadataManager.GetEntity<LongFilenameDataImportTestMetadata>(1L);
+            if (metadata == null)
+                return;
+            
+            AddPropertyItem(nameof(metadata.Vector2Sample), metadata.Vector2Sample);
+            AddPropertyItem(nameof(metadata.Vector2IntSample), metadata.Vector2IntSample);
+            AddPropertyItem(nameof(metadata.Vector3Sample), metadata.Vector3Sample);
+            AddPropertyItem(nameof(metadata.Vector3IntSample), metadata.Vector3IntSample);
+            AddPropertyItem(nameof(metadata.Vector4Sample), metadata.Vector4Sample);
+            AddPropertyItem(nameof(metadata.RangeIntSample), $"({metadata.RangeIntSample.start}, {metadata.RangeIntSample.length})");
+            AddPropertyItem(nameof(metadata.QuaternionSample), metadata.QuaternionSample);
+            AddPropertyItem(nameof(metadata.RectSample), metadata.RectSample);
+            AddPropertyItem(nameof(metadata.RectIntSample), metadata.RectIntSample);
+            AddPropertyItem(nameof(metadata.ColorSample), metadata.ColorSample);
+            AddPropertyItem(nameof(metadata.Color32Sample), metadata.Color32Sample);
+            
             // Array
             AddPropertyItem(nameof(metadata.Vector2ArraySample), ToString(metadata.Vector2ArraySample));
             AddPropertyItem(nameof(metadata.Vector2IntArraySample), ToString(metadata.Vector2IntArraySample));
