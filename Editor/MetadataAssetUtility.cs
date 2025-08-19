@@ -58,7 +58,7 @@ namespace UniSharperEditor.Data.Metadata
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
-            ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
+            ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                 (table,
                     fileName,
                     index,
@@ -114,7 +114,7 @@ namespace UniSharperEditor.Data.Metadata
             var settings = MetadataAssetSettings.Load();
             MetadataAssetSettings.CreateEntityScriptsStoreFolder(settings);
 
-            if (string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath))
+            if (string.IsNullOrEmpty(MetadataAssetSettings.ExcelWorkbookFilesFolderPath))
             {
                 if (EditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK"))
                     EditorUtility.ClearProgressBar();
@@ -126,7 +126,7 @@ namespace UniSharperEditor.Data.Metadata
                 // Try delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
-                ForEachExcelFile(settings.ExcelWorkbookFilesFolderPath,
+                ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                     (table,
                         fileName,
                         index,
@@ -151,8 +151,7 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static void SaveExcelWorkbookFileHashMap()
         {
-            var settings = MetadataAssetSettings.Load();
-            var paths = FileUtility.GetExcelFilePathCollection(settings.ExcelWorkbookFilesFolderPath);
+            var paths = FileUtility.GetExcelFilePathCollection(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
             if (paths.Length == 0)
                 return;
 
@@ -180,8 +179,7 @@ namespace UniSharperEditor.Data.Metadata
             deletedExcelFiles = new List<string>();
 
             var oldHashMap = ExcelWorkbookFileHashMap.Load();
-            var settings = MetadataAssetSettings.Load();
-            var paths = FileUtility.GetExcelFilePathCollection(settings.ExcelWorkbookFilesFolderPath);
+            var paths = FileUtility.GetExcelFilePathCollection(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
             if (paths.Length == 0)
             {
                 if (oldHashMap.Count > 0)

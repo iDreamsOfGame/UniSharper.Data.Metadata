@@ -186,12 +186,12 @@ namespace UniSharperEditor.Data.Metadata
             DrawTitleLabel(title);
 
             // Excel Sheets Folder Path
-            if (!string.IsNullOrEmpty(settings.ExcelWorkbookFilesFolderPath) && !Directory.Exists(settings.ExcelWorkbookFilesFolderPath))
-                settings.ExcelWorkbookFilesFolderPath = string.Empty;
+            if (!string.IsNullOrEmpty(MetadataAssetSettings.ExcelWorkbookFilesFolderPath) && !Directory.Exists(MetadataAssetSettings.ExcelWorkbookFilesFolderPath))
+                MetadataAssetSettings.ExcelWorkbookFilesFolderPath = string.Empty;
 
-            settings.ExcelWorkbookFilesFolderPath = UniEditorGUILayout.FolderField(new GUIContent("Excel Workbook Files Folder Path",
+            MetadataAssetSettings.ExcelWorkbookFilesFolderPath = UniEditorGUILayout.FolderField(new GUIContent("Excel Workbook Files Folder Path",
                     "The folder path where to locate excel workbook files."),
-                settings.ExcelWorkbookFilesFolderPath,
+                MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                 "Excel Workbook Files Folder Path",
                 string.Empty,
                 string.Empty,

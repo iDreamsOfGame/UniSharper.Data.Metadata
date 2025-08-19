@@ -22,15 +22,32 @@ namespace UniSharperEditor.Data.Metadata
 
         public const string MetadataPersistentStoresFolderName = "Data";
 
-        public static readonly string MetadataFolderPath = PlayerPath.GetAssetPath(MetadataFolderName);
+        public static readonly string DefaultMetadataFolderPath = PlayerPath.GetAssetPath(MetadataFolderName);
 
-        public static readonly string DefaultSettingsAssetPath = $"{MetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
+        public static readonly string DefaultSettingsAssetPath = $"{DefaultMetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
             $"{CryptoUtility.Md5HashEncrypt(Directory.GetCurrentDirectory(), null, false)}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
         
+        internal static string ExcelWorkbookFilesFolderPath
+        {
+            get
+            {
+                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
+                return EditorPrefsUtility.GetString(key, string.Empty);
+            }
+            set
+            {
+                if (ExcelWorkbookFilesFolderPath.Equals(value))
+                    return;
+
+                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
+                EditorPrefsUtility.SetString(key, value);
+            }
+        }
+        
         [SerializeField, ReadOnlyField]
-        private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataFolderPath, MetadataPersistentStoresFolderName));
+        private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(DefaultMetadataFolderPath, MetadataPersistentStoresFolderName));
 
         [SerializeField, ReadOnlyField]
         private string entityScriptsStorePath = PlayerPath.GetAssetPath(EditorEnvironment.DefaultScriptsFolderName);
@@ -58,23 +75,6 @@ namespace UniSharperEditor.Data.Metadata
         
         [SerializeField, ReadOnlyField]
         private bool deleteRedundantMetadataAndEntityScripts;
-        
-        internal string ExcelWorkbookFilesFolderPath
-        {
-            get
-            {
-                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                return EditorPrefsUtility.GetString(key, string.Empty);
-            }
-            set
-            {
-                if (ExcelWorkbookFilesFolderPath.Equals(value))
-                    return;
-
-                var key = string.Format(ExcelWorkbookFilesFolderPathPrefKeyFormat, PlayerSettings.productName);
-                EditorPrefsUtility.SetString(key, value);
-            }
-        }
         
         internal string MetadataPersistentStorePath
         {
@@ -233,7 +233,7 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static void CreateMetadataAssetsRootFolder()
         {
-            if (!Directory.Exists(MetadataFolderPath))
+            if (!Directory.Exists(DefaultMetadataFolderPath))
                 AssetDatabase.CreateFolder(PlayerEnvironment.AssetsFolderName, MetadataFolderName);
         }
 

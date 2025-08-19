@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using Newtonsoft.Json;
 using ReSharp.Extensions;
 using UnityEngine;
 
@@ -12,35 +12,61 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal static class ExcelWorkbookFileHashMap
     {
-        private const string FileName = ".excel_workbook_file_hash_map";
+        private const string FileName = ".ExcelWorkbookFileHashMap";
 
-        private static readonly string FilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataAssetSettings.MetadataFolderPath, FileName));
+        private static string FilePath
+        {
+            get
+            {
+                var settings = MetadataAssetSettings.Load();
+                if (!settings)
+                    return PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataAssetSettings.DefaultMetadataFolderPath, FileName));
+
+                var assetPath = Path.Combine(settings.MetadataPersistentStorePath, FileName);
+                return EditorPath.GetFullPath(assetPath);
+            }
+        }
 
         public static Dictionary<string, string> Load()
         {
-            if (!File.Exists(FilePath))
+            var filePath = FilePath;
+            if (!File.Exists(filePath))
                 return new Dictionary<string, string>();
 
-            using var stream = File.Open(FilePath, FileMode.Open, FileAccess.Read);
-            var reader = new BinaryFormatter();
-            return reader.Deserialize(stream) as Dictionary<string, string>;
+            try
+            {
+                var content = File.ReadAllText(filePath);
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+                return new Dictionary<string, string>();
+            }
         }
 
         public static void Save(Dictionary<string, string> hashMap)
         {
-            using var stream = File.Open(FilePath, FileMode.OpenOrCreate);
-            var writer = new BinaryFormatter();
-            writer.Serialize(stream, hashMap);
+            try
+            {
+                var content = JsonConvert.SerializeObject(hashMap);
+                File.WriteAllText(FilePath, content);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+            }
         }
 
         public static void Delete()
         {
-            if (!File.Exists(FilePath))
+            var filePath = FilePath;
+            if (!File.Exists(filePath))
                 return;
 
             try
             {
-                File.Delete(FilePath);
+                File.Delete(filePath);
             }
             catch (Exception e)
             {
