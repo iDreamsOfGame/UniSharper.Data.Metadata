@@ -1,4 +1,0 @@
-[submodule "upm"]
-	path = Assets/UniSharper.Data.Metadata
-	url = https://github.com/iDreamsOfGame/UniSharper.Data.Metadata.git
-	branch = upm
