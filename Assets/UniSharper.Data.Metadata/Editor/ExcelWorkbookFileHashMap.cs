@@ -18,7 +18,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             get
             {
-                var settings = MetadataAssetSettings.Load();
+                var settings = MetadataAssetSettings.Load(true);
                 if (!settings)
                     return PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(MetadataAssetSettings.DefaultMetadataFolderPath, FileName));
 

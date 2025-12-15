@@ -11,18 +11,7 @@ namespace UniSharperEditor.Data.Metadata
     {
         private MetadataAssetSettings settings;
 
-        protected MetadataAssetSettings Settings
-        {
-            get
-            {
-                if (settings == null)
-                {
-                    settings = MetadataAssetSettings.Load();
-                }
-
-                return settings;
-            }
-        }
+        protected MetadataAssetSettings Settings => settings ??= MetadataAssetSettings.Load();
 
         protected virtual void DrawGUIWithoutSettings()
         {

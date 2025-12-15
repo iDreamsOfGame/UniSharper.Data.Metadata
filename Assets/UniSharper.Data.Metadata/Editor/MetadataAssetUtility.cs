@@ -51,7 +51,7 @@ namespace UniSharperEditor.Data.Metadata
         internal static bool CreateMetadataDatabaseFiles()
         {
             var result = false;
-            var settings = MetadataAssetSettings.Load();
+            var settings = MetadataAssetSettings.Load(true);
             MetadataAssetSettings.CreateMetadataPersistentStoreFolder(settings);
             DeleteTempDbFiles();
 
@@ -111,7 +111,7 @@ namespace UniSharperEditor.Data.Metadata
         internal static bool GenerateMetadataEntityScripts()
         {
             var result = false;
-            var settings = MetadataAssetSettings.Load();
+            var settings = MetadataAssetSettings.Load(true);
             MetadataAssetSettings.CreateEntityScriptsStoreFolder(settings);
 
             if (string.IsNullOrEmpty(MetadataAssetSettings.ExcelWorkbookFilesFolderPath))
@@ -308,7 +308,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private static void EncryptFileRawData(string filePath)
         {
-            var settings = MetadataAssetSettings.Load();
+            var settings = MetadataAssetSettings.Load(true);
             var rawData = File.ReadAllBytes(filePath);
             var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
             using var writer = new BinaryWriter(new MemoryStream());

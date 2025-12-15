@@ -204,22 +204,29 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static MetadataAssetSettings Create()
         {
-            MetadataAssetSettings settings;
-
+            var settings = CreateInstance<MetadataAssetSettings>();
+            CreateMetadataAssetsRootFolder();
+            CreateMetadataPersistentStoreFolder(settings);
+            CreateEntityScriptsStoreFolder(settings);
+            AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
+            return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
+        }
+        
+        internal static MetadataAssetSettings Load(bool createOnNotFound = false)
+        {
             if (File.Exists(DefaultSettingsAssetPath))
+                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
+
+            var guids = AssetDatabase.FindAssets($"t: {nameof(MetadataAssetSettings)}");
+            if (guids.Length > 0)
             {
-                settings = Load();
-            }
-            else
-            {
-                settings = CreateInstance<MetadataAssetSettings>();
-                CreateMetadataAssetsRootFolder();
-                CreateMetadataPersistentStoreFolder(settings);
-                CreateEntityScriptsStoreFolder(settings);
-                AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
+                var guid = guids[0];
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(path);
             }
 
-            return settings;
+            // Find nothing, create new and load it.
+            return createOnNotFound ? Create() : null;
         }
 
         internal static void CreateEntityScriptsStoreFolder(MetadataAssetSettings settings)
@@ -244,25 +251,6 @@ namespace UniSharperEditor.Data.Metadata
             
             Directory.CreateDirectory(settings.MetadataPersistentStorePath);
             AssetDatabase.ImportAsset(settings.MetadataPersistentStorePath);
-        }
-
-        internal static MetadataAssetSettings Load()
-        {
-            if (File.Exists(DefaultSettingsAssetPath))
-                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
-
-            var guids = AssetDatabase.FindAssets($"t: {nameof(MetadataAssetSettings)}");
-            if (guids.Length > 0)
-            {
-                var guid = guids[0];
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(path);
-            }
-
-            // Find nothing, create new and load it.
-            var settings = CreateInstance<MetadataAssetSettings>();
-            AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
-            return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
         }
 
         [UsedImplicitly]
