@@ -24,7 +24,7 @@
       "url": "https://packages.unity.cn"
     },
     "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.1",
+      "version": "3.2.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -65,11 +65,11 @@
       "url": "https://package.openupm.com"
     },
     "io.github.idreamsofgame.unisharper.core": {
-      "version": "1.26.2",
+      "version": "1.26.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.unity.nuget.newtonsoft-json": "3.2.2",
         "jillejr.newtonsoft.json-for-unity.converters": "1.6.3",
         "io.github.idreamsofgame.resharp.core": "1.5.2"
       },
