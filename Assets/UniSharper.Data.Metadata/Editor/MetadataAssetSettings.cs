@@ -27,7 +27,7 @@ namespace UniSharperEditor.Data.Metadata
         public static readonly string DefaultSettingsAssetPath = $"{DefaultMetadataFolderPath}/{nameof(MetadataAssetSettings)}.asset";
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
-            $"{CryptoUtility.Md5HashEncrypt(Directory.GetCurrentDirectory(), null, false)}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
+            $"{Md5CryptoUtility.ComputeHashToHexString(Directory.GetCurrentDirectory())}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
         
         internal static string ExcelWorkbookFilesFolderPath
         {

@@ -23,14 +23,19 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// Key length of encryption.
         /// </summary>
-        public const int EncryptionKeyLength = 16;
+        public const int EncryptionKeyLength = 32;
+
+        /// <summary>
+        /// Key length of initialization vector.
+        /// </summary>
+        public const int EncryptionIvLength = 16;
         
         /// <summary>
         /// Gets the real table name.
         /// </summary>
         /// <param name="tableName">The input table name. </param>
         /// <returns>The real table name. </returns>
-        public static string GetRealTableName(string tableName) => tableName.Length > 32 ? CryptoUtility.Md5HashEncrypt(tableName) : tableName;
+        public static string GetRealTableName(string tableName) => tableName.Length > 32 ? Md5CryptoUtility.ComputeHashToHexString(tableName) : tableName;
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
 
@@ -178,8 +183,9 @@ namespace UniSharper.Data.Metadata
             if (dataEncryptionFlag)
             {
                 var key = reader.ReadBytes(EncryptionKeyLength);
-                var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength);
-                return CryptoUtility.AesDecrypt(cipherData, key);
+                var iv = reader.ReadBytes(EncryptionIvLength);
+                var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength - EncryptionIvLength);
+                return AesCryptoUtility.Decrypt(cipherData, key, iv);
             }
             else
             {

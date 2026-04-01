@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.6.0] - 2026-04-02
+
+### Changed
+
+- Updates the version of dependency **io.github.idreamsofgame.unisharper.core**.
+
+
+
 ## [2.5.15] - 2025-08-12
 
 ### Fixed

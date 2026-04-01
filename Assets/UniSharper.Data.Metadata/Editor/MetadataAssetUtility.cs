@@ -160,7 +160,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var fileName = Path.GetFileName(path);
                 var rawData = File.ReadAllBytes(path);
-                var hashString = CryptoUtility.Md5HashEncrypt(Encoding.UTF8.GetString(rawData));
+                var hashString = ShaCryptoUtility.ComputeSha256HashToHexString(rawData);
                 fileHashMap.Add(fileName, hashString);
             }
 
@@ -192,7 +192,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 var fileName = Path.GetFileName(path);
                 var rawData = File.ReadAllBytes(path);
-                var hashString = CryptoUtility.Md5HashEncrypt(Encoding.UTF8.GetString(rawData));
+                var hashString = ShaCryptoUtility.ComputeSha256HashToHexString(rawData);
                 newHashMap.Add(fileName, hashString);
 
                 if (oldHashMap.ContainsKey(fileName))
@@ -320,8 +320,10 @@ namespace UniSharperEditor.Data.Metadata
             {
                 // Write key and cipher data
                 var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
-                var cipherData = CryptoUtility.AesEncrypt(rawData, key);
+                var iv = CryptoUtility.GenerateRandomKey();
+                var cipherData = AesCryptoUtility.Encrypt(rawData, key, iv);
                 writer.Write(key);
+                writer.Write(iv);
                 writer.Write(cipherData);
             }
             else
