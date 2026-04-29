@@ -8,7 +8,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class MetadataImporterWindow : MetadataEditorWindow
     {
-        private static readonly Vector2Int Size = new(840, 375);
+        private static readonly Vector2Int Size = new(840, 435);
 
         private MetadataImporter importer;
 

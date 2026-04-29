@@ -151,7 +151,7 @@ namespace UniSharperEditor.Data.Metadata
 
         internal void DrawEditorGUI()
         {
-            if (settings == null)
+            if (!settings)
                 return;
 
             EditorGUILayout.BeginHorizontal();
@@ -160,13 +160,19 @@ namespace UniSharperEditor.Data.Metadata
 
                 EditorGUILayout.BeginVertical();
                 {
+                    var settingsSerializedObject = new SerializedObject(settings);
+                    
                     // Import Settings
                     DrawImportSettingsFields();
 
                     EditorGUILayout.Space(5);
 
                     // Other Settings
-                    DrawOtherSettingsFields();
+                    DrawOtherSettingsFields(settingsSerializedObject);
+                    
+                    var isDirty = settingsSerializedObject.ApplyModifiedProperties();
+                    if (isDirty)
+                        settings.Save();
 
                     EditorGUILayout.Space(10);
 
@@ -282,7 +288,7 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        private void DrawOtherSettingsFields()
+        private void DrawOtherSettingsFields(SerializedObject settingsSerializedObject)
         {
             const string title = "Other Settings";
             DrawTitleLabel(title);
@@ -299,20 +305,36 @@ namespace UniSharperEditor.Data.Metadata
                     settings.ArrayElementSeparator = arrayElementSeparatorString[0];
             }
 
-            // Data encryption/decryption
-            using (new UniEditorGUILayout.FieldScope(LabelWidth))
+            // Encrypt database or not.
+            var label = new GUIContent("Encrypt Database", "Encrypt Database or not.");
+            settings.ShouldEncryptDatabase = EditorGUILayout.BeginToggleGroup(label, settings.ShouldEncryptDatabase);
             {
-                settings.DataEncryptionAndDecryption = EditorGUILayout.Toggle(new GUIContent("Data Encryption/Decryption",
-                        "Generate database file with encryption, and load metadata with decryption."),
-                    settings.DataEncryptionAndDecryption);
+                using (new UniEditorGUILayout.FieldScope(LabelWidth))
+                {
+                    var serializedProperty = settingsSerializedObject.FindProperty("databaseCryptoProvider");
+                    EditorGUILayout.PropertyField(serializedProperty, new GUIContent("Database Crypto Provider"));
+                }
             }
+            EditorGUILayout.EndToggleGroup();
+            
+            // Compress database or not.
+            label = new GUIContent("Compress Database", "Compress Database or not.");
+            settings.ShouldCompressDatabase = EditorGUILayout.BeginToggleGroup(label, settings.ShouldCompressDatabase);
+            {
+                using (new UniEditorGUILayout.FieldScope(LabelWidth))
+                {
+                    var serializedProperty = settingsSerializedObject.FindProperty("databaseCompressionProvider");
+                    EditorGUILayout.PropertyField(serializedProperty, new GUIContent("Database Compression Provider"));
+                }
+            }
+            EditorGUILayout.EndToggleGroup();
 
-            // Delete or not delete redundant metadata and entity scripts
+            // Remove redundant files or not.
             using (new UniEditorGUILayout.FieldScope(LabelWidth))
             {
-                settings.DeleteRedundantMetadataAndEntityScripts = EditorGUILayout.Toggle(new GUIContent("Delete Redundant Metadata?",
-                        "Delete or not delete redundant metadata and entity scripts."),
-                    settings.DeleteRedundantMetadataAndEntityScripts);
+                settings.ShouldRemoveRedundantFiles = EditorGUILayout.Toggle(new GUIContent("Remove Redundant Files",
+                        "Remove redundant database files and entity scripts or not."),
+                    settings.ShouldRemoveRedundantFiles);
             }
         }
 

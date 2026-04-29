@@ -20,5 +20,10 @@ MonoBehaviour:
   entityPropertyNameRowIndex: 2
   entityDataStartingRowIndex: 3
   arrayElementSeparator: 124
-  dataEncryptionAndDecryption: 1
-  deleteRedundantMetadataAndEntityScripts: 1
+  shouldEncryptDatabase: 1
+  databaseCryptoProvider: UniSharper.Data.Metadata.Providers.AesCbcCryptoProvider,
+    Unity.UniSharper.Data.Metadata
+  shouldCompressDatabase: 1
+  databaseCompressionProvider: UniSharper.Data.Metadata.Samples.LZ4CompressionProvider,
+    Unity.UniSharper.Data.Metadata.Samples
+  shouldRemoveRedundantFiles: 0

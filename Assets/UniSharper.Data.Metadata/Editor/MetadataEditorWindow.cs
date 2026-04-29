@@ -42,7 +42,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private void OnGUI()
         {
-            if (Settings == null)
+            if (!Settings)
             {
                 DrawGUIWithoutSettings();
             }
@@ -50,6 +50,11 @@ namespace UniSharperEditor.Data.Metadata
             {
                 DrawGUIWithSettings();
             }
+        }
+
+        private void OnDestroy()
+        {
+            Settings?.Save();
         }
     }
 }

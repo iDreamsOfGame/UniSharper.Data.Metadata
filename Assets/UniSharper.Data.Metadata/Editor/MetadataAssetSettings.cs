@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
+using UniSharper.Data.Metadata.Providers;
 using UniSharperEditor.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -69,12 +70,21 @@ namespace UniSharperEditor.Data.Metadata
 
         [SerializeField, ReadOnlyField]
         private char arrayElementSeparator = '|';
+
+        [SerializeField, ReadOnlyField]
+        private bool shouldEncryptDatabase;
+
+        [SerializeField, ImplementedTypesFiled(typeof(IDatabaseCryptoProvider), true, true)]
+        private string databaseCryptoProvider;
         
         [SerializeField, ReadOnlyField]
-        private bool dataEncryptionAndDecryption;
+        private bool shouldCompressDatabase;
+        
+        [SerializeField, ImplementedTypesFiled(typeof(IDatabaseCompressionProvider), true, true)]
+        private string databaseCompressionProvider;
         
         [SerializeField, ReadOnlyField]
-        private bool deleteRedundantMetadataAndEntityScripts;
+        private bool shouldRemoveRedundantFiles;
         
         internal string MetadataPersistentStorePath
         {
@@ -175,29 +185,68 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-
-        internal bool DataEncryptionAndDecryption
+        
+        internal bool ShouldEncryptDatabase
         {
-            get => dataEncryptionAndDecryption;
+            get => shouldEncryptDatabase;
             set
             {
-                if (dataEncryptionAndDecryption.Equals(value))
+                if (shouldEncryptDatabase.Equals(value))
                     return;
 
-                dataEncryptionAndDecryption = value;
+                shouldEncryptDatabase = value;
+                Save();
+            }
+        }
+        
+        internal string DatabaseCryptoProvider
+        {
+            get => databaseCryptoProvider;
+            set
+            {
+                if (databaseCryptoProvider.Equals(value))
+                    return;
+
+                databaseCryptoProvider = value;
                 Save();
             }
         }
 
-        internal bool DeleteRedundantMetadataAndEntityScripts
+        internal bool ShouldCompressDatabase
         {
-            get => deleteRedundantMetadataAndEntityScripts;
+            get => shouldCompressDatabase;
             set
             {
-                if (deleteRedundantMetadataAndEntityScripts.Equals(value))
+                if (shouldCompressDatabase.Equals(value))
+                    return;
+                
+                shouldCompressDatabase = value;
+                Save();
+            }
+        }
+        
+        internal string DatabaseCompressionProvider
+        {
+            get => databaseCompressionProvider;
+            set
+            {
+                if (databaseCompressionProvider.Equals(value))
                     return;
 
-                deleteRedundantMetadataAndEntityScripts = value;
+                databaseCompressionProvider = value;
+                Save();
+            }
+        }
+
+        internal bool ShouldRemoveRedundantFiles
+        {
+            get => shouldRemoveRedundantFiles;
+            set
+            {
+                if (shouldRemoveRedundantFiles.Equals(value))
+                    return;
+
+                shouldRemoveRedundantFiles = value;
                 Save();
             }
         }

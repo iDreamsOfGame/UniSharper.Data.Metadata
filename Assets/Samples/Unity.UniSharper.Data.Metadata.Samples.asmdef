@@ -1,6 +1,7 @@
 {
     "name": "Unity.UniSharper.Data.Metadata.Samples",
     "references": [
+        "K4os.Compression.LZ4.Utilities",
         "Unity.UniSharper",
         "Unity.UniSharper.Data.Metadata"
     ],

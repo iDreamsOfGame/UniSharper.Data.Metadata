@@ -31,6 +31,7 @@ MonoBehaviour:
     m_Url: https://package.openupm.com
     m_Scopes:
     - com.github.exceldatareader.exceldatareader
+    - com.github.miloszkrajewski.k4os.compression.lz4
     - com.openupm
     - io.github.idreamsofgame.resharp.core
     - io.github.idreamsofgame.resharp.data.iboxdb

@@ -8,6 +8,7 @@ using ReSharp.Data.IBoxDB;
 using ReSharp.Extensions;
 using ReSharp.Patterns;
 using ReSharp.Security.Cryptography;
+using UniSharper.Data.Metadata.Providers;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -21,15 +22,15 @@ namespace UniSharper.Data.Metadata
     public sealed class MetadataManager : Singleton<MetadataManager>
     {
         /// <summary>
-        /// Key length of encryption.
+        /// The crypto provider to encrypt/decrypt database data.
         /// </summary>
-        public const int EncryptionKeyLength = 32;
-
-        /// <summary>
-        /// Key length of initialization vector.
-        /// </summary>
-        public const int EncryptionIvLength = 16;
+        public IDatabaseCryptoProvider CryptoProvider { get; set; } = new AesCbcCryptoProvider();
         
+        /// <summary>
+        /// The compression provider to compress/decompress database data.
+        /// </summary>
+        public IDatabaseCompressionProvider CompressionProvider { get; set; } = new DeflateCompressionProvider();
+
         /// <summary>
         /// Gets the real table name.
         /// </summary>
@@ -103,7 +104,7 @@ namespace UniSharper.Data.Metadata
             if (configDBAdapter != null) 
                 return;
             
-            var rawData = DecryptDatabaseFile(configDBData);
+            var rawData = GetDatabaseData(configDBData);
             configDBAdapter = new IBoxDBAdapter(rawData);
             configDBAdapter.EnsureTable<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, MetadataEntityDBConfig.TablePrimaryKey);
             configDBAdapter.Open();
@@ -121,7 +122,10 @@ namespace UniSharper.Data.Metadata
         /// </summary>
         /// <param name="entityType">The type of entity.</param>
         /// <param name="rawData">The raw data of entity database.</param>
-        public void LoadEntityDatabase(Type entityType, byte[] rawData) => entityDBRawDataMap.AddUnique(entityType, DecryptDatabaseFile(rawData));
+        public void LoadEntityDatabase(Type entityType, byte[] rawData)
+        {
+            entityDBRawDataMap.AddUnique(entityType, GetDatabaseData(rawData));
+        }
 
         public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
         {
@@ -174,22 +178,36 @@ namespace UniSharper.Data.Metadata
             handler?.Invoke(dataDBAdapter);
         }
 
-        private byte[] DecryptDatabaseFile(byte[] fileData)
+        private byte[] GetDatabaseData(byte[] fileData)
         {
-            using var reader = new BinaryReader(new MemoryStream(fileData));
-            var dataEncryptionFlagRawData = reader.ReadBytes(1);
-            var dataEncryptionFlag = BitConverter.ToBoolean(dataEncryptionFlagRawData, 0);
-
-            if (dataEncryptionFlag)
+            try
             {
-                var key = reader.ReadBytes(EncryptionKeyLength);
-                var iv = reader.ReadBytes(EncryptionIvLength);
-                var cipherData = reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length - EncryptionKeyLength - EncryptionIvLength);
-                return AesCryptoUtility.Decrypt(cipherData, key, iv);
+                using var reader = new BinaryReader(new MemoryStream(fileData));
+                var encryptionFlag = reader.ReadByte();
+                
+                if (encryptionFlag > 0)
+                {
+                    // Need to decrypt data.
+                    var key = reader.ReadBytes(CryptoProvider.EncryptionKeyLength);
+                    var compressionFlagRawData = reader.ReadBytes(1);
+                    var compressionFlag = BitConverter.ToBoolean(compressionFlagRawData, 0);
+                    var cipherData = reader.ReadBytes(fileData.Length - sizeof(byte) - CryptoProvider.EncryptionKeyLength - compressionFlagRawData.Length);
+                    var content = CryptoProvider.Decrypt(cipherData, key);
+                    return compressionFlag ? CompressionProvider.Decompress(content) : content;
+                }
+                else
+                {
+                    // No need to decrypt data.
+                    var compressionFlagRawData = reader.ReadBytes(1);
+                    var compressionFlag = BitConverter.ToBoolean(compressionFlagRawData, 0);
+                    var content = reader.ReadBytes(fileData.Length - sizeof(byte) - compressionFlagRawData.Length);
+                    return compressionFlag ? CompressionProvider.Decompress(content) : content;
+                }
             }
-            else
+            catch (Exception e)
             {
-                return reader.ReadBytes(fileData.Length - dataEncryptionFlagRawData.Length);
+                Debug.LogWarning(e);
+                return null;
             }
         }
 

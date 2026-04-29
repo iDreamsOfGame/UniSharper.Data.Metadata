@@ -21,8 +21,9 @@ namespace UniSharper.Data.Metadata.Samples
             propertyItemTemplate.Visible = false;
             
             var binAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(PlayerPath.GetAssetPath($"Metadata/Data/MetadataEntityDBConfig{FileExtensions.DatabaseFile}{FileExtensions.UnityBinaryAssetFile}"));
+            MetadataManager.CompressionProvider = new LZ4CompressionProvider();
             MetadataManager.Initialize(binAsset.bytes);
-        
+            
             // Load DB data of Metadata
             LoadMetadataAsset<GenericTypeSampleMetadata>();
             LoadMetadataAsset<UnityTypeSampleMetadata>();

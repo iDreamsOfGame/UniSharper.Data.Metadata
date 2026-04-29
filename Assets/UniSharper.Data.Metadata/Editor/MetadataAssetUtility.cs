@@ -15,6 +15,7 @@ using ReSharp.Extensions;
 using ReSharp.Security.Cryptography;
 using UniSharper;
 using UniSharper.Data.Metadata;
+using UniSharper.Data.Metadata.Providers;
 using UnityEditor;
 using UnityDebug = UnityEngine.Debug;
 
@@ -29,6 +30,10 @@ namespace UniSharperEditor.Data.Metadata
         private const string DatabaseAssetFileExtension = FileExtensions.DatabaseFile + FileExtensions.UnityBinaryAssetFile;
 
         private static string tempFolderPath;
+
+        private static IDatabaseCryptoProvider databaseCryptoProvider;
+
+        private static IDatabaseCompressionProvider databaseCompressionProvider;
 
         private static string TempFolderPath
         {
@@ -82,7 +87,7 @@ namespace UniSharperEditor.Data.Metadata
                         var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
                         typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
                             new[] { entityClassType },
-                            new object[] { dbFolderPath, entityClassName, rawInfoList, entityDataList, index, updateDatabaseFile });
+                            new object[] { settings, dbFolderPath, entityClassName, rawInfoList, entityDataList, index, updateDatabaseFile });
                         result = true;
                     }
                     else
@@ -98,10 +103,10 @@ namespace UniSharperEditor.Data.Metadata
             // Copy MetadataEntityDBConfig database file.
             if (result && (addedExcelFiles.Count > 0 || deletedExcelFiles.Count > 0))
             {
-                CopyMetadataDatabaseFile(dbFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
+                CopyMetadataDatabaseFile(settings, dbFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
             }
 
-            // Try delete redundant metadata database file.
+            // Try to delete redundant metadata database file.
             TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
 
             EditorUtility.ClearProgressBar();
@@ -123,7 +128,7 @@ namespace UniSharperEditor.Data.Metadata
             {
                 FindChangedExcelWorkbookFiles(out _, out _, out var deletedExcelFiles);
 
-                // Try delete redundant entity scripts.
+                // Try to delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
                 ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
@@ -212,7 +217,10 @@ namespace UniSharperEditor.Data.Metadata
             deletedExcelFiles.AddRange(oldHashMap.Keys.Where(fileName => !newHashMap.ContainsKey(fileName)));
         }
 
-        private static void CopyMetadataDatabaseFile(string dbFolderPath, long dbLocalAddress, string entityName = null)
+        private static void CopyMetadataDatabaseFile(MetadataAssetSettings settings, 
+            string dbFolderPath, 
+            long dbLocalAddress, 
+            string entityName = null)
         {
             var sourceFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(TempFolderPath, $"db{dbLocalAddress}.box"));
             var newFileName = dbLocalAddress > 1
@@ -220,7 +228,7 @@ namespace UniSharperEditor.Data.Metadata
                 : $"{nameof(MetadataEntityDBConfig)}{DatabaseAssetFileExtension}";
             var destFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(dbFolderPath, newFileName));
             FileUtil.ReplaceFile(sourceFilePath, destFilePath);
-            EncryptFileRawData(destFilePath);
+            PostProcessDatabaseFile(settings, destFilePath);
             var assetFilePath = EditorPath.GetAssetPath(destFilePath);
             AssetDatabase.ImportAsset(assetFilePath, ImportAssetOptions.ForceUpdate);
         }
@@ -306,32 +314,33 @@ namespace UniSharperEditor.Data.Metadata
             FileUtil.DeleteFileOrDirectory(TempFolderPath);
         }
 
-        private static void EncryptFileRawData(string filePath)
+        private static void PostProcessDatabaseFile(MetadataAssetSettings settings, string filePath)
         {
-            var settings = MetadataAssetSettings.Load(true);
             var rawData = File.ReadAllBytes(filePath);
-            var dataEncryptionFlag = BitConverter.GetBytes(settings.DataEncryptionAndDecryption);
-            using var writer = new BinaryWriter(new MemoryStream());
+            var encryptionFlag = (byte)(settings.ShouldEncryptDatabase ? 1 : 0);
+            var compressionFlag = (byte)(settings.ShouldCompressDatabase ? 1 : 0);
+            var cryptoProvider = GetDatabaseCryptoProvider(settings);
+            var compressionProvider = GetDatabaseCompressionProvider(settings);
             
-            // Write flag to judge if data need to decryption
-            writer.Write(dataEncryptionFlag);
+            using var writer = new BinaryWriter(new MemoryStream());
+            writer.Write(encryptionFlag);
 
-            if (settings.DataEncryptionAndDecryption)
+            if (settings.ShouldEncryptDatabase)
             {
-                // Write key and cipher data
-                var key = CryptoUtility.GenerateRandomKey(MetadataManager.EncryptionKeyLength);
-                var iv = CryptoUtility.GenerateRandomKey();
-                var cipherData = AesCryptoUtility.Encrypt(rawData, key, iv);
+                var key = CryptoUtility.GenerateRandomKey(cryptoProvider.EncryptionKeyLength);
+                var output = settings.ShouldCompressDatabase ? compressionProvider.Compress(rawData) : rawData;
+                var cipherData = cryptoProvider.Encrypt(output, key);
                 writer.Write(key);
-                writer.Write(iv);
+                writer.Write(compressionFlag);
                 writer.Write(cipherData);
             }
             else
             {
-                // Write raw data
-                writer.Write(rawData);
+                var output = settings.ShouldCompressDatabase ? compressionProvider.Compress(rawData) : rawData;
+                writer.Write(compressionFlag);
+                writer.Write(output);
             }
-
+            
             var bufferData = ((MemoryStream)writer.BaseStream).GetBuffer();
             File.WriteAllBytes(filePath, bufferData);
         }
@@ -530,7 +539,8 @@ namespace UniSharperEditor.Data.Metadata
         }
 
         [UsedImplicitly]
-        private static void InsertEntityData<T>(string dbFolderPath,
+        private static void InsertEntityData<T>(MetadataAssetSettings settings, 
+            string dbFolderPath,
             string tableName,
             IList<EntityPropertyRawInfo> rowInfos,
             IList<MetadataEntity> entityDataList,
@@ -570,12 +580,12 @@ namespace UniSharperEditor.Data.Metadata
 
             // Copy metadata entity database file.
             if (updateDatabaseFile)
-                CopyMetadataDatabaseFile(dbFolderPath, dbLocalAddress, tableName);
+                CopyMetadataDatabaseFile(settings, dbFolderPath, dbLocalAddress, tableName);
         }
 
         private static void TryDeleteMetadataEntityScripts(MetadataAssetSettings settings, List<string> deletedExcelFiles)
         {
-            if (settings.DeleteRedundantMetadataAndEntityScripts && deletedExcelFiles.Count > 0)
+            if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
                 foreach (var deletedExcelFile in deletedExcelFiles)
                 {
@@ -601,7 +611,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private static void TryDeleteMetadataDatabaseFiles(MetadataAssetSettings settings, List<string> deletedExcelFiles)
         {
-            if (settings.DeleteRedundantMetadataAndEntityScripts && deletedExcelFiles.Count > 0)
+            if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
                 foreach (var deletedExcelFile in deletedExcelFiles)
                 {
@@ -624,6 +634,32 @@ namespace UniSharperEditor.Data.Metadata
             var scriptMetaFilePath = $"{databaseFilePath}{FileExtensions.UnityMetaFile}";
             FileUtil.DeleteFileOrDirectory(databaseFilePath);
             FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
+        }
+        
+        private static IDatabaseCryptoProvider GetDatabaseCryptoProvider(MetadataAssetSettings settings)
+        {
+            if (databaseCryptoProvider != null)
+                return databaseCryptoProvider;
+
+            var type = Type.GetType(settings.DatabaseCryptoProvider);
+            if (type == null)
+                return null;
+            
+            databaseCryptoProvider = Activator.CreateInstance(type) as IDatabaseCryptoProvider;
+            return databaseCryptoProvider;
+        }
+
+        private static IDatabaseCompressionProvider GetDatabaseCompressionProvider(MetadataAssetSettings settings)
+        {
+            if (databaseCompressionProvider != null)
+                return databaseCompressionProvider;
+            
+            var type = Type.GetType(settings.DatabaseCompressionProvider);
+            if (type == null)
+                return null;
+            
+            databaseCompressionProvider = Activator.CreateInstance(type) as IDatabaseCompressionProvider;
+            return databaseCompressionProvider;
         }
     }
 }
