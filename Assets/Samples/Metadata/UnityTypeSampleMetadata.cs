@@ -53,7 +53,7 @@ namespace UniSharper.Data.Metadata.Samples
 		/// <summary>
 		/// ID
 		/// </summary>
-		public long ID { get; set; }
+		public long Id { get; set; }
 
 		/// <summary>
 		/// Vector2 Value

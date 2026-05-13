@@ -13,9 +13,9 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             var array = base.Parse(arrayElementSeparator, value) as string[];
-            if (array == null)
-                return null;
-
+            if (array == null || array.Length == 0)
+                return Array.Empty<T>();
+            
             var result = new T[array.Length];
             for (var i = 0; i < result.Length; i++)
             {
@@ -30,8 +30,8 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters)
         {
             var array = base.Parse(arrayElementSeparator, value) as string[];
-            if (array == null)
-                return null;
+            if (array == null || array.Length == 0)
+                return Array.Empty<bool>();
 
             var result = new bool[array.Length];
             for (var i = 0; i < result.Length; i++)
@@ -45,6 +45,6 @@ namespace UniSharperEditor.Data.Metadata.PropertyTypeConverters
     internal class ArrayTypeConverter : PropertyTypeConverter
     {
         public override object Parse(char arrayElementSeparator, string value, params object[] parameters) => 
-            string.IsNullOrEmpty(value) ? new string[] { } : value.Split(new char[] { arrayElementSeparator }, StringSplitOptions.RemoveEmptyEntries);
+            string.IsNullOrEmpty(value) ? Array.Empty<string>() : value.Split(new char[] { arrayElementSeparator }, StringSplitOptions.RemoveEmptyEntries);
     }
 }

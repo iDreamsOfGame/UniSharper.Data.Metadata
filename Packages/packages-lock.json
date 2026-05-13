@@ -81,7 +81,7 @@
       "url": "https://package.openupm.com"
     },
     "io.github.idreamsofgame.unisharper.core": {
-      "version": "1.28.2",
+      "version": "1.28.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
