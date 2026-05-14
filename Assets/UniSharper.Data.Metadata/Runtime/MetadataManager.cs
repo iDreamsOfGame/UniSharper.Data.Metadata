@@ -12,6 +12,8 @@ using UniSharper.Data.Metadata.Providers;
 using UnityEngine;
 using UnityEngine.Scripting;
 
+// ReSharper disable LoopCanBeConvertedToQuery
+
 namespace UniSharper.Data.Metadata
 {
     /// <summary>
@@ -158,6 +160,31 @@ namespace UniSharper.Data.Metadata
             var result = default(T);
             CreateDataDBAdapterForEntity<T>(context => result = context?.Get<T>(tableName, key));
             return result;
+        }
+
+        /// <summary>
+        /// Gets the entities by the value of primary key.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="key">The value of primary key.</param>
+        /// <returns>The entities found in database.</returns>
+        public T[] GetEntities<T>(object[] keys) where T : MetadataEntity, new()
+        {
+            if (keys == null || keys.Length == 0)
+                return Array.Empty<T>();
+            
+            var tableName = GetRealTableName<T>();
+            var result = new List<T>();
+            CreateDataDBAdapterForEntity<T>(context =>
+            {
+                foreach (var key in keys)
+                {
+                    var entity = context?.Get<T>(tableName, key);
+                    if (entity != null)
+                        result.Add(entity);
+                }
+            });
+            return result.ToArray();
         }
 
         /// <summary>
