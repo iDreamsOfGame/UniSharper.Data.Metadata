@@ -209,10 +209,42 @@ namespace UniSharper.Data.Metadata
         /// <returns>An array of entities matching the criteria.</returns>
         public T[] FindEntities<T>(string key, object value) where T : MetadataEntity, new()
         {
+            if (string.IsNullOrEmpty(key))
+                return Array.Empty<T>();
+            
             var tableName = GetRealTableName<T>();
             List<T> results = null;
             CreateDataDBAdapterForEntity<T>(context => results = context?.Find<T>(tableName, key, value));
             return results?.ToArray();
+        }
+
+        /// <summary>
+        /// Finds entities of the specified type that match the given key with multiple values.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="key">The key to search.</param>
+        /// <param name="values">The values to match.</param>
+        /// <returns>An array of entities matching any of the specified values for the given key.</returns>
+        public T[] FindEntities<T>(string key, params object[] values) where T : MetadataEntity, new()
+        {
+            if (string.IsNullOrEmpty(key))
+                return Array.Empty<T>();
+
+            if (values == null || values.Length == 0)
+                return Array.Empty<T>();
+            
+            var tableName = GetRealTableName<T>();
+            var results = new List<T>();
+            CreateDataDBAdapterForEntity<T>(context =>
+            {
+                foreach (var value in values)
+                {
+                    var entities = context?.Find<T>(tableName, key, value);
+                    if (entities != null)
+                        results.AddRange(entities);
+                }
+            });
+            return results.ToArray();
         }
 
         /// <summary>

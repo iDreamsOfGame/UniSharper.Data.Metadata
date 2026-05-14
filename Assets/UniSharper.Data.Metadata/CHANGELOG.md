@@ -6,11 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.1.2] - 2026-05-14
+
+### Added
+
+- Adds method **FindEntities** to class **MetadataManager**.
+
+
+
 ## [3.1.1] - 2026-05-14
 
 ### Added
 
-- Adds methods **GetEntities** to class **MetadataManager**.
+- Adds method **GetEntities** to class **MetadataManager**.
 
 
 
