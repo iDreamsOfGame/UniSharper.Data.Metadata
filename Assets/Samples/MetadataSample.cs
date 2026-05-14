@@ -154,7 +154,7 @@ namespace UniSharper.Data.Metadata.Samples
         {
             AddTitleItem("Long Filename Data");
             
-            var metadata = MetadataManager.GetEntity<LongFilenameDataImportTestMetadata>(1L);
+            var metadata = MetadataManager.GetEntity<LongFilenameDataImportTestMetadata>("Key1");
             if (metadata == null)
                 return;
             
