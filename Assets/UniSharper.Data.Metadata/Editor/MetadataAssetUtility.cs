@@ -283,15 +283,15 @@ namespace UniSharperEditor.Data.Metadata
 
                 if (string.IsNullOrEmpty(propertyName))
                 {
-                    UnityDebug.Log($"Invalid property name at column index {column}, column data will be ignored!");
+                    UnityDebug.Log($"<color=#FFFF00>Invalid property name at column index {column}, column data will be ignored!</color>");
                     continue;
                 }
 
                 if (string.IsNullOrEmpty(propertyType))
                 {
-                    UnityDebug.LogWarning(string.IsNullOrEmpty(propertyName)
-                        ? $"Invalid property type at column index {column}, column data will be ignored in file '{fileName}'!"
-                        : $"Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored in file '{fileName}'!");
+                    UnityDebug.Log(string.IsNullOrEmpty(propertyName)
+                        ? $"<color=#FFFF00>Invalid property type at column index {column}, column data will be ignored in file '{fileName}'!</color>"
+                        : $"<color=#FFFF00>Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored in file '{fileName}'!</color>");
 
                     continue;
                 }

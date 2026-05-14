@@ -25,17 +25,24 @@ namespace UniSharper.Data.Metadata
         /// The crypto provider to encrypt/decrypt database data.
         /// </summary>
         public IDatabaseCryptoProvider CryptoProvider { get; set; } = new AesCbcCryptoProvider();
-        
+
         /// <summary>
         /// The compression provider to compress/decompress database data.
         /// </summary>
         public IDatabaseCompressionProvider CompressionProvider { get; set; } = new DeflateCompressionProvider();
 
         /// <summary>
+        /// Gets the real table name for the specified entity type.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <returns>The real table name used in database.</returns>
+        public static string GetRealTableName<T>() => GetRealTableName(typeof(T).Name);
+
+        /// <summary>
         /// Gets the real table name.
         /// </summary>
         /// <param name="tableName">The input table name. </param>
-        /// <returns>The real table name. </returns>
+        /// <returns>The real table name used in database.</returns>
         public static string GetRealTableName(string tableName) => tableName.Length > 32 ? Md5CryptoUtility.ComputeHashToHexString(tableName) : tableName;
 
         private readonly Dictionary<Type, byte[]> entityDBRawDataMap;
@@ -49,61 +56,14 @@ namespace UniSharper.Data.Metadata
         }
 
         /// <summary>
-        /// Gets all entities of the entity type.
-        /// </summary>
-        /// <typeparam name="T">The type of entity.</typeparam>
-        /// <returns>The list entities found in database.</returns>
-        public T[] GetAllEntities<T>() where T : MetadataEntity, new()
-        {
-            var entityType = typeof(T);
-            var tableName = GetRealTableName(entityType.Name);
-            List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.GetAll<T>(tableName));
-            return results?.ToArray();
-        }
-
-        public T[] GetEntities<T>(string key, object value) where T : MetadataEntity, new()
-        {
-            var entityType = typeof(T);
-            var tableName = GetRealTableName(entityType.Name);
-            List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, key, value));
-            return results?.ToArray();
-        }
-
-        public T[] GetEntities<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None) where T : MetadataEntity, new()
-        {
-            var entityType = typeof(T);
-            var tableName = GetRealTableName(entityType.Name);
-            List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, arguments, logicalOperator));
-            return results?.ToArray();
-        }
-
-        /// <summary>
-        /// Gets the entity by the value of primary key.
-        /// </summary>
-        /// <typeparam name="T">The type of the entity.</typeparam>
-        /// <param name="key">The value of primary key.</param>
-        /// <returns>The entity found in database.</returns>
-        public T GetEntity<T>(object key) where T : MetadataEntity, new()
-        {
-            var entityType = typeof(T);
-            var tableName = GetRealTableName(entityType.Name);
-            var result = default(T);
-            CreateDataDBAdapterForEntity<T>(entityType, context => result = context?.Get<T>(tableName, key));
-            return result;
-        }
-
-        /// <summary>
         /// Initializes the specified configuration database data.
         /// </summary>
         /// <param name="configDBData">The configuration database data.</param>
         public void Initialize(byte[] configDBData)
         {
-            if (configDBAdapter != null) 
+            if (configDBAdapter != null)
                 return;
-            
+
             var rawData = GetDatabaseData(configDBData);
             configDBAdapter = new IBoxDBAdapter(rawData);
             configDBAdapter.EnsureTable<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, MetadataEntityDBConfig.TablePrimaryKey);
@@ -127,22 +87,137 @@ namespace UniSharper.Data.Metadata
             entityDBRawDataMap.AddUnique(entityType, GetDatabaseData(rawData));
         }
 
-        public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
+        /// <summary>
+        /// Counts all entities of the specified type.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <returns>The count of entities.</returns>
+        public long Count<T>() where T : MetadataEntity, new()
         {
-            var entityType = typeof(T);
-            var tableName = GetRealTableName(entityType.Name);
+            var tableName = GetRealTableName<T>();
+            long count = 0;
+            CreateDataDBAdapterForEntity<T>(context => count = context?.Count(tableName) ?? 0L);
+            return count;
+        }
+
+        /// <summary>
+        /// Counts entities of the specified type that match the given key-value pair.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="key">The key to search.</param>
+        /// <param name="value">The value to match.</param>
+        /// <returns>The count of entities matching the criteria.</returns>
+        public long Count<T>(string key, object value) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            long count = 0;
+            CreateDataDBAdapterForEntity<T>(context => count = context?.Count(tableName, key, value) ?? 0L);
+            return count;
+        }
+
+        /// <summary>
+        /// Counts entities of the specified type that match the given query with arguments.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="query">The query string.</param>
+        /// <param name="arguments">The query arguments.</param>
+        /// <returns>The count of entities matching the query.</returns>
+        public long CountByQuery<T>(string query, params object[] arguments) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            long count = 0;
+            CreateDataDBAdapterForEntity<T>(context => count = context?.CountByQuery(tableName, query, arguments) ?? 0L);
+            return count;
+        }
+
+        /// <summary>
+        /// Counts entities of the specified type that match the given query arguments.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="arguments">The query arguments as key-value pairs.</param>
+        /// <param name="logicalOperator">The logical operator to combine conditions.</param>
+        /// <returns>The count of entities matching the query.</returns>
+        public long CountByQuery<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None)
+            where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            long count = 0;
+            CreateDataDBAdapterForEntity<T>(context => count = context?.CountByQuery(tableName, arguments, logicalOperator) ?? 0L);
+            return count;
+        }
+
+        /// <summary>
+        /// Gets the entity by the value of primary key.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity.</typeparam>
+        /// <param name="key">The value of primary key.</param>
+        /// <returns>The entity found in database.</returns>
+        public T GetEntity<T>(object key) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            var result = default(T);
+            CreateDataDBAdapterForEntity<T>(context => result = context?.Get<T>(tableName, key));
+            return result;
+        }
+
+        /// <summary>
+        /// Gets all entities of the entity type.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <returns>The list entities found in database.</returns>
+        public T[] GetAllEntities<T>() where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
             List<T> results = null;
-            CreateDataDBAdapterForEntity<T>(entityType, context => results = context?.Get<T>(tableName, query, arguments));
+            CreateDataDBAdapterForEntity<T>(context => results = context?.GetAll<T>(tableName));
             return results?.ToArray();
         }
 
         /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
+        /// Finds entities of the specified type that match the given key-value pair.
         /// </summary>
-        /// <param name="disposing">
-        /// <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release
-        /// only unmanaged resources.
-        /// </param>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="key">The key to search.</param>
+        /// <param name="value">The value to match.</param>
+        /// <returns>An array of entities matching the criteria.</returns>
+        public T[] FindEntities<T>(string key, object value) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            List<T> results = null;
+            CreateDataDBAdapterForEntity<T>(context => results = context?.Find<T>(tableName, key, value));
+            return results?.ToArray();
+        }
+
+        /// <summary>
+        /// Queries entities of the specified type that match the given query arguments.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="arguments">The query arguments as key-value pairs.</param>
+        /// <param name="logicalOperator">The logical operator to combine conditions.</param>
+        /// <returns>An array of entities matching the query.</returns>
+        public T[] QueryEntities<T>(Dictionary<string, object> arguments, QueryLogicalOperator logicalOperator = QueryLogicalOperator.None) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            List<T> results = null;
+            CreateDataDBAdapterForEntity<T>(context => results = context?.Query<T>(tableName, arguments, logicalOperator));
+            return results?.ToArray();
+        }
+
+        /// <summary>
+        /// Queries entities of the specified type that match the given query with arguments.
+        /// </summary>
+        /// <typeparam name="T">The type of entity.</typeparam>
+        /// <param name="query">The query string.</param>
+        /// <param name="arguments">The query arguments.</param>
+        /// <returns>An array of entities matching the query.</returns>
+        public T[] QueryEntities<T>(string query, params object[] arguments) where T : MetadataEntity, new()
+        {
+            var tableName = GetRealTableName<T>();
+            List<T> results = null;
+            CreateDataDBAdapterForEntity<T>(context => results = context?.Query<T>(tableName, query, arguments));
+            return results?.ToArray();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -157,21 +232,16 @@ namespace UniSharper.Data.Metadata
             base.Dispose(disposing);
         }
 
-        private void CreateDataDBAdapterForEntity<T>(Type entityType, Action<IBoxDBAdapter> handler) where T : MetadataEntity, new()
+        private void CreateDataDBAdapterForEntity<T>(Action<IBoxDBAdapter> handler) where T : MetadataEntity, new()
         {
-            if (entityType == null)
-            {
-                throw new ArgumentNullException(nameof(entityType));
-            }
-
-            if (!GetDBRawDataForEntity(entityType, out var dbRawData))
+            if (!TryGetDBRawDataForEntity<T>(out var dbRawData))
             {
                 handler?.Invoke(null);
                 return;
             }
 
             using var dataDBAdapter = new IBoxDBAdapter(dbRawData);
-            var tableName = GetRealTableName(entityType.Name);
+            var tableName = GetRealTableName<T>();
             var primaryKeyName = GetMetadataEntityDBPrimaryKey(tableName);
             dataDBAdapter.EnsureTable<T>(tableName, primaryKeyName);
             dataDBAdapter.Open();
@@ -184,7 +254,7 @@ namespace UniSharper.Data.Metadata
             {
                 using var reader = new BinaryReader(new MemoryStream(fileData));
                 var encryptionFlag = reader.ReadByte();
-                
+
                 if (encryptionFlag > 0)
                 {
                     // Need to decrypt data.
@@ -211,15 +281,16 @@ namespace UniSharper.Data.Metadata
             }
         }
 
-        private bool GetDBRawDataForEntity(Type entityType, out byte[] rawData)
+        private bool TryGetDBRawDataForEntity<T>(out byte[] rawData)
         {
+            var entityType = typeof(T);
             if (!entityDBRawDataMap.TryGetValue(entityType, out var value))
             {
                 Debug.LogError($"No database raw data for the type {entityType.FullName}, you should load the database raw data for this type by invoking method 'LoadEntityDatabase'!");
                 rawData = null;
                 return false;
             }
-            
+
             rawData = value;
             return true;
         }
@@ -227,10 +298,8 @@ namespace UniSharper.Data.Metadata
         private MetadataEntityDBConfig GetMetadataEntityDBConfig(string entityName)
         {
             if (configDBAdapter == null)
-            {
                 throw new Exception("Method 'Initialize' should be invoke first!");
-            }
-            
+
             return configDBAdapter.Get<MetadataEntityDBConfig>(MetadataEntityDBConfig.TableName, entityName);
         }
 

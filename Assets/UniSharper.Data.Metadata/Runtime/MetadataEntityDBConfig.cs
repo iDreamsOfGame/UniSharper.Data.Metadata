@@ -38,7 +38,6 @@ namespace UniSharper.Data.Metadata
         /// </summary>
         /// <param name="entityName">The name of entity.</param>
         /// <param name="primaryKey">The primary key.</param>
-        [Preserve]
         public MetadataEntityDBConfig(string entityName, string primaryKey)
         {
             EntityName = entityName;
@@ -48,13 +47,11 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// Gets or sets the name of the entity.
         /// </summary>
-        /// <value>The name of the entity.</value>
         public string EntityName { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the primary key.
         /// </summary>
-        /// <value>The name of the primary key.</value>
         public string PrimaryKey { get; set; }
     }
 }

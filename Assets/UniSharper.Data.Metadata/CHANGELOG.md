@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.1.0] - 2026-05-14
+
+### Added
+
+- Adds methods **Count** and **CountByQuery** to class **MetadataManager**.
+
+
+
+### Changed
+
+- The **io.github.idreamsofgame.resharp.data.iboxdb** package has been updated to **3.0.0**.
+- Rename some methods of class **MetadataManager**.
+- Refactor class **MetadataManager**.
+
+
+
 ## [3.0.0] - 2026-04-29
 
 ### Added

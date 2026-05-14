@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using ReSharp.Data.IBoxDB;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace UniSharper.Data.Metadata.Samples
 {
@@ -25,6 +28,7 @@ namespace UniSharper.Data.Metadata.Samples
             MetadataManager.Initialize(binAsset.bytes);
             
             // Load DB data of Metadata
+            LoadMetadataAsset<PlayerMetadata>();
             LoadMetadataAsset<GenericTypeSampleMetadata>();
             LoadMetadataAsset<UnityTypeSampleMetadata>();
             LoadMetadataAsset<LongFilenameDataImportTestMetadata>();
@@ -53,6 +57,35 @@ namespace UniSharper.Data.Metadata.Samples
             AddTitleItem("Generic Type");
             
             var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(1L);
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var count = MetadataManager.Count<PlayerMetadata>();
+            stopwatch.Stop();
+            Debug.Log($"<color=#FF00FF>count={count}, time cost: {stopwatch.ElapsedMilliseconds} ms</color>");
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            count = MetadataManager.Count<PlayerMetadata>("Id", 3815L);
+            stopwatch.Stop();
+            Debug.Log($"<color=#FF00FF>count={count}, time cost: {stopwatch.ElapsedMilliseconds} ms</color>");
+
+            stopwatch.Reset();
+            stopwatch.Start();
+            count = MetadataManager.CountByQuery<PlayerMetadata>("Id == ? & Name == ?", 3048L, "Solitario");
+            stopwatch.Stop();
+            Debug.Log($"<color=#FF00FF>count={count}, time cost: {stopwatch.ElapsedMilliseconds} ms</color>");
+            
+            var query = new Dictionary<string, object>
+            {
+                { "Id", 3056L },
+                { "Name", "Lolo" }
+            };
+            stopwatch.Reset();
+            stopwatch.Start();
+            count = MetadataManager.CountByQuery<PlayerMetadata>(query, QueryLogicalOperator.And);
+            stopwatch.Stop();
+            Debug.Log($"<color=#FF00FF>count={count}, time cost: {stopwatch.ElapsedMilliseconds} ms</color>");
 
             AddPropertyItem(nameof(metadata.StringSample), metadata.StringSample);
             AddPropertyItem(nameof(metadata.BooleanSample), metadata.BooleanSample);
