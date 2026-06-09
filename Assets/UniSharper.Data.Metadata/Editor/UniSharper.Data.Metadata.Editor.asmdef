@@ -1,9 +1,10 @@
 {
-    "name": "Unity.UniSharper.Data.Metadata.Editor",
+    "name": "UniSharper.Data.Metadata.Editor",
+    "rootNamespace": "UniSharperEditor.Data.Metadata",
     "references": [
-        "Unity.UniSharper",
-        "Unity.UniSharper.Editor",
-        "Unity.UniSharper.Data.Metadata"
+        "UniSharper",
+        "UniSharper.Editor",
+        "UniSharper.Data.Metadata"
     ],
     "includePlatforms": [
         "Editor"
