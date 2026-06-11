@@ -9,7 +9,7 @@ namespace UniSharper.Data.Metadata
     /// MetadataEntityDBConfig contains the database configuration parameters of metadata entity.
     /// </summary>
     [Preserve]
-    public class MetadataEntityDBConfig
+    public sealed class MetadataEntityDBConfig
     {
         /// <summary>
         /// The database local address.
@@ -54,6 +54,7 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// Gets or sets the name of the primary key.
         /// </summary>
+        [Preserve]
         public string PrimaryKey { get; set; }
     }
 }
