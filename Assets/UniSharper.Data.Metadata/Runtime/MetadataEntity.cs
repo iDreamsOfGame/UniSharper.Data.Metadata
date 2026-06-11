@@ -4,12 +4,14 @@
 using System.Linq;
 using System.Text;
 using ReSharp.Extensions;
+using UnityEngine.Scripting;
 
 namespace UniSharper.Data.Metadata
 {
     /// <summary>
     /// The abstract class for metadata entity.
     /// </summary>
+    [RequireDerived]
     public abstract class MetadataEntity
     {
         /// <summary>

@@ -8,6 +8,7 @@ namespace UniSharper.Data.Metadata
     /// <summary>
     /// MetadataEntityDBConfig contains the database configuration parameters of metadata entity.
     /// </summary>
+    [Preserve]
     public class MetadataEntityDBConfig
     {
         /// <summary>
@@ -47,6 +48,7 @@ namespace UniSharper.Data.Metadata
         /// <summary>
         /// Gets or sets the name of the entity.
         /// </summary>
+        [Preserve]
         public string EntityName { get; set; }
 
         /// <summary>

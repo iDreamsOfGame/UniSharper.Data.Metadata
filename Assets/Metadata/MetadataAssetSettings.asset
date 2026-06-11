@@ -22,8 +22,8 @@ MonoBehaviour:
   arrayElementSeparator: 124
   shouldEncryptDatabase: 1
   databaseCryptoProvider: UniSharper.Data.Metadata.Providers.AesCbcCryptoProvider,
-    Unity.UniSharper.Data.Metadata
+    UniSharper.Data.Metadata
   shouldCompressDatabase: 1
   databaseCompressionProvider: UniSharper.Data.Metadata.Samples.LZ4CompressionProvider,
-    Unity.UniSharper.Data.Metadata.Samples
+    UniSharper.Data.Metadata.Samples
   shouldRemoveRedundantFiles: 0
