@@ -160,13 +160,17 @@ namespace UniSharperEditor.Data.Metadata
             if (paths.Length == 0)
                 return;
 
-            var fileHashMap = new Dictionary<string, string>();
+            var fileHashMap = new Dictionary<string, ExcelWorkbookFileMetadata>();
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                var rawData = File.ReadAllBytes(path);
-                var hashString = ShaCryptoUtility.ComputeSha256HashToHexString(rawData);
-                fileHashMap.Add(fileName, hashString);
+                var fileInfo = new FileInfo(path);
+                var fileMetadata = new ExcelWorkbookFileMetadata
+                {
+                    FileLength = fileInfo.Length,
+                    LastWriteTimestamp = fileInfo.LastWriteTimeUtc.ToUnixTimestamp()
+                };
+                fileHashMap.Add(fileName, fileMetadata);
             }
 
             ExcelWorkbookFileHashMap.Save(fileHashMap);
@@ -192,18 +196,22 @@ namespace UniSharperEditor.Data.Metadata
                 return;
             }
 
-            var newHashMap = new Dictionary<string, string>();
+            var newHashMap = new Dictionary<string, ExcelWorkbookFileMetadata>();
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                var rawData = File.ReadAllBytes(path);
-                var hashString = ShaCryptoUtility.ComputeSha256HashToHexString(rawData);
-                newHashMap.Add(fileName, hashString);
+                var fileInfo = new FileInfo(path);
+                var currentExcelFileMetadata = new ExcelWorkbookFileMetadata
+                {
+                    FileLength = fileInfo.Length,
+                    LastWriteTimestamp = fileInfo.LastWriteTimeUtc.ToUnixTimestamp()
+                };
+                newHashMap.Add(fileName, currentExcelFileMetadata);
 
-                if (oldHashMap.ContainsKey(fileName))
+                if (oldHashMap.TryGetValue(fileName, out var oldExcelFileMetadata))
                 {
                     // Updated file.
-                    if (!string.IsNullOrEmpty(oldHashMap[fileName]) && oldHashMap[fileName] != hashString)
+                    if (!oldExcelFileMetadata.Equals(currentExcelFileMetadata))
                         updatedExcelFiles.Add(fileName);
                 }
                 else

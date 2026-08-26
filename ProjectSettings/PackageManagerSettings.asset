@@ -36,6 +36,7 @@ MonoBehaviour:
     - io.github.idreamsofgame.resharp.core
     - io.github.idreamsofgame.resharp.data.iboxdb
     - io.github.idreamsofgame.resharp.security.cryptography
+    - io.github.idreamsofgame.unilitjson
     - io.github.idreamsofgame.unisharper.core
     - jillejr.newtonsoft.json-for-unity
     - org.nuget.bouncycastle.cryptography

@@ -6,7 +6,7 @@
     "com.unity.test-framework": "1.3.0",
     "com.unity.ugui": "1.0.0",
     "io.github.idreamsofgame.resharp.data.iboxdb": "3.0.0",
-    "io.github.idreamsofgame.unisharper.core": "1.29.0",
+    "io.github.idreamsofgame.unisharper.core": "2.0.0",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
@@ -46,6 +46,7 @@
         "io.github.idreamsofgame.resharp.core",
         "io.github.idreamsofgame.resharp.data.iboxdb",
         "io.github.idreamsofgame.resharp.security.cryptography",
+        "io.github.idreamsofgame.unilitjson",
         "io.github.idreamsofgame.unisharper.core",
         "jillejr.newtonsoft.json-for-unity",
         "org.nuget.bouncycastle.cryptography"

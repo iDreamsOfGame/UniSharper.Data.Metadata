@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using LitJson;
 using ReSharp.Extensions;
 using UnityEngine;
 
@@ -27,29 +27,29 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        public static Dictionary<string, string> Load()
+        public static Dictionary<string, ExcelWorkbookFileMetadata> Load()
         {
             var filePath = FilePath;
             if (!File.Exists(filePath))
-                return new Dictionary<string, string>();
+                return new Dictionary<string, ExcelWorkbookFileMetadata>();
 
             try
             {
                 var content = File.ReadAllText(filePath);
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
+                return JsonMapper.ToObject<Dictionary<string, ExcelWorkbookFileMetadata>>(content);
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
-                return new Dictionary<string, string>();
+                return new Dictionary<string, ExcelWorkbookFileMetadata>();
             }
         }
 
-        public static void Save(Dictionary<string, string> hashMap)
+        public static void Save(Dictionary<string, ExcelWorkbookFileMetadata> hashMap)
         {
             try
             {
-                var content = JsonConvert.SerializeObject(hashMap);
+                var content = JsonMapper.ToJson(hashMap);
                 File.WriteAllText(FilePath, content);
             }
             catch (Exception e)

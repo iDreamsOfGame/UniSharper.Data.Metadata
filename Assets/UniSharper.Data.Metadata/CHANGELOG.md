@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.3.0] - 2026-08-26
+
+### Changed
+- Replaced the previously used Excel workbook file SHA256 hash value with Excel workbook file metadata Length and LastWriteTimestamp for file change detection.
+
+
+
+
 ## [3.2.2] - 2026-06-11
 
 ### Fixed

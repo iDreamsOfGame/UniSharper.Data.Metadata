@@ -2,6 +2,7 @@
     "name": "UniSharper.Data.Metadata.Editor",
     "rootNamespace": "UniSharperEditor.Data.Metadata",
     "references": [
+        "UniLitJson",
         "UniSharper",
         "UniSharper.Editor",
         "UniSharper.Data.Metadata"
