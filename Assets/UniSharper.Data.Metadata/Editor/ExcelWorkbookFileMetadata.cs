@@ -4,8 +4,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Xml.Linq;
+using System.Xml;
 using ReSharp.Extensions;
 using UniSharper;
 
@@ -48,16 +47,51 @@ namespace UniSharperEditor.Data.Metadata
 
         private static DateTime? GetXlsxModifiedTime(string filePath)
         {
-            using var zip = ZipFile.OpenRead(filePath);
-            var entry = zip.GetEntry("docProps/core.xml");
-            if (entry == null) return null;
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                return null;
 
-            using var stream = entry.Open();
-            var doc = XDocument.Load(stream);
-            var ns = XNamespace.Get("http://purl.org/dc/terms/");
+            try
+            {
+                const string targetEntryName = "docProps/core.xml";
+                
+                using var zip = ZipFile.OpenRead(filePath);
+                var entry = zip.GetEntry(targetEntryName);
+                if (entry == null) 
+                    return null;
 
-            var modified = doc.Descendants(ns + "modified").FirstOrDefault()?.Value;
-            return modified != null ? DateTime.Parse(modified).ToUniversalTime() : null;
+                using var stream = entry.Open();
+                using var reader = XmlReader.Create(stream, new XmlReaderSettings 
+                { 
+                    IgnoreWhitespace = true, 
+                    IgnoreComments = true 
+                });
+                
+                const string dcTermsNs = "http://purl.org/dc/terms/";
+                const string modifiedName = "modified";
+
+                var dcTermsNsSpan = dcTermsNs.AsSpan();
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName.AsSpan() == modifiedName.AsSpan() && reader.NamespaceURI.AsSpan() == dcTermsNsSpan)
+                    {
+                        var value = reader.ReadElementContentAsString();
+                    
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            if (DateTime.TryParse(value, null, System.Globalization.DateTimeStyles.RoundtripKind, out var dt))
+                                return dt.ToUniversalTime();
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        
+            return null;
         }
     }
 }
