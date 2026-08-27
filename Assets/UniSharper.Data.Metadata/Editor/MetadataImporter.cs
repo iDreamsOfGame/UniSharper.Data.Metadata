@@ -129,7 +129,7 @@ namespace UniSharperEditor.Data.Metadata
                 }
                 else
                 {
-                    if (EditorUtility.DisplayDialog("Error", "Nothing changed in Excel workbook files.", "OK"))
+                    if (EditorUtility.DisplayDialog("Failed", "Nothing changed in Excel workbook files.", "OK"))
                         EditorUtility.ClearProgressBar();
                 }
             }

@@ -168,12 +168,7 @@ namespace UniSharperEditor.Data.Metadata
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                var fileInfo = new FileInfo(path);
-                var fileMetadata = new ExcelWorkbookFileMetadata
-                {
-                    FileLength = fileInfo.Length,
-                    LastWriteTimestamp = fileInfo.LastWriteTimeUtc.ToUnixTimestamp()
-                };
+                var fileMetadata = ExcelWorkbookFileMetadata.Create(path);
                 fileHashMap.Add(fileName, fileMetadata);
             }
 
@@ -204,12 +199,13 @@ namespace UniSharperEditor.Data.Metadata
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                var fileInfo = new FileInfo(path);
-                var currentExcelFileMetadata = new ExcelWorkbookFileMetadata
-                {
-                    FileLength = fileInfo.Length,
-                    LastWriteTimestamp = fileInfo.LastWriteTimeUtc.ToUnixTimestamp()
-                };
+                // var fileInfo = new FileInfo(path);
+                // var currentExcelFileMetadata = new ExcelWorkbookFileMetadata
+                // {
+                //     FileLength = fileInfo.Length,
+                //     LastWriteTimestamp = ExcelWorkbookFileMetadata.GetExcelLastWriteTimestamp(path)
+                // };
+                var currentExcelFileMetadata = ExcelWorkbookFileMetadata.Create(path);
                 newHashMap.Add(fileName, currentExcelFileMetadata);
 
                 if (oldHashMap.TryGetValue(fileName, out var oldExcelFileMetadata))

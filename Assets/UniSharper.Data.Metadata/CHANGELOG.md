@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.3.2] - 2026-08-27
+
+### Changed
+
+- Changed the method for retrieving the modified time of **.xlsx** files.
+
+
+
 ## [3.3.1] - 2026-08-27
 
 ### Changed
