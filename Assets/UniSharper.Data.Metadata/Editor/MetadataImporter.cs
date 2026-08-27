@@ -110,27 +110,26 @@ namespace UniSharperEditor.Data.Metadata
             GUILayout.Box(text, BoxGUIStyle, TitleBoxHeight);
         }
 
-        private static void BuildAssets()
+        private static void BuildAssets(bool isCleanBuild = true)
         {
-            UniEditorUtility.ClearConsole();
-
             if (EditorUtility.scriptCompilationFailed)
                 return;
 
+            UniEditorUtility.ClearConsole();
             ScriptsGenerated = true;
 
             try
             {
-                var result = MetadataAssetUtility.GenerateMetadataEntityScripts();
-                ScriptsGenerated = result;
+                var generated = MetadataAssetUtility.GenerateMetadataEntityScripts(isCleanBuild);
+                ScriptsGenerated = generated;
 
-                if (result)
+                if (generated)
                 {
                     EditorUtility.DisplayProgressBar("Hold on...", "Compiling metadata entity scripts...", 0f);
                 }
                 else
                 {
-                    if (EditorUtility.DisplayDialog("Error", "Failed to generate metadata entity scripts!", "OK"))
+                    if (EditorUtility.DisplayDialog("Error", "Nothing changed in Excel workbook files.", "OK"))
                         EditorUtility.ClearProgressBar();
                 }
             }
@@ -338,13 +337,13 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        private void DrawBuildButtons()
+        private static void DrawBuildButtons()
         {
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Build Metadata Assets", GUILayout.Width(LabelWidth), GUILayout.Height(25)))
-                    BuildAssets();
+                    BuildAssets(false);
 
                 GUILayout.Space(10);
 

@@ -61,6 +61,9 @@ namespace UniSharperEditor.Data.Metadata
             DeleteTempDbFiles();
 
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+            
+            // Try to delete redundant metadata database file.
+            TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
 
             var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
             ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
@@ -106,14 +109,11 @@ namespace UniSharperEditor.Data.Metadata
                 CopyMetadataDatabaseFile(settings, dbFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
             }
 
-            // Try to delete redundant metadata database file.
-            TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
-
             EditorUtility.ClearProgressBar();
             return result;
         }
 
-        internal static bool GenerateMetadataEntityScripts()
+        internal static bool GenerateMetadataEntityScripts(bool isCleanBuild = true)
         {
             var result = false;
             var settings = MetadataAssetSettings.Load(true);
@@ -126,10 +126,10 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                FindChangedExcelWorkbookFiles(out _, out _, out var deletedExcelFiles);
+                FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
                 // Try to delete redundant entity scripts.
-                TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
+                result = TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
                 ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                     (table,
@@ -140,12 +140,16 @@ namespace UniSharperEditor.Data.Metadata
                         if (table == null)
                             return;
 
+                        if (!isCleanBuild && !(addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName)))
+                            return;
+
                         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                         var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
                         var progress = (float)(index + 1) / length;
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
                         var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
-                        result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
+                        if (!result)
+                            result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
                         EditorUtility.ClearProgressBar();
                     });
             }
@@ -567,6 +571,9 @@ namespace UniSharperEditor.Data.Metadata
             if (!success)
                 return;
 
+            if (!updateDatabaseFile)
+                return;
+
             var dataList = new T[entityDataList.Count];
 
             for (var i = 0; i < entityDataList.Count; i++)
@@ -587,11 +594,10 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             // Copy metadata entity database file.
-            if (updateDatabaseFile)
-                CopyMetadataDatabaseFile(settings, dbFolderPath, dbLocalAddress, tableName);
+            CopyMetadataDatabaseFile(settings, dbFolderPath, dbLocalAddress, tableName);
         }
 
-        private static void TryDeleteMetadataEntityScripts(MetadataAssetSettings settings, List<string> deletedExcelFiles)
+        private static bool TryDeleteMetadataEntityScripts(MetadataAssetSettings settings, List<string> deletedExcelFiles)
         {
             if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
@@ -601,7 +607,10 @@ namespace UniSharperEditor.Data.Metadata
                 }
 
                 AssetDatabase.Refresh();
+                return true;
             }
+
+            return false;
         }
 
         private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string excelFileName)
