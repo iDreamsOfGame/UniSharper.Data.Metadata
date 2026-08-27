@@ -72,7 +72,9 @@ namespace UniSharperEditor.Data.Metadata
                 var dcTermsNsSpan = dcTermsNs.AsSpan();
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.LocalName.AsSpan() == modifiedName.AsSpan() && reader.NamespaceURI.AsSpan() == dcTermsNsSpan)
+                    if (reader.NodeType == XmlNodeType.Element 
+                        && reader.LocalName.AsSpan().SequenceEqual(modifiedName.AsSpan()) 
+                        && reader.NamespaceURI.AsSpan().SequenceEqual(dcTermsNsSpan))
                     {
                         var value = reader.ReadElementContentAsString();
                     
