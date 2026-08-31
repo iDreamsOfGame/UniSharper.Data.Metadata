@@ -70,7 +70,7 @@ namespace UniSharperEditor.Data.Metadata
             if (!ScriptsGenerated)
                 return;
 
-            EditorUtility.ClearProgressBar();
+            InternalEditorUtility.ClearProgressBar();
             ScriptsGenerated = false;
 
             if (!EditorUtility.scriptCompilationFailed)
@@ -95,13 +95,13 @@ namespace UniSharperEditor.Data.Metadata
                 }
                 finally
                 {
-                    EditorUtility.ClearProgressBar();
+                    InternalEditorUtility.ClearProgressBar();
                 }
             }
             else
             {
                 if (EditorUtility.DisplayDialog("Error", "Failed to compile metadata entity scripts!", "OK"))
-                    EditorUtility.ClearProgressBar();
+                    InternalEditorUtility.ClearProgressBar();
             }
         }
 
@@ -130,7 +130,7 @@ namespace UniSharperEditor.Data.Metadata
                 else
                 {
                     if (EditorUtility.DisplayDialog("Failed", "Nothing changed in Excel workbook files.", "OK"))
-                        EditorUtility.ClearProgressBar();
+                        InternalEditorUtility.ClearProgressBar();
                 }
             }
             catch (Exception e)

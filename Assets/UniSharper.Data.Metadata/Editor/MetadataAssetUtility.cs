@@ -61,7 +61,7 @@ namespace UniSharperEditor.Data.Metadata
             DeleteTempDbFiles();
 
             FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
-            
+
             // Try to delete redundant metadata database file.
             TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
 
@@ -100,7 +100,7 @@ namespace UniSharperEditor.Data.Metadata
                         return;
                     }
 
-                    EditorUtility.ClearProgressBar();
+                    InternalEditorUtility.ClearProgressBar();
                 });
 
             // Copy MetadataEntityDBConfig database file.
@@ -109,27 +109,33 @@ namespace UniSharperEditor.Data.Metadata
                 CopyMetadataDatabaseFile(settings, dbFolderPath, MetadataEntityDBConfig.DatabaseLocalAddress);
             }
 
-            EditorUtility.ClearProgressBar();
+            InternalEditorUtility.ClearProgressBar();
             return result;
         }
 
         internal static bool GenerateMetadataEntityScripts(bool isCleanBuild = true)
         {
-            var result = false;
+            var result = true;
             var settings = MetadataAssetSettings.Load(true);
             MetadataAssetSettings.CreateEntityScriptsStoreFolder(settings);
 
             if (string.IsNullOrEmpty(MetadataAssetSettings.ExcelWorkbookFilesFolderPath))
             {
                 if (EditorUtility.DisplayDialog("Error", "'Excel Workbook Files Folder Path' is not valid path!", "OK"))
-                    EditorUtility.ClearProgressBar();
+                    InternalEditorUtility.ClearProgressBar();
             }
             else
             {
                 FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
                 // Try to delete redundant entity scripts.
-                result = TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
+                if (TryDeleteMetadataEntityScripts(settings, deletedExcelFiles))
+                {
+                    if (EditorUtility.DisplayDialog("Error", "'Delete redundant entity scripts failed!", "OK"))
+                        InternalEditorUtility.ClearProgressBar();
+
+                    return false;
+                }
 
                 ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                     (table,
@@ -144,17 +150,22 @@ namespace UniSharperEditor.Data.Metadata
                             return;
 
                         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                        var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}.cs... {index + 1}/{length}";
+                        var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}... {index + 1}/{length}";
                         var progress = (float)(index + 1) / length;
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
                         var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
-                        if (!result)
-                            result = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
-                        EditorUtility.ClearProgressBar();
+                        var success = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
+                        if (!success)
+                        {
+                            UnityDebug.LogError($"Generate metadata entity script failed: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}");
+                            result = false;
+                        }
+
+                        InternalEditorUtility.ClearProgressBar();
                     });
             }
 
-            EditorUtility.ClearProgressBar();
+            InternalEditorUtility.ClearProgressBar();
             return result;
         }
 
@@ -225,9 +236,9 @@ namespace UniSharperEditor.Data.Metadata
             deletedExcelFiles.AddRange(oldHashMap.Keys.Where(fileName => !newHashMap.ContainsKey(fileName)));
         }
 
-        private static void CopyMetadataDatabaseFile(MetadataAssetSettings settings, 
-            string dbFolderPath, 
-            long dbLocalAddress, 
+        private static void CopyMetadataDatabaseFile(MetadataAssetSettings settings,
+            string dbFolderPath,
+            long dbLocalAddress,
             string entityName = null)
         {
             var sourceFilePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(TempFolderPath, $"db{dbLocalAddress}.box"));
@@ -239,6 +250,7 @@ namespace UniSharperEditor.Data.Metadata
             PostProcessDatabaseFile(settings, destFilePath);
             var assetFilePath = EditorPath.GetAssetPath(destFilePath);
             AssetDatabase.ImportAsset(assetFilePath, ImportAssetOptions.ForceUpdate);
+            SceneView.RepaintAll();
         }
 
         private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings,
@@ -329,7 +341,7 @@ namespace UniSharperEditor.Data.Metadata
             var compressionFlag = (byte)(settings.ShouldCompressDatabase ? 1 : 0);
             var cryptoProvider = GetDatabaseCryptoProvider(settings);
             var compressionProvider = GetDatabaseCompressionProvider(settings);
-            
+
             using var writer = new BinaryWriter(new MemoryStream());
             writer.Write(encryptionFlag);
 
@@ -348,7 +360,7 @@ namespace UniSharperEditor.Data.Metadata
                 writer.Write(compressionFlag);
                 writer.Write(output);
             }
-            
+
             var bufferData = ((MemoryStream)writer.BaseStream).GetBuffer();
             File.WriteAllBytes(filePath, bufferData);
         }
@@ -397,7 +409,7 @@ namespace UniSharperEditor.Data.Metadata
                 catch (Exception e)
                 {
                     UnityDebug.LogError($"fileName: {fileName}, error: {e}");
-                    EditorUtility.ClearProgressBar();
+                    InternalEditorUtility.ClearProgressBar();
                     throw;
                 }
             }
@@ -547,7 +559,7 @@ namespace UniSharperEditor.Data.Metadata
         }
 
         [UsedImplicitly]
-        private static void InsertEntityData<T>(MetadataAssetSettings settings, 
+        private static void InsertEntityData<T>(MetadataAssetSettings settings,
             string dbFolderPath,
             string tableName,
             IList<EntityPropertyRawInfo> rowInfos,
@@ -648,7 +660,7 @@ namespace UniSharperEditor.Data.Metadata
             FileUtil.DeleteFileOrDirectory(databaseFilePath);
             FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
         }
-        
+
         private static IDatabaseCryptoProvider GetDatabaseCryptoProvider(MetadataAssetSettings settings)
         {
             if (databaseCryptoProvider != null)
@@ -657,7 +669,7 @@ namespace UniSharperEditor.Data.Metadata
             var type = Type.GetType(settings.DatabaseCryptoProvider);
             if (type == null)
                 return null;
-            
+
             databaseCryptoProvider = Activator.CreateInstance(type) as IDatabaseCryptoProvider;
             return databaseCryptoProvider;
         }
@@ -666,11 +678,11 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (databaseCompressionProvider != null)
                 return databaseCompressionProvider;
-            
+
             var type = Type.GetType(settings.DatabaseCompressionProvider);
             if (type == null)
                 return null;
-            
+
             databaseCompressionProvider = Activator.CreateInstance(type) as IDatabaseCompressionProvider;
             return databaseCompressionProvider;
         }
