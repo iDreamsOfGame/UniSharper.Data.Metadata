@@ -115,7 +115,7 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static bool GenerateMetadataEntityScripts(bool isCleanBuild = true)
         {
-            var result = true;
+            var generated = false;
             var settings = MetadataAssetSettings.Load(true);
             MetadataAssetSettings.CreateEntityScriptsStoreFolder(settings);
 
@@ -129,13 +129,7 @@ namespace UniSharperEditor.Data.Metadata
                 FindChangedExcelWorkbookFiles(settings, out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
                 // Try to delete redundant entity scripts.
-                if (TryDeleteMetadataEntityScripts(settings, deletedExcelFiles))
-                {
-                    if (EditorUtility.DisplayDialog("Error", "'Delete redundant entity scripts failed!", "OK"))
-                        InternalEditorUtility.ClearProgressBar();
-
-                    return false;
-                }
+                TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
                 ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
                     (table,
@@ -155,18 +149,20 @@ namespace UniSharperEditor.Data.Metadata
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
                         var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
                         var success = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
-                        if (!success)
+                        if (success)
+                        {
+                            generated = true;
+                        }
+                        else
                         {
                             UnityDebug.LogError($"Generate metadata entity script failed: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}");
-                            result = false;
                         }
-
                         InternalEditorUtility.ClearProgressBar();
                     });
             }
 
             InternalEditorUtility.ClearProgressBar();
-            return result;
+            return generated;
         }
 
         internal static void SaveExcelWorkbookFilesSnapshot()
@@ -611,7 +607,7 @@ namespace UniSharperEditor.Data.Metadata
             CopyMetadataDatabaseFile(settings, dbFolderPath, dbLocalAddress, tableName);
         }
 
-        private static bool TryDeleteMetadataEntityScripts(MetadataAssetSettings settings, List<string> deletedExcelFiles)
+        private static void TryDeleteMetadataEntityScripts(MetadataAssetSettings settings, List<string> deletedExcelFiles)
         {
             if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
@@ -621,23 +617,28 @@ namespace UniSharperEditor.Data.Metadata
                 }
 
                 AssetDatabase.Refresh();
-                return true;
+                SceneView.RepaintAll();
             }
-
-            return false;
         }
 
         private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string excelFileName)
         {
-            var entityScriptName = Path.GetFileNameWithoutExtension(excelFileName);
-            var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
-            if (AssetDatabase.DeleteAsset(scriptFilePath))
-                return;
+            try
+            {
+                var entityScriptName = Path.GetFileNameWithoutExtension(excelFileName);
+                var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
+                if (AssetDatabase.DeleteAsset(scriptFilePath))
+                    return;
 
-            // Plan B: Try to delete file by using class FileUtil.
-            var scriptMetaFilePath = $"{scriptFilePath}{FileExtensions.UnityMetaFile}";
-            FileUtil.DeleteFileOrDirectory(scriptFilePath);
-            FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
+                // Plan B: Try to delete file by using class FileUtil.
+                var scriptMetaFilePath = $"{scriptFilePath}{FileExtensions.UnityMetaFile}";
+                FileUtil.DeleteFileOrDirectory(scriptFilePath);
+                FileUtil.DeleteFileOrDirectory(scriptMetaFilePath);
+            }
+            catch (Exception e)
+            {
+                UnityDebug.LogError(e.ToString());
+            }
         }
 
         private static void TryDeleteMetadataDatabaseFiles(MetadataAssetSettings settings, List<string> deletedExcelFiles)
