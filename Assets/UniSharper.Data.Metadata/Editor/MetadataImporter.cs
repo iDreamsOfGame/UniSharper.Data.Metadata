@@ -81,7 +81,7 @@ namespace UniSharperEditor.Data.Metadata
 
                     if (result)
                     {
-                        MetadataAssetUtility.SaveExcelWorkbookFileHashMap();
+                        MetadataAssetUtility.SaveExcelWorkbookFilesSnapshot();
                         EditorUtility.DisplayDialog("Success", "Build success!", "OK");
                     }
                     else
@@ -142,7 +142,7 @@ namespace UniSharperEditor.Data.Metadata
         private static void RebuildAssets()
         {
             // Clear cache.
-            MetadataAssetUtility.ClearExcelWorkbookFileHashMap();
+            MetadataAssetUtility.ClearExcelWorkbookFilesSnapshot();
 
             // Then build assets.
             BuildAssets();

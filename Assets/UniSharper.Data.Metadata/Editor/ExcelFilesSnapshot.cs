@@ -10,9 +10,9 @@ using UnityEngine;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal static class ExcelWorkbookFileHashMap
+    internal static class ExcelFilesSnapshot
     {
-        private const string FileName = ".ExcelWorkbookFileHashMap";
+        private const string FileName = ".excel_files_snapshot";
 
         private static string FilePath
         {
@@ -27,29 +27,29 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        public static Dictionary<string, ExcelWorkbookFileMetadata> Load()
+        public static Dictionary<string, ExcelFileMetadata> Load()
         {
             var filePath = FilePath;
             if (!File.Exists(filePath))
-                return new Dictionary<string, ExcelWorkbookFileMetadata>();
+                return new Dictionary<string, ExcelFileMetadata>();
 
             try
             {
                 var content = File.ReadAllText(filePath);
-                return JsonMapper.ToObject<Dictionary<string, ExcelWorkbookFileMetadata>>(content);
+                return JsonMapper.ToObject<Dictionary<string, ExcelFileMetadata>>(content);
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
-                return new Dictionary<string, ExcelWorkbookFileMetadata>();
+                return new Dictionary<string, ExcelFileMetadata>();
             }
         }
 
-        public static void Save(Dictionary<string, ExcelWorkbookFileMetadata> hashMap)
+        public static void Save(Dictionary<string, ExcelFileMetadata> snapshot)
         {
             try
             {
-                var content = JsonMapper.ToJson(hashMap);
+                var content = JsonMapper.ToJson(snapshot);
                 File.WriteAllText(FilePath, content);
             }
             catch (Exception e)

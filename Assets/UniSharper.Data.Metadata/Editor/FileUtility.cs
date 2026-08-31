@@ -11,8 +11,8 @@ namespace UniSharperEditor.Data.Metadata
     {
         public static string[] GetExcelFilePathCollection(string excelFilesFolderPath)
         {
-            var paths = Directory.GetFiles(excelFilesFolderPath, SearchPatterns.ExcelFiles, SearchOption.AllDirectories);
-            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, SearchPatterns.ExcelXFiles, SearchOption.AllDirectories);
+            var paths = Directory.GetFiles(excelFilesFolderPath, SearchPatterns.ExcelSpreadsheetFiles, SearchOption.AllDirectories);
+            var xlsxFilePaths = Directory.GetFiles(excelFilesFolderPath, SearchPatterns.ExcelWorkbookFiles, SearchOption.AllDirectories);
             paths = paths.Union(xlsxFilePaths).ToArray();
             return (from path in paths let fileName = Path.GetFileName(path) where !fileName.StartsWith("~$") select path).ToArray();
         }

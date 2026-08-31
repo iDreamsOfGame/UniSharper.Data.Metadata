@@ -10,22 +10,22 @@ using UniSharper;
 
 namespace UniSharperEditor.Data.Metadata
 {
-    internal struct ExcelWorkbookFileMetadata : IEquatable<ExcelWorkbookFileMetadata>
+    internal struct ExcelFileMetadata : IEquatable<ExcelFileMetadata>
     {
         public long FileLength { get; set; }
 
         public long LastWriteTimestamp { get; set; }
 
-        public bool Equals(ExcelWorkbookFileMetadata other) => FileLength == other.FileLength && LastWriteTimestamp == other.LastWriteTimestamp;
+        public bool Equals(ExcelFileMetadata other) => FileLength == other.FileLength && LastWriteTimestamp == other.LastWriteTimestamp;
 
-        public override bool Equals(object obj) => obj is ExcelWorkbookFileMetadata other && Equals(other);
+        public override bool Equals(object obj) => obj is ExcelFileMetadata other && Equals(other);
 
         public override int GetHashCode() => HashCode.Combine(FileLength, LastWriteTimestamp);
 
-        public static ExcelWorkbookFileMetadata Create(string filePath)
+        public static ExcelFileMetadata Create(string filePath)
         {
             var fileInfo = new FileInfo(filePath);
-            return new ExcelWorkbookFileMetadata
+            return new ExcelFileMetadata
             {
                 FileLength = fileInfo.Length,
                 LastWriteTimestamp = GetExcelLastWriteTimestamp(filePath, fileInfo)
@@ -35,7 +35,7 @@ namespace UniSharperEditor.Data.Metadata
         private static long GetExcelLastWriteTimestamp(string filePath, FileInfo fileInfo)
         {
             var extension = Path.GetExtension(filePath);
-            if (extension == FileExtensions.ExcelXFile)
+            if (extension == FileExtensions.ExcelWorkbookFile)
             {
                 var modifiedTime = GetXlsxModifiedTime(filePath);
                 if (modifiedTime != null)

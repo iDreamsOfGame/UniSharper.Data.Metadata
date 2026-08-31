@@ -60,7 +60,7 @@ namespace UniSharperEditor.Data.Metadata
             MetadataAssetSettings.CreateMetadataPersistentStoreFolder(settings);
             DeleteTempDbFiles();
 
-            FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+            FindChangedExcelWorkbookFiles(settings, out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
             // Try to delete redundant metadata database file.
             TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
@@ -126,7 +126,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                FindChangedExcelWorkbookFiles(out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
+                FindChangedExcelWorkbookFiles(settings, out var addedExcelFiles, out var updatedExcelFiles, out var deletedExcelFiles);
 
                 // Try to delete redundant entity scripts.
                 if (TryDeleteMetadataEntityScripts(settings, deletedExcelFiles))
@@ -169,57 +169,63 @@ namespace UniSharperEditor.Data.Metadata
             return result;
         }
 
-        internal static void SaveExcelWorkbookFileHashMap()
+        internal static void SaveExcelWorkbookFilesSnapshot()
         {
             var paths = FileUtility.GetExcelFilePathCollection(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
             if (paths.Length == 0)
                 return;
 
-            var fileHashMap = new Dictionary<string, ExcelWorkbookFileMetadata>();
+            var snapshot = new Dictionary<string, ExcelFileMetadata>();
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                var fileMetadata = ExcelWorkbookFileMetadata.Create(path);
-                fileHashMap.Add(fileName, fileMetadata);
+                var fileMetadata = ExcelFileMetadata.Create(path);
+                snapshot.Add(fileName, fileMetadata);
             }
 
-            ExcelWorkbookFileHashMap.Save(fileHashMap);
+            ExcelFilesSnapshot.Save(snapshot);
         }
 
-        internal static void ClearExcelWorkbookFileHashMap()
+        internal static void ClearExcelWorkbookFilesSnapshot()
         {
-            ExcelWorkbookFileHashMap.Delete();
+            ExcelFilesSnapshot.Delete();
         }
 
-        private static void FindChangedExcelWorkbookFiles(out List<string> addedExcelFiles, out List<string> updatedExcelFiles, out List<string> deletedExcelFiles)
+        private static void FindChangedExcelWorkbookFiles(MetadataAssetSettings settings, 
+            out List<string> addedExcelFiles, 
+            out List<string> updatedExcelFiles, 
+            out List<string> deletedExcelFiles)
         {
             addedExcelFiles = new List<string>();
             updatedExcelFiles = new List<string>();
             deletedExcelFiles = new List<string>();
 
-            var oldHashMap = ExcelWorkbookFileHashMap.Load();
+            var oldSnapshot = ExcelFilesSnapshot.Load();
             var paths = FileUtility.GetExcelFilePathCollection(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
             if (paths.Length == 0)
             {
-                if (oldHashMap.Count > 0)
-                    deletedExcelFiles = oldHashMap.Keys.ToList();
+                if (oldSnapshot.Count > 0)
+                    deletedExcelFiles = oldSnapshot.Keys.ToList();
                 return;
             }
 
-            var newHashMap = new Dictionary<string, ExcelWorkbookFileMetadata>();
+            var newSnapshot = new Dictionary<string, ExcelFileMetadata>();
             foreach (var path in paths)
             {
                 var fileName = Path.GetFileName(path);
-                // var fileInfo = new FileInfo(path);
-                // var currentExcelFileMetadata = new ExcelWorkbookFileMetadata
-                // {
-                //     FileLength = fileInfo.Length,
-                //     LastWriteTimestamp = ExcelWorkbookFileMetadata.GetExcelLastWriteTimestamp(path)
-                // };
-                var currentExcelFileMetadata = ExcelWorkbookFileMetadata.Create(path);
-                newHashMap.Add(fileName, currentExcelFileMetadata);
+                var currentExcelFileMetadata = ExcelFileMetadata.Create(path);
+                newSnapshot.Add(fileName, currentExcelFileMetadata);
 
-                if (oldHashMap.TryGetValue(fileName, out var oldExcelFileMetadata))
+                var entityScriptName = Path.GetFileNameWithoutExtension(path);
+                var entityScriptFilePath = EditorPath.GetFullPath(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
+                if (!File.Exists(entityScriptFilePath))
+                {
+                    // New file.
+                    addedExcelFiles.Add(fileName);
+                    continue;
+                }
+
+                if (oldSnapshot.TryGetValue(fileName, out var oldExcelFileMetadata))
                 {
                     // Updated file.
                     if (!oldExcelFileMetadata.Equals(currentExcelFileMetadata))
@@ -233,7 +239,7 @@ namespace UniSharperEditor.Data.Metadata
             }
 
             // Find deleted files.
-            deletedExcelFiles.AddRange(oldHashMap.Keys.Where(fileName => !newHashMap.ContainsKey(fileName)));
+            deletedExcelFiles.AddRange(oldSnapshot.Keys.Where(fileName => !newSnapshot.ContainsKey(fileName)));
         }
 
         private static void CopyMetadataDatabaseFile(MetadataAssetSettings settings,
