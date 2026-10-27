@@ -40,6 +40,7 @@ MonoBehaviour:
     - io.github.idreamsofgame.unisharper.core
     - jillejr.newtonsoft.json-for-unity
     - org.nuget.bouncycastle.cryptography
+    - org.nuget.system.runtime.compilerservices.unsafe
     m_IsDefault: 0
     m_Capabilities: 0
     m_ConfigSource: 4

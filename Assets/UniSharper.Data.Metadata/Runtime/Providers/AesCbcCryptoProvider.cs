@@ -10,9 +10,8 @@ namespace UniSharper.Data.Metadata.Providers
 {
     /// <summary>
     /// Provides AES encryption and decryption functionality using CBC (Cipher Block Chaining) mode.
-    /// This class implements the <see cref="UniSharper.Data.Metadata.Providers.IDatabaseCryptoProvider"/> interface for secure data encryption in save database files.
     /// </summary>
-    internal class AesCbcCryptoProvider : IDatabaseCryptoProvider
+    public class AesCbcCryptoProvider : IDatabaseCryptoProvider
     {
         private const int IvDataLength = 16;
         

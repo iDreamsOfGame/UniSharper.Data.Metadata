@@ -24,6 +24,6 @@ MonoBehaviour:
   databaseCryptoProvider: UniSharper.Data.Metadata.Providers.AesCbcCryptoProvider,
     UniSharper.Data.Metadata
   shouldCompressDatabase: 1
-  databaseCompressionProvider: UniSharper.Data.Metadata.Samples.LZ4CompressionProvider,
-    UniSharper.Data.Metadata.Samples
+  databaseCompressionProvider: UniSharper.Data.Metadata.Providers.LZ4CompressionProvider,
+    UniSharper.Data.Metadata
   shouldRemoveRedundantFiles: 0

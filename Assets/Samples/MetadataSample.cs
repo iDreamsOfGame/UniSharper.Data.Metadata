@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ReSharp.Data.IBoxDB;
+using UniSharper.Data.Metadata.Providers;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -17,7 +18,7 @@ namespace UniSharper.Data.Metadata.Samples
         [SerializeField]
         private MetadataEntityPropertyItem propertyItemTemplate;
         
-        private MetadataManager MetadataManager => MetadataManager.Instance;
+        private static MetadataManager MetadataManager => MetadataManager.Instance;
 
         private void Awake()
         {

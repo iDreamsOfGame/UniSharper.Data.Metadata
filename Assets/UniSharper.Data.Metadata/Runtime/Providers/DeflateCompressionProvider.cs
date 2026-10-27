@@ -6,9 +6,9 @@ using ReSharp.Compression;
 namespace UniSharper.Data.Metadata.Providers
 {
     /// <summary>
-    /// Deflate algorithm implementation of <see cref="IDatabaseCompressionProvider"/>.
+    /// Provides compression and decompression functionality using the Deflate algorithm.
     /// </summary>
-    internal class DeflateCompressionProvider : IDatabaseCompressionProvider
+    public class DeflateCompressionProvider : IDatabaseCompressionProvider
     {
         public byte[] Compress(byte[] input) => Deflate.Compress(input);
 

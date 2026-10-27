@@ -1,7 +1,9 @@
 {
     "name": "UniSharper.Data.Metadata",
     "rootNamespace": "UniSharper.Data.Metadata",
-    "references": [],
+    "references": [
+        "K4os.Compression.LZ4.Utilities"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -9,6 +11,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.github.miloszkrajewski.k4os.compression.lz4",
+            "expression": "",
+            "define": "ENABLE_K4OS_LZ4_PACKAGE"
+        }
+    ],
     "noEngineReferences": false
 }

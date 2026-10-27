@@ -8,10 +8,12 @@
       "url": "https://package.openupm.com"
     },
     "com.github.miloszkrajewski.k4os.compression.lz4": {
-      "version": "1.3.8-beta.3",
+      "version": "1.3.8-beta.6",
       "depth": 0,
       "source": "registry",
-      "dependencies": {},
+      "dependencies": {
+        "org.nuget.system.runtime.compilerservices.unsafe": "6.1.2"
+      },
       "url": "https://package.openupm.com"
     },
     "com.unity.ext.nunit": {
@@ -51,7 +53,7 @@
       }
     },
     "io.github.idreamsofgame.resharp.core": {
-      "version": "2.0.2",
+      "version": "2.0.5",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -65,7 +67,7 @@
       "url": "https://package.openupm.com"
     },
     "io.github.idreamsofgame.resharp.security.cryptography": {
-      "version": "1.1.0",
+      "version": "1.2.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -81,12 +83,12 @@
       "url": "https://package.openupm.com"
     },
     "io.github.idreamsofgame.unisharper.core": {
-      "version": "2.0.1",
+      "version": "2.0.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "io.github.idreamsofgame.resharp.core": "2.0.2",
-        "io.github.idreamsofgame.resharp.security.cryptography": "1.1.0",
+        "io.github.idreamsofgame.resharp.core": "2.0.5",
+        "io.github.idreamsofgame.resharp.security.cryptography": "1.2.0",
         "io.github.idreamsofgame.unilitjson": "0.19.0"
       },
       "url": "https://package.openupm.com"
@@ -94,6 +96,13 @@
     "org.nuget.bouncycastle.cryptography": {
       "version": "2.6.2",
       "depth": 2,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
+    "org.nuget.system.runtime.compilerservices.unsafe": {
+      "version": "6.1.2",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.com"

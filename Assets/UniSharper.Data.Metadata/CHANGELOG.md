@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.4.0] - 2026-08-31
+
+### Added
+
+- Adds new implementation of interface **IDatabaseCompressionProvider**: **LZ4CompressionProvider**.
+
+
+
+### Changed
+
+- Updates the version of package dependency: **io.github.idreamsofgame.unisharper.core**.
+
+
+
 ## [3.3.5] - 2026-08-31
 
 ### Changed
