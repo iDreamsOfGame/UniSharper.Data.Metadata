@@ -126,6 +126,53 @@ Open the tool from the menu **UniSharper → Metadata Management → Metadata Im
 
 The output is written to the persistent store folder: one `{EntityName}.db.bytes` per Excel workbook file (named after the file) plus the shared `MetadataEntityDBConfig.db.bytes` configuration database. Entity scripts are partial classes derived from `MetadataEntity` and can be extended freely.
 
+### Reading the Generated Data at Runtime
+
+The generated `*.db.bytes` files are Unity binary assets (`TextAsset`). At runtime, initialize the `MetadataManager` with the **configuration database data** (`MetadataEntityDBConfig.db.bytes`) first, then load the entity database data and read the entities through the query APIs:
+
+```csharp
+using UniSharper.Data.Metadata;
+using UniSharper.Data.Metadata.Providers;
+using UnityEngine;
+
+public class MetadataSample : MonoBehaviour
+{
+    [SerializeField]
+    private TextAsset configDatabaseAsset;
+
+    [SerializeField]
+    private TextAsset playerDatabaseAsset;
+
+    private void Awake()
+    {
+        // The providers must match the ones selected at build time
+        // (skip this if you keep the default AesCbcCryptoProvider and DeflateCompressionProvider).
+        MetadataManager.Instance.CompressionProvider = new LZ4CompressionProvider();
+
+        // Initialize the MetadataManager with the configuration database data.
+        MetadataManager.Instance.Initialize(configDatabaseAsset.bytes);
+
+        // Load the entity database data.
+        MetadataManager.Instance.LoadEntityDatabase<PlayerMetadata>(playerDatabaseAsset.bytes);
+    }
+
+    private void Start()
+    {
+        var player = MetadataManager.Instance.GetEntity<PlayerMetadata>(1L);
+        var allPlayers = MetadataManager.Instance.GetAllEntities<PlayerMetadata>();
+        var foundPlayers = MetadataManager.Instance.FindEntities<PlayerMetadata>("TypeValue", 1);
+        var count = MetadataManager.Instance.Count<PlayerMetadata>();
+    }
+
+    private void OnDestroy()
+    {
+        MetadataManager.Instance.Dispose();
+    }
+}
+```
+
+The `TextAsset` references can be assigned in the Inspector, or the assets can be loaded by `Resources.Load` / Addressables — any source that provides the raw `byte[]` of the generated files works. Besides `GetEntity`, `GetAllEntities`, `FindEntities` and `Count`, the `MetadataManager` also provides `GetEntities`, `QueryEntities` and `CountByQuery` for key-value pair and query string based access. See the `MetadataSample` script in the `Samples` folder for a complete example.
+
 ## Generating Database Files Without the Unity Editor
 
 `MetadataDatabaseFileGenerator` (namespace `UniSharperEditor.Data.Metadata`, in the *UniSharper.Data.Metadata.Editor* assembly) generates the same database files directly from Excel workbook files — **no entity scripts and no domain reload are needed**. Instead of compiled entity classes it creates the entity types dynamically with C# Reflection.Emit, so a generation run only takes milliseconds.
