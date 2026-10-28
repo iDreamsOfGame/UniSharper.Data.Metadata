@@ -29,7 +29,7 @@ namespace UniSharperEditor.Data.Metadata
 
         private static readonly string ExcelWorkbookFilesFolderPathPrefKeyFormat =
             $"{Md5CryptoUtility.ComputeHashToHexString(Directory.GetCurrentDirectory())}.{typeof(MetadataAssetSettings).FullName}.excelWorkbookFilesFolderPath";
-        
+
         internal static string ExcelWorkbookFilesFolderPath
         {
             get
@@ -46,25 +46,25 @@ namespace UniSharperEditor.Data.Metadata
                 EditorPrefsUtility.SetString(key, value);
             }
         }
-        
+
         [SerializeField, ReadOnlyField]
         private string metadataPersistentStorePath = PathUtility.UnifyToAltDirectorySeparatorChar(Path.Combine(DefaultMetadataFolderPath, MetadataPersistentStoresFolderName));
 
         [SerializeField, ReadOnlyField]
         private string entityScriptsStorePath = PlayerPath.GetAssetPath(EditorEnvironment.DefaultScriptsFolderName);
-        
+
         [SerializeField, ReadOnlyField]
         private string entityScriptNamespace;
-        
+
         [SerializeField, ReadOnlyField]
         private int entityPropertyCommentRowIndex;
-        
+
         [SerializeField, ReadOnlyField]
         private int entityPropertyTypeRowIndex = 1;
-        
+
         [SerializeField, ReadOnlyField]
         private int entityPropertyNameRowIndex = 2;
-        
+
         [SerializeField, ReadOnlyField]
         private int entityDataStartingRowIndex = 3;
 
@@ -76,16 +76,16 @@ namespace UniSharperEditor.Data.Metadata
 
         [SerializeField, ImplementedTypesFiled(typeof(IDatabaseCryptoProvider), true, true)]
         private string databaseCryptoProvider;
-        
+
         [SerializeField, ReadOnlyField]
         private bool shouldCompressDatabase;
-        
+
         [SerializeField, ImplementedTypesFiled(typeof(IDatabaseCompressionProvider), true, true)]
         private string databaseCompressionProvider;
-        
+
         [SerializeField, ReadOnlyField]
         private bool shouldRemoveRedundantFiles;
-        
+
         internal string MetadataPersistentStorePath
         {
             get => metadataPersistentStorePath;
@@ -98,7 +98,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal string EntityScriptsStorePath
         {
             get => entityScriptsStorePath;
@@ -111,7 +111,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal string EntityScriptNamespace
         {
             get => entityScriptNamespace;
@@ -124,7 +124,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal int EntityPropertyCommentRowIndex
         {
             get => entityPropertyCommentRowIndex;
@@ -136,7 +136,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal int EntityPropertyTypeRowIndex
         {
             get => entityPropertyTypeRowIndex;
@@ -185,7 +185,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal bool ShouldEncryptDatabase
         {
             get => shouldEncryptDatabase;
@@ -198,7 +198,7 @@ namespace UniSharperEditor.Data.Metadata
                 Save();
             }
         }
-        
+
         internal string DatabaseCryptoProvider
         {
             get => databaseCryptoProvider;
@@ -219,12 +219,12 @@ namespace UniSharperEditor.Data.Metadata
             {
                 if (shouldCompressDatabase.Equals(value))
                     return;
-                
+
                 shouldCompressDatabase = value;
                 Save();
             }
         }
-        
+
         internal string DatabaseCompressionProvider
         {
             get => databaseCompressionProvider;
@@ -260,7 +260,7 @@ namespace UniSharperEditor.Data.Metadata
             AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
             return AssetDatabase.LoadAssetAtPath<MetadataAssetSettings>(DefaultSettingsAssetPath);
         }
-        
+
         internal static MetadataAssetSettings Load(bool createOnNotFound = false)
         {
             if (File.Exists(DefaultSettingsAssetPath))
@@ -282,7 +282,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (Directory.Exists(settings.EntityScriptsStorePath))
                 return;
-            
+
             Directory.CreateDirectory(settings.EntityScriptsStorePath);
             AssetDatabase.ImportAsset(settings.EntityScriptsStorePath);
         }
@@ -297,10 +297,18 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (Directory.Exists(settings.MetadataPersistentStorePath))
                 return;
-            
+
             Directory.CreateDirectory(settings.MetadataPersistentStorePath);
             AssetDatabase.ImportAsset(settings.MetadataPersistentStorePath);
         }
+
+        internal ExcelDataParseOptions CreateExcelDataParseOptions() =>
+            new(
+                EntityPropertyCommentRowIndex,
+                EntityPropertyTypeRowIndex,
+                EntityPropertyNameRowIndex,
+                EntityDataStartingRowIndex,
+                ArrayElementSeparator);
 
         [UsedImplicitly]
         private void OnEnable()

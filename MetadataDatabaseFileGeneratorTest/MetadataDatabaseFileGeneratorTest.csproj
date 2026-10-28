@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>MetadataDatabaseFileGeneratorTest</AssemblyName>
+    <RootNamespace>MetadataDatabaseFileGeneratorTest</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="UniSharper.Data.Metadata">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\UniSharper.Data.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="UniSharper.Data.Metadata.Editor">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\UniSharper.Data.Metadata.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="UniSharper">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\UniSharper.dll</HintPath>
+    </Reference>
+    <Reference Include="UniSharper.Editor">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\UniSharper.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="UniLitJson">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\UniLitJson.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4.Utilities">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\ScriptAssemblies\K4os.Compression.LZ4.Utilities.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\com.github.miloszkrajewski.k4os.compression.lz4%401.3.8-beta.6\Plugins\K4os.Compression.LZ4.dll</HintPath>
+    </Reference>
+    <Reference Include="ReSharp.Core">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\io.github.idreamsofgame.resharp.core%402.0.5\Plugins\ReSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ReSharp.Extensions">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\io.github.idreamsofgame.resharp.core%402.0.5\Plugins\ReSharp.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ReSharp.Security.Cryptography">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\io.github.idreamsofgame.resharp.security.cryptography@1.2.0\Plugins\ReSharp.Security.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="ReSharp.Data.iBoxDB">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\io.github.idreamsofgame.resharp.data.iboxdb%403.0.0\Plugins\ReSharp.Data.iBoxDB.dll</HintPath>
+    </Reference>
+    <Reference Include="iBoxDB.NET2">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\io.github.idreamsofgame.resharp.data.iboxdb%403.0.0\Plugins\iBoxDB.NET2.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\com.github.exceldatareader.exceldatareader%403.6.0\Plugins\Editor\ExcelDataReader.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader.DataSet">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\com.github.exceldatareader.exceldatareader%403.6.0\Plugins\Editor\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
+    <Reference Include="BouncyCastle.Cryptography">
+      <HintPath>$(MSBuildThisFileDirectory)..\Library\PackageCache\org.nuget.bouncycastle.cryptography%402.6.2\lib\netstandard2.0\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>lib/UnityEngine.SharedInternalsModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>lib/UnityEngine.CoreModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

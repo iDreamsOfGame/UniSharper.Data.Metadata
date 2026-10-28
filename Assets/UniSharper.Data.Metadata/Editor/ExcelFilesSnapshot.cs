@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using LitJson;
 using ReSharp.Extensions;
-using UnityEngine;
 
 namespace UniSharperEditor.Data.Metadata
 {
@@ -40,7 +39,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception e)
             {
-                Debug.LogError(e.ToString());
+                Debugger.LogError(e.ToString());
                 return new Dictionary<string, ExcelFileMetadata>();
             }
         }
@@ -54,7 +53,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception e)
             {
-                Debug.LogError(e.ToString());
+                Debugger.LogError(e.ToString());
             }
         }
 
@@ -70,7 +69,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception e)
             {
-                Debug.LogError(e.ToString());
+                Debugger.LogError(e.ToString());
             }
         }
     }

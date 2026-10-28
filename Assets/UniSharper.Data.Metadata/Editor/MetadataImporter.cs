@@ -91,7 +91,7 @@ namespace UniSharperEditor.Data.Metadata
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException(e);
+                    Debugger.LogException(e);
                 }
                 finally
                 {
@@ -135,7 +135,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                Debugger.LogException(e);
             }
         }
 
@@ -217,7 +217,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                Debug.LogError("The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!");
+                Debugger.LogError("The 'Metadata Persistent Store Path' you choose is invalid path, please select the folder in the project!");
             }
 
             // Metadata Entity Scripts Store Path
@@ -235,7 +235,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             else
             {
-                Debug.LogError("The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!");
+                Debugger.LogError("The 'Entity Scripts Store Path' you choose is invalid path, please select the folder in the project!");
             }
 
             // Metadata Entity Namespace

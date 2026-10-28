@@ -17,7 +17,6 @@ using UniSharper;
 using UniSharper.Data.Metadata;
 using UniSharper.Data.Metadata.Providers;
 using UnityEditor;
-using UnityDebug = UnityEngine.Debug;
 
 // ReSharper disable RedundantArgumentDefaultValue
 
@@ -81,12 +80,12 @@ namespace UniSharperEditor.Data.Metadata
                     var progress = (float)(index + 1) / length;
                     EditorUtility.DisplayProgressBar("Hold on...", info, progress);
 
-                    var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
+                    var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, table);
                     var entityClassType = GetEntityClassType(settings, entityClassName);
 
                     if (entityClassType != null)
                     {
-                        var entityDataList = CreateEntityDataList(settings, table, entityClassType, rawInfoList);
+                        var entityDataList = CreateEntityDataList(settings.CreateExcelDataParseOptions(), table, entityClassType, rawInfoList);
                         var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
                         typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
                             new[] { entityClassType },
@@ -95,7 +94,7 @@ namespace UniSharperEditor.Data.Metadata
                     }
                     else
                     {
-                        UnityDebug.LogError($"Can not find the entity class: {entityClassName}{FileExtensions.CSharpScriptFile}!");
+                        Debugger.LogError($"Can not find the entity class: {entityClassName}{FileExtensions.CSharpScriptFile}!");
                         result = false;
                         return;
                     }
@@ -147,7 +146,7 @@ namespace UniSharperEditor.Data.Metadata
                         var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}... {index + 1}/{length}";
                         var progress = (float)(index + 1) / length;
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        var rawInfoList = CreateMetadataEntityRawInfoList(settings, fileName, table);
+                        var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, table);
                         var success = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
                         if (success)
                         {
@@ -155,7 +154,7 @@ namespace UniSharperEditor.Data.Metadata
                         }
                         else
                         {
-                            UnityDebug.LogError($"Generate metadata entity script failed: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}");
+                            Debugger.LogError($"Generate metadata entity script failed: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}");
                         }
                         InternalEditorUtility.ClearProgressBar();
                     });
@@ -255,7 +254,7 @@ namespace UniSharperEditor.Data.Metadata
             SceneView.RepaintAll();
         }
 
-        private static List<MetadataEntity> CreateEntityDataList(MetadataAssetSettings settings,
+        internal static List<MetadataEntity> CreateEntityDataList(ExcelDataParseOptions options,
             DataTable table,
             Type entityClassType,
             List<EntityPropertyRawInfo> rawInfoList)
@@ -263,7 +262,7 @@ namespace UniSharperEditor.Data.Metadata
             var list = new List<MetadataEntity>();
             var rowCount = table.Rows.Count;
 
-            for (var i = settings.EntityDataStartingRowIndex; i < rowCount; ++i)
+            for (var i = options.EntityDataStartingRowIndex; i < rowCount; ++i)
             {
                 var entityData = (MetadataEntity)entityClassType.InvokeConstructor();
                 foreach (var rowInfo in rawInfoList)
@@ -274,13 +273,13 @@ namespace UniSharperEditor.Data.Metadata
 
                     if (typeParser != null)
                     {
-                        var arrayElementSeparator = settings.ArrayElementSeparator;
+                        var arrayElementSeparator = options.ArrayElementSeparator;
                         var value = typeParser.Parse(arrayElementSeparator, cellValue.Trim(), rowInfo.Parameters);
                         entityData.SetPropertyValue(rowInfo.PropertyName, value);
                     }
                     else
                     {
-                        UnityDebug.LogWarningFormat("Type '{0}' is not supported!", rowInfo.PropertyType);
+                        Debugger.LogWarning($"Type '{rowInfo.PropertyType}' is not supported!");
                     }
                 }
 
@@ -290,7 +289,7 @@ namespace UniSharperEditor.Data.Metadata
             return list;
         }
 
-        private static List<EntityPropertyRawInfo> CreateMetadataEntityRawInfoList(MetadataAssetSettings settings, string fileName, DataTable table)
+        internal static List<EntityPropertyRawInfo> CreateMetadataEntityRawInfoList(ExcelDataParseOptions options, string fileName, DataTable table)
         {
             var columns = table.Columns;
             var rows = table.Rows;
@@ -299,21 +298,22 @@ namespace UniSharperEditor.Data.Metadata
 
             for (var column = 0; column < columnCount; column++)
             {
-                var propertyName = rows[settings.EntityPropertyNameRowIndex][column].ToString();
-                var propertyType = rows[settings.EntityPropertyTypeRowIndex][column].ToString();
-                var comment = rows[settings.EntityPropertyCommentRowIndex][column].ToString();
+                var propertyName = rows[options.EntityPropertyNameRowIndex][column].ToString();
+                var propertyType = rows[options.EntityPropertyTypeRowIndex][column].ToString();
+                var comment = rows[options.EntityPropertyCommentRowIndex][column].ToString();
 
                 if (string.IsNullOrEmpty(propertyName))
                 {
-                    UnityDebug.Log($"<color=#FFFF00>Invalid property name at column index {column}, column data will be ignored!</color>");
+                    var message = $"Invalid property name at column index {column}, column data will be ignored!";
+                    Debugger.Log(message);
                     continue;
                 }
 
                 if (string.IsNullOrEmpty(propertyType))
                 {
-                    UnityDebug.Log(string.IsNullOrEmpty(propertyName)
-                        ? $"<color=#FFFF00>Invalid property type at column index {column}, column data will be ignored in file '{fileName}'!</color>"
-                        : $"<color=#FFFF00>Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored in file '{fileName}'!</color>");
+                    Debugger.Log(string.IsNullOrEmpty(propertyName)
+                        ? $"Invalid property type at column index {column}, column data will be ignored in file '{fileName}'!"
+                        : $"Invalid property type with name '{propertyName}' at column index {column}, column data will be ignored in file '{fileName}'!");
 
                     continue;
                 }
@@ -323,7 +323,7 @@ namespace UniSharperEditor.Data.Metadata
                 comment = FormatCommentString(comment.Trim());
 
                 var editor = PropertyRawInfoEditorFactory.Instance.GetInstance(propertyType);
-                var rawInfo = editor?.Edit(settings, table, column, comment, propertyType, propertyName)
+                var rawInfo = editor?.Edit(options, table, column, comment, propertyType, propertyName)
                               ?? new EntityPropertyRawInfo(column, comment, propertyType, propertyName);
                 list.Add(rawInfo);
             }
@@ -371,7 +371,7 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (string.IsNullOrEmpty(excelFilesFolderPath))
             {
-                UnityDebug.LogWarning("Excel files folder path can not be null or empty!");
+                Debugger.LogWarning("Excel files folder path can not be null or empty!");
                 return;
             }
 
@@ -379,7 +379,7 @@ namespace UniSharperEditor.Data.Metadata
             var paths = FileUtility.GetExcelFilePathCollection(excelFilesFolderPath);
             if (paths.Length == 0)
             {
-                UnityDebug.LogError("No excel files found!");
+                Debugger.LogError("No excel files found!");
                 action?.Invoke(null, null, -1, -1);
                 return;
             }
@@ -389,32 +389,29 @@ namespace UniSharperEditor.Data.Metadata
                 var path = paths[i];
                 var fileName = Path.GetFileName(path);
 
-                using var stream = File.OpenRead(path);
                 try
                 {
-                    using var reader = ExcelReaderFactory.CreateReader(stream);
-                    if (reader != null)
-                    {
-                        var result = reader.AsDataSet();
-                        if (result is { Tables: { Count: > 0 } })
-                        {
-                            var table = result.Tables[0];
-                            if (table != null)
-                                action?.Invoke(table, fileName, i, paths.Length);
-                        }
-                        else
-                        {
-                            UnityDebug.LogError("Excel file should have a table at least!");
-                        }
-                    }
+                    var table = ReadExcelFileDataTable(path);
+                    if (table != null)
+                        action?.Invoke(table, fileName, i, paths.Length);
+                    else
+                        Debugger.LogError("Excel file should have a table at least!");
                 }
                 catch (Exception e)
                 {
-                    UnityDebug.LogError($"fileName: {fileName}, error: {e}");
+                    Debugger.LogError($"fileName: {fileName}, error: {e}");
                     InternalEditorUtility.ClearProgressBar();
                     throw;
                 }
             }
+        }
+
+        internal static DataTable ReadExcelFileDataTable(string filePath)
+        {
+            using var stream = File.OpenRead(filePath);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var result = reader.AsDataSet();
+            return result is { Tables: { Count: > 0 } } ? result.Tables[0] : null;
         }
 
         private static string FormatCommentString(string comment)
@@ -548,7 +545,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception exception)
             {
-                UnityDebug.LogError(exception.ToString());
+                Debugger.LogError(exception.ToString());
                 return false;
             }
         }
@@ -600,7 +597,7 @@ namespace UniSharperEditor.Data.Metadata
                 var result = dataDBAdapter.Insert(entityName, data);
 
                 if (!result)
-                    UnityDebug.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
+                    Debugger.LogWarning($"Can not write metadata ({data}) into database file: {tableName}!");
             }
 
             // Copy metadata entity database file.
@@ -637,7 +634,7 @@ namespace UniSharperEditor.Data.Metadata
             }
             catch (Exception e)
             {
-                UnityDebug.LogError(e.ToString());
+                Debugger.LogError(e.ToString());
             }
         }
 

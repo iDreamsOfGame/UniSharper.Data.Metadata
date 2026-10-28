@@ -9,7 +9,7 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal class EnumTypeRawInfoEditor : PropertyRawInfoEditor
     {
-        public override EntityPropertyRawInfo Edit(MetadataAssetSettings settings,
+        public override EntityPropertyRawInfo Edit(ExcelDataParseOptions options,
             DataTable dataTable,
             int column,
             string comment,
@@ -22,7 +22,7 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 
             var enumValues = new List<string> { "None" };
             var rows = dataTable.Rows;
-            for (var row = settings.EntityDataStartingRowIndex; row < rows.Count; row++)
+            for (var row = options.EntityDataStartingRowIndex; row < rows.Count; row++)
             {
                 var enumValue = rows[row][column].ToString().Trim();
 

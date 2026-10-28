@@ -7,7 +7,7 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
 {
     internal abstract class PropertyRawInfoEditor : IPropertyRawInfoEditor
     {
-        public abstract EntityPropertyRawInfo Edit(MetadataAssetSettings settings, 
+        public abstract EntityPropertyRawInfo Edit(ExcelDataParseOptions options, 
             DataTable dataTable, 
             int column, 
             string comment, 

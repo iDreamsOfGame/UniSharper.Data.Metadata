@@ -88,7 +88,7 @@ namespace UniSharperEditor.Data.Metadata.PropertyRawInfoEditors
         
         protected abstract int NumberOfConstructorParameters { get; }
         
-        public override EntityPropertyRawInfo Edit(MetadataAssetSettings settings, 
+        public override EntityPropertyRawInfo Edit(ExcelDataParseOptions options, 
             DataTable table, 
             int column, 
             string comment, 

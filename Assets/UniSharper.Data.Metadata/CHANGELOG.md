@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
-## [3.4.0] - 2026-08-31
+## [3.5.0] - 2026-10-28
+
+### Added
+
+- Adds class **MetadataDatabaseFileGenerator** to generate meta database files without Unity Editor GUI.
+
+
+
+## [3.4.0] - 2026-10-27
 
 ### Added
 
