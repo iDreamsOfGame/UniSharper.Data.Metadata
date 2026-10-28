@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 [![Unity](https://img.shields.io/badge/Unity-2021.3%2B-black.svg)](https://unity.com/)
 [![Version](https://img.shields.io/badge/version-3.5.1-blue.svg)](https://github.com/iDreamsOfGame/UniSharper.Data.Metadata)
+[![openupm](https://img.shields.io/npm/v/io.github.idreamsofgame.unisharper.data.metadata?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/io.github.idreamsofgame.unisharper.data.metadata/)
 
 UniSharper.Data.Metadata is a library for converting data in Excel workbook files (*.xls, *.xlsx) into metadata database files, and reading them at runtime in Unity Engine.
 
