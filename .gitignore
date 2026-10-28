@@ -64,3 +64,5 @@ Assets/Plugins
 Assets/Plugins.meta
 
 /*.meta
+
+!*~
