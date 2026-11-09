@@ -10,7 +10,7 @@ namespace UniSharperEditor.Data.Metadata
 {
     internal class PropertyRawInfoEditorFactory : CachingFactoryTemplate<PropertyRawInfoEditorFactory, string, IPropertyRawInfoEditor>
     {
-        private static readonly Dictionary<string, Type> PropertyTypeEditorTypeMap = new Dictionary<string, Type>()
+        private static readonly Dictionary<string, Type> PropertyTypeEditorTypeMap = new()
         {
             { PropertyTypeNames.Enum, typeof(EnumTypeRawInfoEditor) },
             { PropertyTypeNames.UnityVector2, typeof(UnityVector2RawInfoEditor) },
@@ -37,7 +37,7 @@ namespace UniSharperEditor.Data.Metadata
             { PropertyTypeNames.UnityColor32Array, typeof(UnityColor32RawInfoEditor) }
         };
 
-        private PropertyRawInfoEditorFactory()
+        public PropertyRawInfoEditorFactory()
             : base(PropertyTypeEditorTypeMap)
         {
         }

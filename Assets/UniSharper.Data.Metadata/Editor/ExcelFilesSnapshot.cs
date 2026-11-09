@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using LitJson;
 using ReSharp.Extensions;
+using UniLitJson;
 
 namespace UniSharperEditor.Data.Metadata
 {
