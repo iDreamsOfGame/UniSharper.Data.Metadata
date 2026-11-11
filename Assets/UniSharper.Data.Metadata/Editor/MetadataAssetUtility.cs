@@ -17,6 +17,7 @@ using UniSharper;
 using UniSharper.Data.Metadata;
 using UniSharper.Data.Metadata.Providers;
 using UnityEditor;
+using UnityEditor.Compilation;
 
 // ReSharper disable RedundantArgumentDefaultValue
 
@@ -158,6 +159,15 @@ namespace UniSharperEditor.Data.Metadata
                         }
                         InternalEditorUtility.ClearProgressBar();
                     });
+
+                if (isCleanBuild)
+                {
+                    CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
+                }
+                else
+                {
+                    CompilationPipeline.RequestScriptCompilation();
+                }
             }
 
             InternalEditorUtility.ClearProgressBar();

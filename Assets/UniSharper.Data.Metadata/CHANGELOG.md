@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.5.3] - 2026-11-11
+
+- ### Changed
+
+  - Call method **CompilationPipeline.RequestScriptCompilation** after metadata entity scripts generated.
+
+
+
 ## [3.5.2] - 2026-11-09
 
 - ### Changed
