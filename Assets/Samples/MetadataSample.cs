@@ -37,8 +37,10 @@ namespace UniSharper.Data.Metadata.Samples
 
         private void Start()
         {
-            AddGenericTypeSampleMetadataItems();
-            AddUnityTypeSampleMetadataItems();
+            AddGenericTypeSampleMetadataItems(1L);
+            AddGenericTypeSampleMetadataItems(2L);
+            AddUnityTypeSampleMetadataItems(1L);
+            AddUnityTypeSampleMetadataItems(2L);
             AddLongFilenameDataImportTestMetadataItems();
         }
         
@@ -53,11 +55,11 @@ namespace UniSharper.Data.Metadata.Samples
             MetadataManager.LoadEntityDatabase<T>(binAsset.bytes);
         }
 
-        private void AddGenericTypeSampleMetadataItems()
+        private void AddGenericTypeSampleMetadataItems(long key)
         {
-            AddTitleItem("Generic Type");
+            AddTitleItem($"Generic Type, Id={key}");
             
-            var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(2L);
+            var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(key);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -119,11 +121,11 @@ namespace UniSharper.Data.Metadata.Samples
             AddPropertyItem(nameof(metadata.DecimalArraySample), ToString(metadata.DecimalArraySample));
         }
 
-        private void AddUnityTypeSampleMetadataItems()
+        private void AddUnityTypeSampleMetadataItems(long key)
         {
-            AddTitleItem("Unity Type");
+            AddTitleItem($"Unity Type, Id={key}");
             
-            var metadata = MetadataManager.GetEntity<UnityTypeSampleMetadata>(1L);
+            var metadata = MetadataManager.GetEntity<UnityTypeSampleMetadata>(key);
             
             AddPropertyItem(nameof(metadata.Vector2Sample), metadata.Vector2Sample);
             AddPropertyItem(nameof(metadata.Vector2IntSample), metadata.Vector2IntSample);

@@ -5,7 +5,8 @@
 // The test flow:
 //   1. Reads all Excel workbook files (*.xls, *.xlsx) from the 'SampleExcelFiles' folder and parses
 //      them to build the expected data (the test oracle), replicating the conversion rules of the
-//      metadata importing pipeline.
+//      metadata importing pipeline. Files whose names share the prefix before a hyphen '-' are merged
+//      into one entity.
 //   2. Generates a single database file by MetadataDatabaseFileGenerator.GenerateDatabaseFile
 //      (encrypted + compressed) for the first excel workbook file.
 //   3. Generates database files in batch by MetadataDatabaseFileGenerator.GenerateDatabaseFiles (plain).
@@ -122,17 +123,17 @@ namespace MetadataDatabaseFileGeneratorTest
         // Unity type name -> the semantic names of its components, used to verify the component order.
         private static readonly Dictionary<string, string[]> UnityComponentNameMap = new()
         {
-            { "Vector2", ["x", "y"] },
-            { "Vector2Int", ["x", "y"] },
-            { "Vector3", ["x", "y", "z"] },
-            { "Vector3Int", ["x", "y", "z"] },
-            { "Vector4", ["x", "y", "z", "w"] },
-            { "RangeInt", ["start", "length"] },
-            { "Quaternion", ["x", "y", "z", "w"] },
-            { "Rect", ["x", "y", "width", "height"] },
-            { "RectInt", ["x", "y", "width", "height"] },
-            { "Color", ["r", "g", "b", "a"] },
-            { "Color32", ["r", "g", "b", "a"] }
+            { "Vector2", new[] { "x", "y" } },
+            { "Vector2Int", new[] { "x", "y" } },
+            { "Vector3", new[] { "x", "y", "z" } },
+            { "Vector3Int", new[] { "x", "y", "z" } },
+            { "Vector4", new[] { "x", "y", "z", "w" } },
+            { "RangeInt", new[] { "start", "length" } },
+            { "Quaternion", new[] { "x", "y", "z", "w" } },
+            { "Rect", new[] { "x", "y", "width", "height" } },
+            { "RectInt", new[] { "x", "y", "width", "height" } },
+            { "Color", new[] { "r", "g", "b", "a" } },
+            { "Color32", new[] { "r", "g", "b", "a" } }
         };
 
         private static int failureCount;
@@ -149,7 +150,11 @@ namespace MetadataDatabaseFileGeneratorTest
                 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
                 // ExcelDataReader requires the code pages encoding provider on .NET Core to read Excel files.
-                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+                // Registered by reflection to stay compilable against the .NET Framework reference assemblies.
+                var providerType = Type.GetType("System.Text.CodePagesEncodingProvider, System.Text.Encoding.CodePages");
+                var provider = providerType?.GetProperty("Instance")?.GetValue(null) as System.Text.EncodingProvider;
+                if (provider != null)
+                    System.Text.Encoding.RegisterProvider(provider);
 
                 var baseDirectory = AppContext.BaseDirectory;
 
@@ -171,17 +176,29 @@ namespace MetadataDatabaseFileGeneratorTest
                     return PrintSummary();
 
                 // Step 2: parse the Excel workbook files to build the expected data (the test oracle).
+                // Files whose names share the prefix before a hyphen '-' are merged into one entity.
                 PrintStep("Parsing excel workbook files to build expected data...");
                 var expectedEntities = new List<ExpectedEntity>();
+                var groupedFilePaths = new List<Tuple<string, string, List<string>>>();
                 foreach (var excelFilePath in excelFilePaths)
                 {
-                    var model = ParseExpectedEntity(excelFilePath);
+                    var entityName = ToTitleCase(Path.GetFileNameWithoutExtension(excelFilePath).Split('-')[0].Trim());
+                    var group = groupedFilePaths.Find(candidate => candidate.Item1 == entityName);
+                    if (group == null)
+                        groupedFilePaths.Add(Tuple.Create(entityName, Path.GetFileName(excelFilePath), new List<string> { excelFilePath }));
+                    else
+                        group.Item3.Add(excelFilePath);
+                }
+
+                foreach (var group in groupedFilePaths)
+                {
+                    var model = ParseExpectedGroup(group.Item1, group.Item2, group.Item3);
                     if (model != null)
                         expectedEntities.Add(model);
                 }
 
-                Check(expectedEntities.Count == excelFilePaths.Length, "All excel workbook files parsed to expected data");
-                if (expectedEntities.Count != excelFilePaths.Length)
+                Check(expectedEntities.Count == groupedFilePaths.Count, "All excel workbook files parsed to expected data");
+                if (expectedEntities.Count != groupedFilePaths.Count)
                     return PrintSummary();
 
                 var singleOutputFolderPath = Path.Combine(baseDirectory, "Output", "Single");
@@ -251,7 +268,7 @@ namespace MetadataDatabaseFileGeneratorTest
                     var outputFolderPath = i == 0 ? singleOutputFolderPath : batchOutputFolderPath;
                     var adapterRawData = UnwrapDatabaseFile(File.ReadAllBytes(Path.Combine(outputFolderPath, model.EntityClassName + DatabaseFileExtension)));
                     using var adapter = new IBoxDBAdapter(adapterRawData);
-                    AdapterEnsureTableMethod.MakeGenericMethod(model.EntityType).Invoke(adapter, [model.TableName, model.PrimaryKeyPropertyName]);
+                    AdapterEnsureTableMethod.MakeGenericMethod(model.EntityType).Invoke(adapter, new[] { model.TableName, model.PrimaryKeyPropertyName });
                     adapter.Open();
                     VerifyEntity(model, adapter);
                 }
@@ -285,29 +302,51 @@ namespace MetadataDatabaseFileGeneratorTest
                    || extension.Equals(FileExtensions.ExcelWorkbookFile, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static DataTable ReadExcelFirstTable(string filePath)
+        private static List<DataTable> ReadExcelTables(string filePath)
         {
             using var stream = File.OpenRead(filePath);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var dataSet = reader.AsDataSet();
-            return dataSet is { Tables: { Count: > 0 } } ? dataSet.Tables[0] : null;
-        }
-
-        private static ExpectedEntity ParseExpectedEntity(string excelFilePath)
-        {
-            var fileName = Path.GetFileNameWithoutExtension(excelFilePath);
-            var table = ReadExcelFirstTable(excelFilePath);
-            Check(table != null, $"Excel file '{fileName}' has a worksheet");
-            if (table == null)
+            if (dataSet is not { Tables: { Count: > 0 } })
                 return null;
 
-            var entityClassName = ToTitleCase(fileName);
+            // Empty worksheets and worksheets whose name starts with "##" are ignored, just like the importing pipeline.
+            var tables = new List<DataTable>();
+            foreach (DataTable table in dataSet.Tables)
+            {
+                if (table == null || table.Columns.Count == 0 || table.Rows.Count == 0
+                    || (table.TableName != null && table.TableName.StartsWith("##", StringComparison.Ordinal)))
+                    continue;
+
+                tables.Add(table);
+            }
+
+            return tables.Count > 0 ? tables : null;
+        }
+
+        private static ExpectedEntity ParseExpectedGroup(string entityClassName, string structureFileName, List<string> excelFilePaths)
+        {
+            var tables = new List<DataTable>();
+            foreach (var excelFilePath in excelFilePaths)
+            {
+                var fileTables = ReadExcelTables(excelFilePath);
+                if (fileTables == null)
+                {
+                    Check(false, $"Excel file '{Path.GetFileName(excelFilePath)}' has a worksheet");
+                    return null;
+                }
+
+                tables.AddRange(fileTables);
+            }
+
+            var firstTable = tables[0];
             var properties = new List<ExpectedProperty>();
 
-            for (var column = 0; column < table.Columns.Count; column++)
+            // The first worksheet of the first merged file defines the data structure.
+            for (var column = 0; column < firstTable.Columns.Count; column++)
             {
-                var propertyName = table.Rows[NameRowIndex][column].ToString();
-                var propertyType = table.Rows[TypeRowIndex][column].ToString();
+                var propertyName = firstTable.Rows[NameRowIndex][column].ToString();
+                var propertyType = firstTable.Rows[TypeRowIndex][column].ToString();
                 if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyType))
                     continue;
 
@@ -315,7 +354,7 @@ namespace MetadataDatabaseFileGeneratorTest
                 propertyType = propertyType.Trim();
                 if (!TryResolvePropertyType(propertyType, out var storageType, out var valueKind, out var unityComponentCount, out var unityIsArray))
                 {
-                    Check(false, $"Property type '{propertyType}' of '{propertyName}' in '{fileName}' is not supported");
+                    Check(false, $"Property type '{propertyType}' of '{propertyName}' in '{structureFileName}' is not supported");
                     continue;
                 }
 
@@ -332,43 +371,81 @@ namespace MetadataDatabaseFileGeneratorTest
                 });
             }
 
-            Check(properties.Count > 0, $"'{fileName}' has valid property definitions");
+            Check(properties.Count > 0, $"'{entityClassName}' has valid property definitions");
             if (properties.Count == 0)
                 return null;
 
-            // Build the enum value lists, index 0 is 'None', then the cell values by order of appearance.
+            // Build the enum value lists, index 0 is 'None', then the cell values by order of appearance,
+            // unioned across all worksheets of all merged files.
             foreach (var property in properties.Where(property => property.ValueKind == "Enum"))
             {
-                property.EnumValues = ["None"];
-                for (var row = DataStartingRowIndex; row < table.Rows.Count; row++)
+                property.EnumValues = new List<string> { "None" };
+                for (var tableIndex = 0; tableIndex < tables.Count; tableIndex++)
                 {
-                    var cell = table.Rows[row][property.SourceColumn].ToString()?.Trim();
-                    if (!string.IsNullOrEmpty(cell) && !property.EnumValues.Contains(cell))
-                        property.EnumValues.Add(cell);
+                    var table = tables[tableIndex];
+                    if (table.Rows.Count <= DataStartingRowIndex)
+                        continue;
+
+                    var column = tableIndex == 0 ? property.SourceColumn : FindColumnByPropertyName(firstTable, table, property.SourceColumn);
+                    if (column < 0)
+                        continue;
+
+                    for (var row = DataStartingRowIndex; row < table.Rows.Count; row++)
+                    {
+                        var cell = table.Rows[row][column].ToString()?.Trim();
+                        if (!string.IsNullOrEmpty(cell) && !property.EnumValues.Contains(cell))
+                            property.EnumValues.Add(cell);
+                    }
                 }
             }
 
-            // Build the expected rows.
+            // Build the expected rows: the first worksheet uses its own columns, the other worksheets
+            // (of all merged files) are matched by the property name definition row.
             var rows = new List<Dictionary<string, object>>();
             var rawRows = new List<Dictionary<string, string>>();
-            for (var row = DataStartingRowIndex; row < table.Rows.Count; row++)
+            for (var tableIndex = 0; tableIndex < tables.Count; tableIndex++)
             {
-                var expectedValues = new Dictionary<string, object>();
-                var rawValues = new Dictionary<string, string>();
-                foreach (var property in properties)
-                {
-                    var cell = table.Rows[row][property.SourceColumn].ToString();
-                    rawValues[property.PropertyName] = cell;
-                    expectedValues[property.PropertyName] = ConvertCell(property, cell);
-                }
+                var table = tables[tableIndex];
+                if (table.Rows.Count <= DataStartingRowIndex)
+                    continue;
 
-                rows.Add(expectedValues);
-                rawRows.Add(rawValues);
+                for (var row = DataStartingRowIndex; row < table.Rows.Count; row++)
+                {
+                    var expectedValues = new Dictionary<string, object>();
+                    var rawValues = new Dictionary<string, string>();
+                    foreach (var property in properties)
+                    {
+                        int column;
+                        if (tableIndex == 0)
+                        {
+                            column = property.SourceColumn;
+                        }
+                        else
+                        {
+                            column = FindColumnByPropertyName(firstTable, table, property.SourceColumn);
+                            if (column < 0)
+                            {
+                                // The property is not defined in this worksheet, the entity property keeps
+                                // its default value, just like the importing pipeline does.
+                                rawValues[property.PropertyName] = string.Empty;
+                                expectedValues[property.PropertyName] = DefaultPropertyValue(property);
+                                continue;
+                            }
+                        }
+
+                        var cell = table.Rows[row][column].ToString();
+                        rawValues[property.PropertyName] = cell;
+                        expectedValues[property.PropertyName] = ConvertCell(property, cell);
+                    }
+
+                    rows.Add(expectedValues);
+                    rawRows.Add(rawValues);
+                }
             }
 
             // Emit the entity type for IBoxDBAdapter reading, just like the generator does for writing.
             var entityType = CreateEntityType(entityClassName, properties);
-            Console.WriteLine($"  {entityClassName}: {properties.Count} properties, {rows.Count} data rows");
+            Console.WriteLine($"  {entityClassName}: {properties.Count} properties, {rows.Count} data rows (merged {tables.Count} worksheet(s) from {excelFilePaths.Count} file(s))");
 
             return new ExpectedEntity
             {
@@ -380,6 +457,36 @@ namespace MetadataDatabaseFileGeneratorTest
                 Rows = rows,
                 RawRows = rawRows
             };
+        }
+
+        private static int FindColumnByPropertyName(DataTable firstTable, DataTable table, int firstTableColumn)
+        {
+            if (firstTable.Rows.Count <= NameRowIndex || table.Rows.Count <= NameRowIndex)
+                return -1;
+
+            var propertyName = firstTable.Rows[NameRowIndex][firstTableColumn].ToString().Trim();
+            if (string.IsNullOrEmpty(propertyName))
+                return -1;
+
+            for (var column = 0; column < table.Columns.Count; column++)
+            {
+                if (string.Equals(propertyName, table.Rows[NameRowIndex][column].ToString().Trim(), StringComparison.OrdinalIgnoreCase))
+                    return column;
+            }
+
+            return -1;
+        }
+
+        private static object DefaultPropertyValue(ExpectedProperty property)
+        {
+            // An untouched property keeps the default value of its storage type.
+            if (property.ValueKind == "Enum")
+                return 0;
+
+            if (property.StorageType.IsArray || property.StorageType == typeof(string))
+                return null;
+
+            return Activator.CreateInstance(property.StorageType);
         }
 
         private static bool TryResolvePropertyType(string typeString,
@@ -456,8 +563,8 @@ namespace MetadataDatabaseFileGeneratorTest
                 {
                     var elementType = property.StorageType.GetElementType();
                     var elementStrings = string.IsNullOrEmpty(value)
-                        ? []
-                        : value.Split([ArrayElementSeparator], StringSplitOptions.RemoveEmptyEntries);
+                        ? Array.Empty<string>()
+                        : value.Split(new[] { ArrayElementSeparator }, StringSplitOptions.RemoveEmptyEntries);
                     var array = Array.CreateInstance(elementType, elementStrings.Length);
                     for (var i = 0; i < elementStrings.Length; i++)
                         array.SetValue(ConvertPlainValue(elementType, elementStrings[i]), i);
@@ -696,16 +803,16 @@ namespace MetadataDatabaseFileGeneratorTest
             }
 
             if (targetType == typeof(byte))
-                return byte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultByte) ? resultByte : 0;
+                return byte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultByte) ? resultByte : (byte)0;
 
             if (targetType == typeof(sbyte))
-                return sbyte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultSByte) ? resultSByte : 0;
+                return sbyte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultSByte) ? resultSByte : (sbyte)0;
 
             if (targetType == typeof(short))
-                return short.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt16) ? resultInt16 : 0;
+                return short.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt16) ? resultInt16 : (short)0;
 
             if (targetType == typeof(ushort))
-                return ushort.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultUInt16) ? resultUInt16 : 0;
+                return ushort.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultUInt16) ? resultUInt16 : (ushort)0;
 
             if (targetType == typeof(int))
                 return int.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt32) ? resultInt32 : 0;
@@ -747,7 +854,7 @@ namespace MetadataDatabaseFileGeneratorTest
         private static void AddAutoImplementedProperty(TypeBuilder typeBuilder, string propertyName, Type propertyType)
         {
             var fieldBuilder = typeBuilder.DefineField($"<{propertyName}>k__BackingField", propertyType, FieldAttributes.Private);
-            var propertyBuilder = typeBuilder.DefineProperty(propertyName, PropertyAttributes.None, propertyType, Type.EmptyTypes);
+            var propertyBuilder = typeBuilder.DefineProperty(propertyName, System.Reflection.PropertyAttributes.None, propertyType, Type.EmptyTypes);
 
             var getterMethodBuilder = typeBuilder.DefineMethod($"get_{propertyName}",
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
@@ -762,7 +869,7 @@ namespace MetadataDatabaseFileGeneratorTest
             var setterMethodBuilder = typeBuilder.DefineMethod($"set_{propertyName}",
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
                 typeof(void),
-                [propertyType]);
+                new[] { propertyType });
 
             ilGenerator = setterMethodBuilder.GetILGenerator();
             ilGenerator.Emit(OpCodes.Ldarg_0);
@@ -781,7 +888,7 @@ namespace MetadataDatabaseFileGeneratorTest
             var count = Convert.ToInt64(adapter.Count(model.TableName));
             Check(count == model.Rows.Count, $"{model.EntityClassName}: Count is {model.Rows.Count} (actual: {count})");
 
-            var entities = AdapterGetAllMethod.MakeGenericMethod(entityType).Invoke(adapter, [model.TableName]) as IEnumerable;
+            var entities = AdapterGetAllMethod.MakeGenericMethod(entityType).Invoke(adapter, new object[] { model.TableName }) as IEnumerable;
             var entityList = (entities ?? Array.Empty<object>()).Cast<object>().ToList();
             Check(entityList.Count == model.Rows.Count, $"{model.EntityClassName}: GetAll returns {model.Rows.Count} entities (actual: {entityList.Count})");
 
@@ -846,7 +953,7 @@ namespace MetadataDatabaseFileGeneratorTest
 
             // Verify Get with the primary key of the first row.
             var firstRowKey = model.Rows[0][model.PrimaryKeyPropertyName];
-            var firstEntity = AdapterGetMethod.MakeGenericMethod(entityType).Invoke(adapter, [model.TableName, new[] { firstRowKey }]);
+            var firstEntity = AdapterGetMethod.MakeGenericMethod(entityType).Invoke(adapter, new object[] { model.TableName, new[] { firstRowKey } });
             Check(firstEntity != null, $"{model.EntityClassName}: Get({FormatValue(firstRowKey)}) returns an entity");
         }
 

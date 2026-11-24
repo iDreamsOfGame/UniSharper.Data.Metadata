@@ -61,9 +61,11 @@ namespace UniSharperEditor.Data.Metadata
         private static string tempFolderPath;
 
         /// <summary>
-        /// Generates a metadata database file from an Excel workbook file (*.xls, *.xlsx). The first
-        /// worksheet of the Excel workbook file is used as the metadata table, also the configuration
-        /// database file (<see cref="MetadataEntityDBConfig"/>) will be generated for the metadata entity.
+        /// Generates a metadata database file from an Excel workbook file (*.xls, *.xlsx). All valid
+        /// worksheets of the Excel workbook file are merged into one metadata table (the first worksheet
+        /// defines the data structure), also the configuration database file (<see cref="MetadataEntityDBConfig"/>)
+        /// will be generated for the metadata entity. The entity is named by the string before the first
+        /// hyphen '-' of the file name, e.g. 'AAMetadata-Module1' generates the database 'AAMetadata'.
         /// </summary>
         /// <param name="excelFilePath">The path of the Excel workbook file (*.xls, *.xlsx).</param>
         /// <param name="saveFolderPath">The folder path where to save the database files.</param>
@@ -112,9 +114,12 @@ namespace UniSharperEditor.Data.Metadata
 
         /// <summary>
         /// Generates metadata database files from all Excel workbook files (*.xls, *.xlsx) in the
-        /// specified folder. The first worksheet of each Excel workbook file is used as the metadata
-        /// table, also the configuration database file (<see cref="MetadataEntityDBConfig"/>) will be
-        /// generated for all metadata entities.
+        /// specified folder. All valid worksheets of each Excel workbook file are merged into one
+        /// metadata table (the first worksheet defines the data structure), also the configuration
+        /// database file (<see cref="MetadataEntityDBConfig"/>) will be generated for all metadata
+        /// entities. Excel workbook files whose names share the string before the first hyphen '-'
+        /// (e.g. 'AAMetadata-Module1' and 'AAMetadata-Module2') are merged into one database file
+        /// named by that string ('AAMetadata').
         /// </summary>
         /// <param name="excelFilesFolderPath">The folder path where to locate excel workbook files (*.xls, *.xlsx).</param>
         /// <param name="saveFolderPath">The folder path where to save the database files.</param>
@@ -181,44 +186,31 @@ namespace UniSharperEditor.Data.Metadata
             var assemblyName = new AssemblyName($"{typeof(MetadataDatabaseFileGenerator).FullName}.{Guid.NewGuid():N}");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name);
-            var generatedEntityNames = new HashSet<string>();
 
             try
             {
-                for (var i = 0; i < excelFilePaths.Count; i++)
+                // Excel workbook files whose names share the string before the first hyphen '-' are
+                // merged into one database file named by that string.
+                var groups = MetadataAssetUtility.LoadExcelFileGroups(excelFilePaths);
+
+                for (var i = 0; i < groups.Count; i++)
                 {
-                    var excelFilePath = excelFilePaths[i];
-                    var fileName = Path.GetFileName(excelFilePath);
-                    var entityClassName = Path.GetFileNameWithoutExtension(fileName).ToTitleCase();
-                    LogInfo($"Creating Database File for Entity {entityClassName}... {i + 1}/{excelFilePaths.Count}");
+                    var group = groups[i];
+                    var entityClassName = group.EntityName;
+                    LogInfo($"Creating Database File for Entity {entityClassName}... {i + 1}/{groups.Count}");
 
                     try
                     {
-                        var table = MetadataAssetUtility.ReadExcelFileDataTable(excelFilePath);
-                        if (table == null)
-                        {
-                            LogError($"Excel file '{fileName}' should have a table at least!");
-                            hasError = true;
-                            continue;
-                        }
-
-                        if (!generatedEntityNames.Add(entityClassName))
-                        {
-                            LogError($"Excel file '{fileName}' has a duplicated entity name '{entityClassName}', it will be ignored!");
-                            hasError = true;
-                            continue;
-                        }
-
-                        var rawInfoList = MetadataAssetUtility.CreateMetadataEntityRawInfoList(options, fileName, table);
+                        var rawInfoList = MetadataAssetUtility.CreateMetadataEntityRawInfoList(options, group.StructureFileName, group.Tables);
                         if (rawInfoList.Count == 0)
                         {
-                            LogError($"No valid property definitions found in excel file '{fileName}'!");
+                            LogError($"No valid property definitions found in excel file '{group.StructureFileName}'!");
                             hasError = true;
                             continue;
                         }
 
                         var entityType = CreateEntityType(moduleBuilder, entityClassName, rawInfoList);
-                        var entityDataList = MetadataAssetUtility.CreateEntityDataList(options, table, entityType, rawInfoList);
+                        var entityDataList = MetadataAssetUtility.CreateEntityDataList(options, group.Tables, entityType, rawInfoList, group.StructureFileName);
                         var dbLocalAddress = i + 2L;
                         GenerateEntityDatabaseFile(entityClassName,
                             rawInfoList,
@@ -235,7 +227,7 @@ namespace UniSharperEditor.Data.Metadata
                     }
                     catch (Exception e)
                     {
-                        LogError($"Create database file for entity '{entityClassName}' failed, fileName: {fileName}, error: {e}");
+                        LogError($"Create database file for entity '{entityClassName}' failed, structureFileName: {group.StructureFileName}, error: {e}");
                         hasError = true;
                     }
                 }

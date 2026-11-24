@@ -66,40 +66,41 @@ namespace UniSharperEditor.Data.Metadata
             TryDeleteMetadataDatabaseFiles(settings, deletedExcelFiles);
 
             var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
-            ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
-                (tables,
-                    fileName,
-                    index,
-                    length) =>
+            var groups = LoadExcelFileGroups(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
+            if (groups.Count == 0)
+            {
+                InternalEditorUtility.ClearProgressBar();
+                return false;
+            }
+
+            foreach (var group in groups)
+            {
+                var info = $"Creating Database File for Entity {group.EntityName}... {group.Index + 1}/{groups.Count}";
+                var progress = (float)(group.Index + 1) / groups.Count;
+                EditorUtility.DisplayProgressBar("Hold on...", info, progress);
+
+                var options = settings.CreateExcelDataParseOptions();
+                var rawInfoList = CreateMetadataEntityRawInfoList(options, group.StructureFileName, group.Tables);
+                var entityClassType = GetEntityClassType(settings, group.EntityName);
+
+                if (entityClassType != null)
                 {
-                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                    var entityClassName = fileNameWithoutExtension.ToTitleCase();
-                    var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
-                    var progress = (float)(index + 1) / length;
-                    EditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                    var entityDataList = CreateEntityDataList(options, group.Tables, entityClassType, rawInfoList, group.StructureFileName);
+                    var updateDatabaseFile = group.FileNames.Any(fileName => addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName));
+                    typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
+                        new[] { entityClassType },
+                        new object[] { settings, dbFolderPath, group.EntityName, rawInfoList, entityDataList, group.Index, updateDatabaseFile });
+                    result = true;
+                }
+                else
+                {
+                    Debugger.LogError($"Can not find the entity class: {group.EntityName}{FileExtensions.CSharpScriptFile}!");
+                    result = false;
+                    break;
+                }
 
-                    var options = settings.CreateExcelDataParseOptions();
-                    var rawInfoList = CreateMetadataEntityRawInfoList(options, fileName, tables);
-                    var entityClassType = GetEntityClassType(settings, entityClassName);
-
-                    if (entityClassType != null)
-                    {
-                        var entityDataList = CreateEntityDataList(options, tables, entityClassType, rawInfoList, fileName);
-                        var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
-                        typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
-                            new[] { entityClassType },
-                            new object[] { settings, dbFolderPath, entityClassName, rawInfoList, entityDataList, index, updateDatabaseFile });
-                        result = true;
-                    }
-                    else
-                    {
-                        Debugger.LogError($"Can not find the entity class: {entityClassName}{FileExtensions.CSharpScriptFile}!");
-                        result = false;
-                        return;
-                    }
-
-                    InternalEditorUtility.ClearProgressBar();
-                });
+                InternalEditorUtility.ClearProgressBar();
+            }
 
             // Copy MetadataEntityDBConfig database file.
             if (result && (addedExcelFiles.Count > 0 || deletedExcelFiles.Count > 0))
@@ -129,31 +130,27 @@ namespace UniSharperEditor.Data.Metadata
                 // Try to delete redundant entity scripts.
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
-                ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
-                    (tables,
-                        fileName,
-                        index,
-                        length) =>
-                    {
-                        if (!isCleanBuild && !(addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName)))
-                            return;
+                var groups = LoadExcelFileGroups(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
+                foreach (var group in groups)
+                {
+                    if (!isCleanBuild && !group.FileNames.Any(fileName => addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName)))
+                        continue;
 
-                        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                        var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}... {index + 1}/{length}";
-                        var progress = (float)(index + 1) / length;
-                        EditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, tables);
-                        var success = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
-                        if (success)
-                        {
-                            generated = true;
-                        }
-                        else
-                        {
-                            Debugger.LogError($"Generate metadata entity script failed: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}");
-                        }
-                        InternalEditorUtility.ClearProgressBar();
-                    });
+                    var info = $"Generating Metadata Entity Script: {group.EntityName}{FileExtensions.CSharpScriptFile}... {group.Index + 1}/{groups.Count}";
+                    var progress = (float)(group.Index + 1) / groups.Count;
+                    EditorUtility.DisplayProgressBar("Hold on...", info, progress);
+                    var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), group.StructureFileName, group.Tables);
+                    var success = GenerateMetadataEntityScript(settings, group.EntityName, rawInfoList);
+                    if (success)
+                    {
+                        generated = true;
+                    }
+                    else
+                    {
+                        Debugger.LogError($"Generate metadata entity script failed: {group.EntityName}{FileExtensions.CSharpScriptFile}");
+                    }
+                    InternalEditorUtility.ClearProgressBar();
+                }
 
                 if (isCleanBuild)
                 {
@@ -505,22 +502,53 @@ namespace UniSharperEditor.Data.Metadata
             File.WriteAllBytes(filePath, bufferData);
         }
 
-        private static void ForEachExcelFile(string excelFilesFolderPath, Action<List<DataTable>, string, int, int> action)
+        internal sealed class ExcelFileGroup
         {
-            if (string.IsNullOrEmpty(excelFilesFolderPath))
+            public string EntityName { get; set; }
+
+            public string StructureFileName { get; set; }
+
+            public int Index { get; set; }
+
+            public List<string> FileNames { get; } = new List<string>();
+
+            public List<DataTable> Tables { get; } = new List<DataTable>();
+        }
+
+        private static string GetEntityName(string fileNameWithoutExtension) => fileNameWithoutExtension.Split('-')[0].Trim().ToTitleCase();
+
+        private static HashSet<string> GetEntityNamesOfExcelFiles()
+        {
+            var entityNames = new HashSet<string>();
+            var paths = FileUtility.GetExcelFilePathCollection(MetadataAssetSettings.ExcelWorkbookFilesFolderPath);
+            foreach (var path in paths)
             {
-                Debugger.LogWarning("Excel files folder path can not be null or empty!");
-                return;
+                entityNames.Add(GetEntityName(Path.GetFileNameWithoutExtension(path)));
             }
 
-            // Find *.xls and *.xlsx
+            return entityNames;
+        }
+
+        internal static List<ExcelFileGroup> LoadExcelFileGroups(string excelFilesFolderPath)
+        {
             var paths = FileUtility.GetExcelFilePathCollection(excelFilesFolderPath);
             if (paths.Length == 0)
             {
                 Debugger.LogError("No excel files found!");
-                action?.Invoke(null, null, -1, -1);
-                return;
+                return new List<ExcelFileGroup>();
             }
+
+            return LoadExcelFileGroups(paths);
+        }
+
+        internal static List<ExcelFileGroup> LoadExcelFileGroups(IList<string> excelFilePaths)
+        {
+            var groups = new List<ExcelFileGroup>();
+
+            // Sort the file paths to keep the merging order and the structure source deterministic.
+            var paths = new string[excelFilePaths.Count];
+            excelFilePaths.CopyTo(paths, 0);
+            Array.Sort(paths, StringComparer.Ordinal);
 
             for (var i = 0; i < paths.Length; i++)
             {
@@ -530,10 +558,25 @@ namespace UniSharperEditor.Data.Metadata
                 try
                 {
                     var tables = ReadExcelFileDataTables(path);
-                    if (tables is { Count: > 0 })
-                        action?.Invoke(tables, fileName, i, paths.Length);
-                    else
-                        Debugger.LogError("Excel file should have a table at least!");
+                    if (tables is not { Count: > 0 })
+                    {
+                        Debugger.LogError($"Excel file '{fileName}' should have a table at least!");
+                        continue;
+                    }
+
+                    // Excel files whose name contains a hyphen '-' are merged into one database named
+                    // by the string before the first hyphen, e.g. 'AAMetadata-Module1' and
+                    // 'AAMetadata-Module2' are merged into the database 'AAMetadata'.
+                    var entityName = GetEntityName(Path.GetFileNameWithoutExtension(fileName));
+                    var group = groups.Find(candidate => candidate.EntityName.Equals(entityName));
+                    if (group == null)
+                    {
+                        group = new ExcelFileGroup { EntityName = entityName, StructureFileName = fileName, Index = groups.Count };
+                        groups.Add(group);
+                    }
+
+                    group.FileNames.Add(fileName);
+                    group.Tables.AddRange(tables);
                 }
                 catch (Exception e)
                 {
@@ -542,6 +585,8 @@ namespace UniSharperEditor.Data.Metadata
                     throw;
                 }
             }
+
+            return groups;
         }
 
         internal static DataTable ReadExcelFileDataTable(string filePath)
@@ -764,9 +809,14 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
+                var remainingEntityNames = GetEntityNamesOfExcelFiles();
                 foreach (var deletedExcelFile in deletedExcelFiles)
                 {
-                    DeleteMetadataEntityScript(settings, deletedExcelFile);
+                    var entityName = GetEntityName(Path.GetFileNameWithoutExtension(deletedExcelFile));
+                    if (remainingEntityNames.Contains(entityName))
+                        continue;
+
+                    DeleteMetadataEntityScript(settings, entityName);
                 }
 
                 AssetDatabase.Refresh();
@@ -774,12 +824,11 @@ namespace UniSharperEditor.Data.Metadata
             }
         }
 
-        private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string excelFileName)
+        private static void DeleteMetadataEntityScript(MetadataAssetSettings settings, string entityName)
         {
             try
             {
-                var entityScriptName = Path.GetFileNameWithoutExtension(excelFileName);
-                var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityScriptName}{FileExtensions.CSharpScriptFile}");
+                var scriptFilePath = Path.Combine(settings.EntityScriptsStorePath, $"{entityName}{FileExtensions.CSharpScriptFile}");
                 if (AssetDatabase.DeleteAsset(scriptFilePath))
                     return;
 
@@ -798,19 +847,23 @@ namespace UniSharperEditor.Data.Metadata
         {
             if (settings.ShouldRemoveRedundantFiles && deletedExcelFiles.Count > 0)
             {
+                var remainingEntityNames = GetEntityNamesOfExcelFiles();
                 foreach (var deletedExcelFile in deletedExcelFiles)
                 {
-                    DeleteMetadataDatabaseFile(settings, deletedExcelFile);
+                    var entityName = GetEntityName(Path.GetFileNameWithoutExtension(deletedExcelFile));
+                    if (remainingEntityNames.Contains(entityName))
+                        continue;
+
+                    DeleteMetadataDatabaseFile(settings, entityName);
                 }
 
                 AssetDatabase.Refresh();
             }
         }
 
-        private static void DeleteMetadataDatabaseFile(MetadataAssetSettings settings, string excelFileName)
+        private static void DeleteMetadataDatabaseFile(MetadataAssetSettings settings, string entityName)
         {
-            var metadataName = Path.GetFileNameWithoutExtension(excelFileName);
-            var databaseFilePath = Path.Combine(settings.MetadataPersistentStorePath, $"{metadataName}{FileExtensions.DatabaseFile}");
+            var databaseFilePath = Path.Combine(settings.MetadataPersistentStorePath, $"{entityName}{FileExtensions.DatabaseFile}");
             if (AssetDatabase.DeleteAsset(databaseFilePath))
                 return;
 

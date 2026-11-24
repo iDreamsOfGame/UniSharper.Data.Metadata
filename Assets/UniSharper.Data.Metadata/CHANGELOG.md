@@ -6,11 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [3.7.0] - 2026-11-24
+
+### Added
+
+- Merges multiple Excel workbook files into one database file when their names share the prefix before a hyphen '-', the database file is named by that prefix.
+
+
+
 ## [3.6.0] - 2026-11-24
 
 ### Added
 
 - Supports multiple sheets data importing.
+- Merges multiple Excel workbook files into one database file when their names share the prefix before a hyphen '-', the database file is named by that prefix.
 - Ignores empty worksheets and worksheets whose name starts with `##`.
 
 

@@ -14,7 +14,8 @@ All database files are read at runtime by the `MetadataManager` class.
 
 ## Features
 
-- Imports an Excel workbook file as one metadata table: in the Unity Editor importer the data rows of all worksheets are merged and the first worksheet defines the data structure; the console `MetadataDatabaseFileGenerator` imports the first worksheet only.
+- Imports an Excel workbook file as one metadata table: the data rows of all worksheets are merged and the first worksheet defines the data structure (in both the Unity Editor importer and the console `MetadataDatabaseFileGenerator`).
+- Merges Excel workbook files that share the prefix before a hyphen '-' in their names (e.g. `AAMetadata-Module1.xlsx` and `AAMetadata-Module2.xlsx`) into one database file named by that prefix (`AAMetadata`); empty worksheets and worksheets whose name starts with `##` are ignored.
 - Generates a standalone iBoxDB database file (*.db.bytes) per metadata entity, plus a shared configuration database file.
 - Supports primitive types, one-dimensional arrays, custom enums and Unity types (`Vector2`, `Vector3`, `Quaternion`, `Rect`, `Color`, etc.).
 - Optional encryption (AES-CBC) and compression (Deflate/LZ4) of the database files.
@@ -82,7 +83,7 @@ openupm add io.github.idreamsofgame.unisharper.data.metadata
 
 ## The Excel Workbook Format
 
-An Excel workbook file is imported as one metadata table. Empty worksheets and worksheets whose name starts with `##` are ignored; the first remaining worksheet defines the table structure, and in the Unity Editor importer the data rows of the other worksheets are merged into the same table when they share this structure — columns are matched by the property name definition row (so the column order may differ), worksheets without a property name row or without matching columns are ignored with a warning, and `enum` value lists are collected from the data cells of all worksheets. The console `MetadataDatabaseFileGenerator` imports the first valid worksheet only. By default the first four rows of the first worksheet define the table layout (each row index is configurable):
+An Excel workbook file is imported as one metadata table. Empty worksheets and worksheets whose name starts with `##` are ignored; the first remaining worksheet defines the table structure, and the data rows of the other worksheets are merged into the same table when they share this structure — columns are matched by the property name definition row (so the column order may differ), worksheets without a property name row or without matching columns are ignored with a warning, and `enum` value lists are collected from the data cells of all worksheets. Excel workbook files whose names share the string before the first hyphen '-' (e.g. `AAMetadata-Module1.xlsx` and `AAMetadata-Module2.xlsx`) are merged into one database file named by that string (`AAMetadata`); the files are merged in file name order and the first file's first worksheet defines the structure. By default the first four rows of the first worksheet define the table layout (each row index is configurable):
 
 | Row | Index | Content |
 | --- | --- | --- |
@@ -131,7 +132,7 @@ Open the tool from the menu **UniSharper → Metadata Management → Metadata Im
 - **Build Metadata Assets** — generates the entity scripts for new or changed Excel workbook files, compiles them and writes the database files.
 - **Rebuild Metadata Assets** — clears the import snapshot and rebuilds everything.
 
-The output is written to the persistent store folder: one `{EntityName}.db.bytes` per Excel workbook file (named after the file) plus the shared `MetadataEntityDBConfig.db.bytes` configuration database. Entity scripts are partial classes derived from `MetadataEntity` and can be extended freely.
+The output is written to the persistent store folder: one `{EntityName}.db.bytes` per metadata entity (named after the Excel workbook file, or the shared prefix when files are merged by '-') plus the shared `MetadataEntityDBConfig.db.bytes` configuration database. Entity scripts are partial classes derived from `MetadataEntity` and can be extended freely.
 
 ## Usage — Generating Database Files Without the Unity Editor
 
@@ -182,6 +183,8 @@ MetadataDatabaseFileGenerator.GenerateDatabaseFiles(
 Both methods return `true` when all database files were generated successfully. Custom provider instances can be passed with the optional `cryptoProvider` / `compressionProvider` parameters; when omitted, the default `AesCbcCryptoProvider` and `DeflateCompressionProvider` are used.
 
 ### Output
+
+Excel workbook files sharing a hyphen-separated prefix (e.g. `AAMetadata-Module1.xlsx` and `AAMetadata-Module2.xlsx`) are merged into one database file named by the prefix (`AAMetadata.db.bytes`).
 
 For every Excel workbook file named `Player.xlsx` the generator writes:
 
