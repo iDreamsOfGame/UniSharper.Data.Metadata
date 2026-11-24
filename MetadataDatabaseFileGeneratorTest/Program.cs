@@ -696,16 +696,16 @@ namespace MetadataDatabaseFileGeneratorTest
             }
 
             if (targetType == typeof(byte))
-                return byte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultByte) ? resultByte : (byte)0;
+                return byte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultByte) ? resultByte : 0;
 
             if (targetType == typeof(sbyte))
-                return sbyte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultSByte) ? resultSByte : (sbyte)0;
+                return sbyte.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultSByte) ? resultSByte : 0;
 
             if (targetType == typeof(short))
-                return short.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt16) ? resultInt16 : (short)0;
+                return short.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt16) ? resultInt16 : 0;
 
             if (targetType == typeof(ushort))
-                return ushort.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultUInt16) ? resultUInt16 : (ushort)0;
+                return ushort.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultUInt16) ? resultUInt16 : 0;
 
             if (targetType == typeof(int))
                 return int.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out var resultInt32) ? resultInt32 : 0;
@@ -747,7 +747,7 @@ namespace MetadataDatabaseFileGeneratorTest
         private static void AddAutoImplementedProperty(TypeBuilder typeBuilder, string propertyName, Type propertyType)
         {
             var fieldBuilder = typeBuilder.DefineField($"<{propertyName}>k__BackingField", propertyType, FieldAttributes.Private);
-            var propertyBuilder = typeBuilder.DefineProperty(propertyName, System.Reflection.PropertyAttributes.None, propertyType, Type.EmptyTypes);
+            var propertyBuilder = typeBuilder.DefineProperty(propertyName, PropertyAttributes.None, propertyType, Type.EmptyTypes);
 
             var getterMethodBuilder = typeBuilder.DefineMethod($"get_{propertyName}",
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
@@ -783,13 +783,15 @@ namespace MetadataDatabaseFileGeneratorTest
 
             var entities = AdapterGetAllMethod.MakeGenericMethod(entityType).Invoke(adapter, [model.TableName]) as IEnumerable;
             var entityList = (entities ?? Array.Empty<object>()).Cast<object>().ToList();
-            Check(entityList.Count == model.Rows.Count,
-                $"{model.EntityClassName}: GetAll returns {model.Rows.Count} entities (actual: {entityList.Count})");
+            Check(entityList.Count == model.Rows.Count, $"{model.EntityClassName}: GetAll returns {model.Rows.Count} entities (actual: {entityList.Count})");
 
             var primaryKeyProperty = entityType.GetProperty(model.PrimaryKeyPropertyName);
+            
             var entityMap = new Dictionary<object, object>();
             foreach (var entity in entityList)
+            {
                 entityMap[primaryKeyProperty.GetValue(entity)] = entity;
+            }
 
             var verifiedCount = 0;
             var mismatchCount = 0;

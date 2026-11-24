@@ -67,26 +67,24 @@ namespace UniSharperEditor.Data.Metadata
 
             var dbFolderPath = EditorPath.GetFullPath(settings.MetadataPersistentStorePath);
             ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
-                (table,
+                (tables,
                     fileName,
                     index,
                     length) =>
                 {
-                    if (table == null)
-                        return;
-
                     var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                     var entityClassName = fileNameWithoutExtension.ToTitleCase();
                     var info = $"Creating Database File for Entity {entityClassName}... {index + 1}/{length}";
                     var progress = (float)(index + 1) / length;
                     EditorUtility.DisplayProgressBar("Hold on...", info, progress);
 
-                    var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, table);
+                    var options = settings.CreateExcelDataParseOptions();
+                    var rawInfoList = CreateMetadataEntityRawInfoList(options, fileName, tables);
                     var entityClassType = GetEntityClassType(settings, entityClassName);
 
                     if (entityClassType != null)
                     {
-                        var entityDataList = CreateEntityDataList(settings.CreateExcelDataParseOptions(), table, entityClassType, rawInfoList);
+                        var entityDataList = CreateEntityDataList(options, tables, entityClassType, rawInfoList, fileName);
                         var updateDatabaseFile = addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName);
                         typeof(MetadataAssetUtility).InvokeGenericStaticMethod("InsertEntityData",
                             new[] { entityClassType },
@@ -132,14 +130,11 @@ namespace UniSharperEditor.Data.Metadata
                 TryDeleteMetadataEntityScripts(settings, deletedExcelFiles);
 
                 ForEachExcelFile(MetadataAssetSettings.ExcelWorkbookFilesFolderPath,
-                    (table,
+                    (tables,
                         fileName,
                         index,
                         length) =>
                     {
-                        if (table == null)
-                            return;
-
                         if (!isCleanBuild && !(addedExcelFiles.Contains(fileName) || updatedExcelFiles.Contains(fileName)))
                             return;
 
@@ -147,7 +142,7 @@ namespace UniSharperEditor.Data.Metadata
                         var info = $"Generating Metadata Entity Script: {fileNameWithoutExtension}{FileExtensions.CSharpScriptFile}... {index + 1}/{length}";
                         var progress = (float)(index + 1) / length;
                         EditorUtility.DisplayProgressBar("Hold on...", info, progress);
-                        var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, table);
+                        var rawInfoList = CreateMetadataEntityRawInfoList(settings.CreateExcelDataParseOptions(), fileName, tables);
                         var success = GenerateMetadataEntityScript(settings, fileNameWithoutExtension, rawInfoList);
                         if (success)
                         {
@@ -269,35 +264,122 @@ namespace UniSharperEditor.Data.Metadata
             Type entityClassType,
             List<EntityPropertyRawInfo> rawInfoList)
         {
+            return CreateEntityDataList(options, new List<DataTable> { table }, entityClassType, rawInfoList);
+        }
+
+        internal static List<MetadataEntity> CreateEntityDataList(ExcelDataParseOptions options,
+            List<DataTable> tables,
+            Type entityClassType,
+            List<EntityPropertyRawInfo> rawInfoList,
+            string fileName = null)
+        {
             var list = new List<MetadataEntity>();
-            var rowCount = table.Rows.Count;
+            if (tables == null || tables.Count == 0)
+                return list;
 
-            for (var i = options.EntityDataStartingRowIndex; i < rowCount; ++i)
+            var firstTable = tables[0];
+
+            for (var tableIndex = 0; tableIndex < tables.Count; tableIndex++)
             {
-                var entityData = (MetadataEntity)entityClassType.InvokeConstructor();
-                foreach (var rowInfo in rawInfoList)
-                {
-                    var column = rowInfo.Column;
-                    var cellValue = table.Rows[i][column].ToString();
-                    var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType);
+                var table = tables[tableIndex];
+                if (table == null || table.Rows.Count <= options.EntityDataStartingRowIndex)
+                    continue;
 
-                    if (typeParser != null)
-                    {
-                        var arrayElementSeparator = options.ArrayElementSeparator;
-                        var value = typeParser.Parse(arrayElementSeparator, cellValue.Trim(), rowInfo.Parameters);
-                        entityData.SetPropertyValue(rowInfo.PropertyName, value);
-                    }
-                    else
-                    {
-                        Debugger.LogWarning($"Type '{rowInfo.PropertyType}' is not supported!");
-                    }
+                // The first worksheet defines the data structure, so for the other worksheets the
+                // columns are matched by the property name definition row.
+                Dictionary<int, int> columnMap = null;
+                if (tableIndex > 0)
+                {
+                    var worksheetDisplayName = GetWorksheetDisplayName(table, tableIndex);
+                    columnMap = CreateColumnMapByPropertyName(options, firstTable, table, rawInfoList, fileName, worksheetDisplayName);
+                    if (columnMap.Count == 0)
+                        continue;
                 }
 
-                list.Add(entityData);
+                for (var i = options.EntityDataStartingRowIndex; i < table.Rows.Count; ++i)
+                {
+                    var entityData = (MetadataEntity)entityClassType.InvokeConstructor();
+                    foreach (var rowInfo in rawInfoList)
+                    {
+                        var column = rowInfo.Column;
+                        if (columnMap != null && !columnMap.TryGetValue(rowInfo.Column, out column))
+                            continue;
+
+                        var cellValue = table.Rows[i][column].ToString();
+                        var typeParser = PropertyTypeConverterFactory.Instance.GetInstance(rowInfo.PropertyType);
+
+                        if (typeParser != null)
+                        {
+                            var arrayElementSeparator = options.ArrayElementSeparator;
+                            var value = typeParser.Parse(arrayElementSeparator, cellValue.Trim(), rowInfo.Parameters);
+                            entityData.SetPropertyValue(rowInfo.PropertyName, value);
+                        }
+                        else
+                        {
+                            Debugger.LogWarning($"Type '{rowInfo.PropertyType}' is not supported!");
+                        }
+                    }
+
+                    list.Add(entityData);
+                }
             }
 
             return list;
         }
+
+        private static Dictionary<int, int> CreateColumnMapByPropertyName(ExcelDataParseOptions options,
+            DataTable firstTable,
+            DataTable table,
+            List<EntityPropertyRawInfo> rawInfoList,
+            string fileName,
+            string worksheetDisplayName)
+        {
+            var map = new Dictionary<int, int>();
+            var nameRowIndex = options.EntityPropertyNameRowIndex;
+
+            if (firstTable.Rows.Count <= nameRowIndex || table.Rows.Count <= nameRowIndex)
+            {
+                Debugger.LogWarning($"Worksheet '{worksheetDisplayName}' of Excel file '{fileName}' has no property name definition row, this worksheet will be ignored!");
+                return map;
+            }
+
+            foreach (var rowInfo in rawInfoList)
+            {
+                var column = FindColumnByPropertyName(options, firstTable, table, rowInfo.Column);
+                if (column >= 0)
+                {
+                    map.Add(rowInfo.Column, column);
+                }
+                else
+                {
+                    var propertyName = firstTable.Rows[nameRowIndex][rowInfo.Column].ToString().Trim();
+                    Debugger.LogWarning($"Property '{propertyName}' not found in worksheet '{worksheetDisplayName}' of Excel file '{fileName}', its data will be ignored!");
+                }
+            }
+
+            return map;
+        }
+
+        private static int FindColumnByPropertyName(ExcelDataParseOptions options, DataTable firstTable, DataTable table, int firstTableColumn)
+        {
+            var nameRowIndex = options.EntityPropertyNameRowIndex;
+            if (firstTable.Rows.Count <= nameRowIndex || table.Rows.Count <= nameRowIndex)
+                return -1;
+
+            var propertyName = firstTable.Rows[nameRowIndex][firstTableColumn].ToString().Trim();
+            if (string.IsNullOrEmpty(propertyName))
+                return -1;
+
+            for (var column = 0; column < table.Columns.Count; column++)
+            {
+                if (string.Equals(propertyName, table.Rows[nameRowIndex][column].ToString().Trim(), StringComparison.OrdinalIgnoreCase))
+                    return column;
+            }
+
+            return -1;
+        }
+
+        private static string GetWorksheetDisplayName(DataTable table, int tableIndex) => string.IsNullOrEmpty(table.TableName) ? $"#{tableIndex + 1}" : table.TableName;
 
         internal static List<EntityPropertyRawInfo> CreateMetadataEntityRawInfoList(ExcelDataParseOptions options, string fileName, DataTable table)
         {
@@ -341,6 +423,52 @@ namespace UniSharperEditor.Data.Metadata
             return list;
         }
 
+        internal static List<EntityPropertyRawInfo> CreateMetadataEntityRawInfoList(ExcelDataParseOptions options, string fileName, List<DataTable> tables)
+        {
+            // The first worksheet defines the data structure (property comment, type, name and data
+            // starting rows), the other worksheets only provide entity data rows.
+            var rawInfoList = tables is { Count: > 0 } ? CreateMetadataEntityRawInfoList(options, fileName, tables[0]) : new List<EntityPropertyRawInfo>();
+            if (rawInfoList.Count > 0)
+                AppendEnumValuesFromOtherWorksheets(options, tables, rawInfoList);
+
+            return rawInfoList;
+        }
+
+        private static void AppendEnumValuesFromOtherWorksheets(ExcelDataParseOptions options,
+            List<DataTable> tables,
+            List<EntityPropertyRawInfo> rawInfoList)
+        {
+            var firstTable = tables[0];
+
+            foreach (var rawInfo in rawInfoList.Where(rowInfo => rowInfo.PropertyType.Equals(PropertyTypeNames.Enum)))
+            {
+                var enumValues = (rawInfo.Parameters[2] as string[])?.ToList();
+                if (enumValues == null)
+                    continue;
+
+                for (var tableIndex = 1; tableIndex < tables.Count; tableIndex++)
+                {
+                    var table = tables[tableIndex];
+                    if (table == null || table.Rows.Count <= options.EntityDataStartingRowIndex)
+                        continue;
+
+                    var column = FindColumnByPropertyName(options, firstTable, table, rawInfo.Column);
+                    if (column < 0)
+                        continue;
+
+                    for (var row = options.EntityDataStartingRowIndex; row < table.Rows.Count; row++)
+                    {
+                        var enumValue = table.Rows[row][column].ToString().Trim();
+
+                        if (!string.IsNullOrEmpty(enumValue) && !enumValues.Contains(enumValue))
+                            enumValues.Add(enumValue);
+                    }
+                }
+
+                rawInfo.Parameters[2] = enumValues.ToArray();
+            }
+        }
+
         private static void DeleteTempDbFiles()
         {
             FileUtil.DeleteFileOrDirectory(TempFolderPath);
@@ -377,7 +505,7 @@ namespace UniSharperEditor.Data.Metadata
             File.WriteAllBytes(filePath, bufferData);
         }
 
-        private static void ForEachExcelFile(string excelFilesFolderPath, Action<DataTable, string, int, int> action)
+        private static void ForEachExcelFile(string excelFilesFolderPath, Action<List<DataTable>, string, int, int> action)
         {
             if (string.IsNullOrEmpty(excelFilesFolderPath))
             {
@@ -401,9 +529,9 @@ namespace UniSharperEditor.Data.Metadata
 
                 try
                 {
-                    var table = ReadExcelFileDataTable(path);
-                    if (table != null)
-                        action?.Invoke(table, fileName, i, paths.Length);
+                    var tables = ReadExcelFileDataTables(path);
+                    if (tables is { Count: > 0 })
+                        action?.Invoke(tables, fileName, i, paths.Length);
                     else
                         Debugger.LogError("Excel file should have a table at least!");
                 }
@@ -418,11 +546,29 @@ namespace UniSharperEditor.Data.Metadata
 
         internal static DataTable ReadExcelFileDataTable(string filePath)
         {
+            var tables = ReadExcelFileDataTables(filePath);
+            return tables is { Count: > 0 } ? tables[0] : null;
+        }
+
+        internal static List<DataTable> ReadExcelFileDataTables(string filePath)
+        {
             using var stream = File.OpenRead(filePath);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var result = reader.AsDataSet();
-            return result is { Tables: { Count: > 0 } } ? result.Tables[0] : null;
+            if (result is not { Tables: { Count: > 0 } })
+                return null;
+
+            // Empty worksheets and worksheets whose name starts with "##" are ignored.
+            var tables = new List<DataTable>(result.Tables.Count);
+            tables.AddRange(result.Tables.Cast<DataTable>()
+                .Where(table => table != null && !IsEmptyWorksheet(table) && !IsIgnoredWorksheetName(table.TableName)));
+
+            return tables.Count > 0 ? tables : null;
         }
+
+        private static bool IsEmptyWorksheet(DataTable table) => table.Columns.Count == 0 || table.Rows.Count == 0;
+
+        private static bool IsIgnoredWorksheetName(string worksheetName) => !string.IsNullOrEmpty(worksheetName) && worksheetName.StartsWith("##", StringComparison.Ordinal);
 
         private static string FormatCommentString(string comment)
         {

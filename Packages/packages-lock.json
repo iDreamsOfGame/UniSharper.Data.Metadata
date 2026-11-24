@@ -53,7 +53,7 @@
       }
     },
     "io.github.idreamsofgame.resharp.core": {
-      "version": "2.2.1",
+      "version": "2.3.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -83,11 +83,11 @@
       "url": "https://package.openupm.com"
     },
     "io.github.idreamsofgame.unisharper.core": {
-      "version": "2.0.9",
+      "version": "2.1.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "io.github.idreamsofgame.resharp.core": "2.2.1",
+        "io.github.idreamsofgame.resharp.core": "2.3.0",
         "io.github.idreamsofgame.resharp.security.cryptography": "1.2.0",
         "io.github.idreamsofgame.unilitjson": "0.19.1"
       },

@@ -57,7 +57,7 @@ namespace UniSharper.Data.Metadata.Samples
         {
             AddTitleItem("Generic Type");
             
-            var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(1L);
+            var metadata = MetadataManager.GetEntity<GenericTypeSampleMetadata>(2L);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();

@@ -14,7 +14,7 @@ All database files are read at runtime by the `MetadataManager` class.
 
 ## Features
 
-- Imports the first worksheet of an Excel workbook file as a metadata table.
+- Imports an Excel workbook file as one metadata table: in the Unity Editor importer the data rows of all worksheets are merged and the first worksheet defines the data structure; the console `MetadataDatabaseFileGenerator` imports the first worksheet only.
 - Generates a standalone iBoxDB database file (*.db.bytes) per metadata entity, plus a shared configuration database file.
 - Supports primitive types, one-dimensional arrays, custom enums and Unity types (`Vector2`, `Vector3`, `Quaternion`, `Rect`, `Color`, etc.).
 - Optional encryption (AES-CBC) and compression (Deflate/LZ4) of the database files.
@@ -82,7 +82,7 @@ openupm add io.github.idreamsofgame.unisharper.data.metadata
 
 ## The Excel Workbook Format
 
-The first worksheet of an Excel workbook file is imported as one metadata table. By default the first four rows define the table layout (each row index is configurable):
+An Excel workbook file is imported as one metadata table. Empty worksheets and worksheets whose name starts with `##` are ignored; the first remaining worksheet defines the table structure, and in the Unity Editor importer the data rows of the other worksheets are merged into the same table when they share this structure — columns are matched by the property name definition row (so the column order may differ), worksheets without a property name row or without matching columns are ignored with a warning, and `enum` value lists are collected from the data cells of all worksheets. The console `MetadataDatabaseFileGenerator` imports the first valid worksheet only. By default the first four rows of the first worksheet define the table layout (each row index is configurable):
 
 | Row | Index | Content |
 | --- | --- | --- |
